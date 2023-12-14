@@ -28,6 +28,7 @@ exports.getLessonsBySectionId = async (req, res, next) => {
   try {
     const lessonsOfSection = await Lesson.find({
       sectionId: sectionId,
+      sectionId: sectionId,
     });
     res.status(200).json({
       message: "Fetch all lessons of section id successfully!",

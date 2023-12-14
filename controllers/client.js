@@ -6,6 +6,7 @@ const Order = require("../models/Order");
 const Review = require("../models/Review");
 const Section = require("../models/Section");
 const User = require("../models/User");
+const Blog = require("../models/Blog");
 const axios = require("axios");
 
 const {
@@ -1573,3 +1574,4 @@ exports.createTheWholeCourse = async (req, res, next) => {
     next(error);
   }
 };
+
