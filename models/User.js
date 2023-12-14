@@ -42,6 +42,39 @@ const userSchema = new Schema(
     lastLogin: {
       type: Date,
     },
+    headline: {
+      type: String,
+    },
+    biography: {
+      type: String,
+    },
+    website: {
+      type: String,
+    },
+    twitter: {
+      type: String,
+    },
+    facebook: {
+      type: String,
+    },
+    linkedin: {
+      type: String,
+    },
+    youtube: {
+      type: String,
+    },
+    language: {
+      type: String,
+      default: "en",
+    },
+    showProfile: {
+      type: Boolean,
+      default: true,
+    },
+    showCourses: {
+      type: Boolean,
+      default: true,
+    },
     resetToken: String,
     resetTokenExpiration: Date,
     loginToken: String,
@@ -55,7 +88,6 @@ const userSchema = new Schema(
 );
 
 userSchema.index({ name: "text", email: "text" });
-
 
 //Export the model
 module.exports = mongoose.model("User", userSchema);

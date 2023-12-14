@@ -1,6 +1,7 @@
 const express = require("express");
 const clientController = require("../controllers/client");
 const isAuth = require("../middleware/is-auth");
+const upload = require("../middleware/upload");
 const router = express.Router();
 const { check, body } = require("express-validator");
 
@@ -81,6 +82,8 @@ router.get("/users/:userId", clientController.getUser);
 
 // GET USER DETAIL
 router.get("/users/:userId/detail", clientController.getUserDetail);
+
+router.put("/users/:userId", upload.single("avatar"), clientController.updateUser);
 
 // CREATE REVIEW FOR COURSE ID OF USER ID AFTER ORDER
 

@@ -7,6 +7,7 @@ const Review = require("../models/Review");
 const Section = require("../models/Section");
 const User = require("../models/User");
 const axios = require("axios");
+const { BACKEND_URL } = require("../config/backend-domain");
 
 const {
   getProgressOfCourse,
@@ -1046,7 +1047,9 @@ exports.getUser = async (req, res, next) => {
   // console.log("id: ", userId);
 
   try {
-    const user = await User.findById(userId).select("_id name avatar email phone");
+    const user = await User.findById(userId).select(
+      "_id name avatar email phone headline biography website twitter facebook linkedin youtube language showProfile showCourses"
+    );
 
     const lessonDoneList = await IsLessonDone.find({
       userId: userId,
@@ -1120,7 +1123,28 @@ exports.getCourseReviews = async (req, res, next) => {
   }
 };
 
-exports.updateUser = async (req, res, next) => {};
+exports.updateUser = async (req, res, next) => {
+  const { userId } = req.params;
+
+  let updateData = {
+    ...req.body, 
+  };
+
+  if (req.file) {
+    updateData.avatar = `${BACKEND_URL}/${req.file.path}`
+  }
+
+  try {
+    const updatedUser = await User.findByIdAndUpdate(userId, updateData, { new: true });
+
+    res.status(200).json({
+      message: "User updated successfully",
+      userId: updatedUser._id,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 // Retrieve to see history to track orders.
 exports.getOrdersByIduser = async (req, res, next) => {};
