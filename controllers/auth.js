@@ -8,6 +8,7 @@ const passport = require("passport");
 const FacebookStrategy = require("passport-facebook").Strategy;
 const mongoose = require("mongoose");
 const customError = require("../utils/error");
+const { google } = require("googleapis");
 
 var admin = require("firebase-admin");
 
@@ -69,28 +70,28 @@ exports.googleLogin = async (req, res, next) => {
   const { token } = req.body;
 
   try {
-    const decodedToken = await admin.auth().verifyIdToken(token);
+    const oauth2Client = new google.auth.OAuth2();
+    oauth2Client.setCredentials({ access_token: token });
 
-    console.log("detoken: ", decodedToken);
+    const oauth2 = google.oauth2({
+      auth: oauth2Client,
+      version: "v2",
+    });
 
-    const email = decodedToken.email;
+    const userInfoResponse = await oauth2.userinfo.get();
+    const email = userInfoResponse.data.email;
 
-    // Check if the email is registered in your application
     const userDoc = await User.findOne({ email, providerId: "google.com" });
 
     if (!userDoc) {
-      // Handle the case when the user is not registered
       return res.status(401).json({ message: "User not registered!" });
     }
 
-    // Generate a JWT token for the user
     const jwtToken = jwt.sign(
       { email: userDoc.email, userId: userDoc._id.toString() },
       "somesupersecret",
       { expiresIn: "1h" }
     );
-
-    // Save login Token to database
 
     userDoc.loginToken = jwtToken;
     userDoc.loginTokenExpiration = Date.now() + 60 * 60 * 1000;
@@ -101,8 +102,6 @@ exports.googleLogin = async (req, res, next) => {
       userId: userDoc._id.toString(),
     });
   } catch (error) {
-    // Handle errors
-
     if (!error.statusCode) {
       error.statusCode = 500;
     }
