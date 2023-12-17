@@ -73,6 +73,8 @@ router.post("/order", clientController.postOrder);
 // GET ORDER: id
 router.get("/orders/:orderId", clientController.getOrder);
 
+router.get("/orders/user/:userId", clientController.getOrdersByUserId);
+
 // GET COURSE BY STUDENTS HAVE BOUGHT
 router.get("/courses/:userId/ordered", clientController.getCoursesOrderedByUser);
 

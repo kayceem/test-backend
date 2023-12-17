@@ -926,8 +926,6 @@ exports.getUserDetail = async (req, res, next) => {
 exports.getCoursesOrderedByUser = async (req, res, next) => {
   const { userId } = req.params;
 
-  console.log(userId);
-
   try {
     const courses = await getCoursesOrderedByUserInfo(userId);
 
@@ -1128,11 +1126,11 @@ exports.updateUser = async (req, res, next) => {
   const { userId } = req.params;
 
   let updateData = {
-    ...req.body, 
+    ...req.body,
   };
 
   if (req.file) {
-    updateData.avatar = `${BACKEND_URL}/${req.file.path}`
+    updateData.avatar = `${BACKEND_URL}/${req.file.path}`;
   }
 
   try {
@@ -1148,7 +1146,30 @@ exports.updateUser = async (req, res, next) => {
 };
 
 // Retrieve to see history to track orders.
-exports.getOrdersByIduser = async (req, res, next) => {};
+exports.getOrdersByUserId = async (req, res, next) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const userId = req.params.userId;
+    const totalItems = await Order.countDocuments({ "user._id": userId });
+    const orders = await Order.find({ "user._id": userId }).skip(skip).limit(limit);
+
+    res.status(200).json({
+      message: "Orders fetched successfully!",
+      orders,
+      totalItems,
+      totalPages: Math.ceil(totalItems / limit),
+      currentPage: page,
+    });
+  } catch (error) {
+    if (!error.statusCode) {
+      error.statusCode = 500;
+    }
+    next(error);
+  }
+};
 
 // List all of orders at db
 exports.getOrders = async (req, res, next) => {};
@@ -1598,4 +1619,3 @@ exports.createTheWholeCourse = async (req, res, next) => {
     next(error);
   }
 };
-
