@@ -1619,3 +1619,52 @@ exports.createTheWholeCourse = async (req, res, next) => {
     next(error);
   }
 };
+
+exports.getRelatedCourses = async (req, res, next) => {
+  const { courseId } = req.params;
+  const userId = req.query.userId;
+  let limit = req.query.limit;
+
+  try {
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res.status(404).json({
+        message: "Course not found",
+      });
+    }
+
+    limit = limit ? parseInt(limit) : 5;
+
+    const relatedCourses = await Course.find({
+      _id: { $ne: courseId },
+      categoryId: course.categoryId,
+    })
+      .populate("categoryId", "_id name")
+      .populate("userId", "_id name avatar")
+      .limit(limit);
+
+    if (!userId) {
+      return res.status(200).json({
+        message: "List of related courses",
+        relatedCourses,
+      });
+    }
+
+    const coursesOfUser = await getCoursesOrderedByUserInfo(userId);
+    const courseIdOfUserList = coursesOfUser.map((course) => course._id.toString());
+
+    let result = relatedCourses.map((course) => {
+      return {
+        ...course._doc,
+        isBought: courseIdOfUserList.includes(course._id.toString()),
+      };
+    });
+
+    res.status(200).json({
+      message: "List of related courses",
+      relatedCourses: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

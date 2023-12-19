@@ -131,4 +131,6 @@ router.get("/generate-whole-course", clientController.generateTheWholeCourse);
 // GENERATE WHOLE COURSE
 router.post("/create-whole-course", clientController.createTheWholeCourse);
 
+router.get("/courses/related/:courseId", clientController.getRelatedCourses);
+
 module.exports = router;
