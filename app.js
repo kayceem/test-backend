@@ -16,6 +16,7 @@ const adminOrderRouter = require("./routes/adminOrder");
 const clientRouter = require("./routes/client");
 const reportRouter = require("./routes/report");
 const blogRouter = require("./routes/blog");
+const commentRouter = require("./routes/comments");
 const app = express();
 
 const port = process.env.PORT || 9000;
@@ -50,10 +51,11 @@ app.use("/admin", adminLessonRouter);
 app.use("/admin", adminUserRouter);
 app.use("/admin", adminOrderRouter);
 app.use("/admin", reportRouter);
-app.use(clientRouter);
 
-// blog routes
 app.use("/blog", blogRouter);
+app.use("/", commentRouter);
+
+app.use(clientRouter);
 
 // Middleware handler error!!! (custom error here!!!)
 app.use((error, req, res, next) => {

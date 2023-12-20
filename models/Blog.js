@@ -1,5 +1,7 @@
 const mongoose = require("mongoose");
 
+const Schema = mongoose.Schema;
+
 const blogSchema = new mongoose.Schema({
   title: {
     type: String,
@@ -13,7 +15,7 @@ const blogSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  summary: {
+  technology: {
     type: String,
     required: true,
   },
@@ -23,7 +25,7 @@ const blogSchema = new mongoose.Schema({
     },
   ],
   readTime: {
-    type: Number,
+    type: String,
     required: true,
   },
   datePublished: {
@@ -34,6 +36,11 @@ const blogSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  userId: {
+    type: Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
   category: [
     {
       type: String,
@@ -42,4 +49,5 @@ const blogSchema = new mongoose.Schema({
   ],
 });
 
+blogSchema.index({ title: "text", content: "text" });
 module.exports = mongoose.model("Blog", blogSchema);
