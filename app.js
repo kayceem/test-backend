@@ -53,7 +53,7 @@ app.use("/admin", adminOrderRouter);
 app.use("/admin", reportRouter);
 
 app.use("/blog", blogRouter);
-app.use("/", commentRouter);
+app.use("/comments", commentRouter);
 
 app.use(clientRouter);
 
