@@ -9,13 +9,12 @@ router.get("/", blogController.getAllBlog);
 router.get("/:id", blogController.getBlogById);
 
 // POST a new blog
-router.post("/", blogController.postBlog);
+router.post("/", blogController.createBlog);
 
-// UPDATE a blog by id
-router.put("/:id", blogController.updateBlogById);
+// PUT a blog by id
+router.put("/create-blog/:id", blogController.updateBlog);
 
 // DELETE a blog by id
 router.delete("/:id", blogController.deleteBlogById);
-
 
 module.exports = router;
