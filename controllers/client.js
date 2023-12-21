@@ -1071,9 +1071,7 @@ exports.getUser = async (req, res, next) => {
 };
 
 exports.postReview = async (req, res, next) => {
-  const { courseId, title, content, ratingStar, orderId } = req.body;
-
-  console.log("req.body: ", req.body);
+  const { courseId, title, content, ratingStar, orderId, userId } = req.body;
 
   try {
     const newReview = new Review({
@@ -1082,20 +1080,21 @@ exports.postReview = async (req, res, next) => {
       content,
       ratingStar,
       orderId,
+      userId,
     });
 
     const result = await newReview.save();
 
-    res.status(200).json({
-      message: "Post review successfully!",
+    await Order.updateOne(
+      { _id: orderId, "items._id": courseId },
+      { $set: { "items.$.reviewed": true } }
+    );
+
+    res.status(201).json({
+      message: "Review created successfully!",
       review: result,
     });
   } catch (error) {
-    if (!error) {
-      const error = new Error("Failed to post course review!");
-      error.statusCode(422);
-      return error;
-    }
     next(error);
   }
 };
