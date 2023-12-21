@@ -63,6 +63,10 @@ const orderSchema = new Schema(
           type: String,
           required: true,
         },
+        reviewed: {
+          type: Boolean,
+          default: false,
+        },
       },
     ],
   },
