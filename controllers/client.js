@@ -1074,13 +1074,6 @@ exports.postReview = async (req, res, next) => {
   const { courseId, title, content, ratingStar, orderId, userId } = req.body;
 
   try {
-    const user = await User.findById(userId);
-    if (!user) {
-      const error = new Error("User not found");
-      error.statusCode = 400;
-      throw error;
-    }
-
     const newReview = new Review({
       courseId,
       title,
