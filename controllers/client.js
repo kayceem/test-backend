@@ -1153,7 +1153,10 @@ exports.getOrdersByUserId = async (req, res, next) => {
 
     const userId = req.params.userId;
     const totalItems = await Order.countDocuments({ "user._id": userId });
-    const orders = await Order.find({ "user._id": userId }).skip(skip).limit(limit);
+    const orders = await Order.find({ "user._id": userId })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
 
     res.status(200).json({
       message: "Orders fetched successfully!",
