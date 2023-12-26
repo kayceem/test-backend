@@ -17,6 +17,8 @@ const clientRouter = require("./routes/client");
 const reportRouter = require("./routes/report");
 const blogRouter = require("./routes/blog");
 const commentRouter = require("./routes/comments");
+const paymentRouter = require("./routes/payment");
+
 const app = express();
 
 const port = process.env.PORT || 9000;
@@ -54,6 +56,8 @@ app.use("/admin", reportRouter);
 
 app.use("/blog", blogRouter);
 app.use("/comments", commentRouter);
+
+app.use("/payments", paymentRouter);
 
 app.use(clientRouter);
 

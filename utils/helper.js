@@ -420,6 +420,7 @@ exports.getCoursesOrderedByUserInfo = async (userId) => {
   try {
     const courses = await Order.find({
       "user._id": userId,
+      status: "Success",
     })
       .select("items")
       .populate("items._id");
