@@ -84,17 +84,31 @@ exports.handleVnpayReturn = async (req, res) => {
 
     if (secureHash === signed) {
       const orderId = vnp_Params["vnp_TxnRef"];
+      const transactionStatus = vnp_Params["vnp_TransactionStatus"];
 
-      const updatedOrder = await Order.findOneAndUpdate(
-        { _id: orderId },
-        { status: "Success" },
-        { new: true }
-      );
+      if (transactionStatus === "00") {
+        const updatedOrder = await Order.findOneAndUpdate(
+          { _id: orderId },
+          { status: "Success" },
+          { new: true }
+        );
 
-      if (updatedOrder) {
-        res.redirect(`${FRONTEND_URL}/order-completed?orderId=${orderId}`);
+        if (updatedOrder) {
+          res.redirect(`${FRONTEND_URL}/order-completed?orderId=${orderId}`);
+        } else {
+          res.send("Error: Order not found");
+        }
       } else {
-        res.send("Error: Order not found");
+        const canceledOrder = await Order.findOneAndUpdate(
+          { _id: orderId },
+          { status: "Cancelled" },
+          { new: true }
+        );
+        if (canceledOrder) {
+          res.send("Payment Failed. The order has been cancelled.");
+        } else {
+          res.send("Error: Order not found");
+        }
       }
     } else {
       res.send("Error");
