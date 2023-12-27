@@ -2,6 +2,7 @@ const express = require("express");
 const clientController = require("../controllers/client");
 const isAuth = require("../middleware/is-auth");
 const upload = require("../middleware/upload");
+const uploadVideoMiddleware = require("../middleware/uploadVideo");
 const router = express.Router();
 const { check, body } = require("express-validator");
 
@@ -132,5 +133,11 @@ router.get("/generate-whole-course", clientController.generateTheWholeCourse);
 router.post("/create-whole-course", clientController.createTheWholeCourse);
 
 router.get("/courses/related/:courseId", clientController.getRelatedCourses);
+
+router.post(
+  "/upload-video",
+  uploadVideoMiddleware.single("videoFile"),
+  clientController.uploadVideo
+);
 
 module.exports = router;

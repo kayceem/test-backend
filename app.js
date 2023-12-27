@@ -4,6 +4,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const multer = require("multer");
 const mongoose = require("mongoose");
+const cors = require("cors");
 
 // Routers
 const authRouter = require("./routes/auth");
@@ -21,6 +22,8 @@ const paymentRouter = require("./routes/payment");
 
 const app = express();
 
+app.use(cors());
+
 const port = process.env.PORT || 9000;
 
 // const MONGODB_URI = "mongodb://127.0.0.1:27017/fullstack_es6";
@@ -33,6 +36,7 @@ app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, "public")));
 
 app.use("/images", express.static(path.join(__dirname, "images")));
+app.use("/videos", express.static(path.join(__dirname, "videos")));
 
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");

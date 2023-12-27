@@ -1670,3 +1670,20 @@ exports.getRelatedCourses = async (req, res, next) => {
     next(error);
   }
 };
+
+exports.uploadVideo = (req, res) => {
+  try {
+    const videoPath = req.file.path;
+
+    const fullVideoPath = `${BACKEND_URL}/${videoPath}`;
+
+    const response = {
+      message: "Video uploaded successfully",
+      videoPath: fullVideoPath,
+    };
+
+    res.status(200).json(response);
+  } catch (error) {
+    res.status(500).json({ error: "An error occurred while uploading the video" });
+  }
+};
