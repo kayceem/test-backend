@@ -140,4 +140,6 @@ router.post(
   clientController.uploadVideo
 );
 
+router.get("/courses/suggested/:userId", clientController.getSuggestedCourses);
+
 module.exports = router;
