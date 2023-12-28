@@ -970,6 +970,8 @@ exports.checkLessonDoneUserId = async (req, res, next) => {
 exports.postOrder = async (req, res, next) => {
   const { note, transaction, vatFee, items, user, totalPrice } = req.body;
 
+  const status = totalPrice === 0 ? "Success" : "Pending";
+
   try {
     const courses = await Course.find({
       _id: {
@@ -986,25 +988,10 @@ exports.postOrder = async (req, res, next) => {
       },
       items: courses,
       user,
+      status,
     });
 
     const response = await order.save();
-    // Update qty Course at database (-qty);
-    // Courses.items.forEach(async (Course) => {
-    //   const { prodId, qty } = Course;
-    //   console.log("update stock qty at database!!!");
-    //   const CourseItem = await Course.findById(prodId);
-    //   CourseItem.stockQty = CourseItem.stockQty - qty;
-    //   CourseItem.save();
-    // });
-
-    // for (const Course of Courses.items) {
-    //   const { prodId, qty } = Course;
-    //   console.log("update stock qty at database!!!");
-    //   const Course = await Course.findById(prodId);
-    //   Course.stockQty = Course.stockQty - qty;
-    //   Course.save();
-    // }
 
     res.status(201).json({
       message: "Created order successfully!",
@@ -1685,5 +1672,38 @@ exports.uploadVideo = (req, res) => {
     res.status(200).json(response);
   } catch (error) {
     res.status(500).json({ error: "An error occurred while uploading the video" });
+  }
+};
+
+exports.getSuggestedCourses = async (req, res, next) => {
+  const userId = req.params.userId;
+  let limit = req.query.limit ? parseInt(req.query.limit) : 5;
+
+  try {
+    const boughtCourses = await getCoursesOrderedByUserInfo(userId);
+
+    if (!boughtCourses.length) {
+      return res.status(200).json({
+        message: "No suggestions available as no courses have been purchased.",
+        suggestedCourses: [],
+      });
+    }
+
+    const boughtCourseCategories = boughtCourses.map((course) => course.categoryId.toString());
+
+    const suggestedCourses = await Course.find({
+      categoryId: { $in: boughtCourseCategories },
+      _id: { $nin: boughtCourses.map((course) => course._id) },
+    })
+      .populate("categoryId", "_id name")
+      .populate("userId", "_id name avatar")
+      .limit(limit);
+
+    res.status(200).json({
+      message: "List of suggested courses",
+      suggestedCourses,
+    });
+  } catch (error) {
+    next(error);
   }
 };
