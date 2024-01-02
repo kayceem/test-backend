@@ -11,7 +11,7 @@ module.exports = async (req, res, next) => {
     throw error;
   }
 
-  console.log("auth header: ", authHeader);
+  // console.log("auth header: ", authHeader);
 
   const token = req.get("Authorization").split(" ")[1];
 
