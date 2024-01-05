@@ -1,12 +1,28 @@
 const express = require("express");
-import { Router } from "express";
-const router = Router();
-const commentController = require("../controllers/comments");
 
-router.post("/", commentController.createComment);
-router.get("/:postId", commentController.getComments);
-router.put("/:postId", commentController.updateComment);
-router.delete("/:postId", commentController.deleteComment);
-router.post("/:postId/like", commentController.likeComment);
+import {
+  createComment,
+  getComments,
+  updateComment,
+  deleteComment,
+  likeComment
+} from '../controllers/comments'; 
 
-module.exports = router;
+const router = express.Router();
+
+// Route để tạo một bình luận mới
+router.post('/', createComment);
+
+// Route để lấy tất cả bình luận của một bài viết
+router.get('/:postId', getComments);
+
+// Route để cập nhật một bình luận
+router.put('/:commentId', updateComment);
+
+// Route để xóa một bình luận
+router.delete('/:commentId', deleteComment);
+
+// Route để 'like' hoặc 'unlike' một bình luận
+router.patch('/like/:commentId', likeComment);
+
+export default router;
