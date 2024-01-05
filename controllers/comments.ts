@@ -1,97 +1,107 @@
-import Comment from '../models/Comment';
-import { Request, Response } from 'express';
+const Comment = require("../models/Comment");
+import { Request, Response, NextFunction } from "express";
+import mongoose from "mongoose";
 
-export const createComment = async (req: Request, res: Response) => {
+// Create a new comment
+exports.createComment = async (req: Request, res: Response) => {
   try {
-    const { content, userId, postId, parentCommentId } = req.body;
+    const { content, postId, userId } = req.body;
+
+    // Check if postId is a valid ObjectId
+    if (!mongoose.Types.ObjectId.isValid(postId)) {
+      return res.status(400).json({ error: "Invalid postId" });
+    }
+
+    // Check if userId is provided
+    if (!userId) {
+      return res.status(400).json({ error: "userId is required" });
+    }
+
     const newComment = new Comment({
-      content,
-      userId,
-      postId,
-      parentCommentId: parentCommentId || null
-    }); 
+      content: content,
+      postId: postId,
+      userId: userId,
+    });
 
-    const savedComment = await newComment.save();
-    res.status(201).json(savedComment);
-  } catch (error: unknown) {
-    res.status(500).json({ error: (error as Error).message });
+    await newComment.save();
+    res.status(201).json(newComment);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
   }
 };
 
-export const getComments = async (req: Request, res: Response) => {
+// Get all comments for a post
+exports.getComments = async (req: Request, res: Response) => {
+  const postId = req.params.postId;
+  if (!postId) {
+    return res.status(400).json({ error: "postId is required" });
+  }
   try {
-    const { postId } = req.params;
-    const comments = await Comment.find({ postId: postId }).populate('userId');
+    const comments = await Comment.find({ postId: postId }).populate("_id");
+    if (!comments.length) {
+      return res.status(404).json({ error: "No comments found for this post" });
+    }
     res.json(comments);
-  } catch (error: unknown) {
-    res.status(500).json({ error: (error as Error).message });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
   }
 };
 
-
-export const updateComment = async (req: Request, res: Response) => {
+// Update a comment
+exports.updateComment = async (req: Request, res: Response) => {
   try {
-    const { commentId } = req.params;
+    const postId = req.params.postId;
     const { content } = req.body;
 
-    const updatedComment = await Comment.findByIdAndUpdate(
-      commentId,
-      { content },
-      { new: true }
-    );
+    const comment = await Comment.findById(postId);
 
-    if (!updatedComment) {
-      res.status(404).json({ error: 'Comment not found' });
-      return;
-    }
-
-    res.json(updatedComment);
-  } catch (error: unknown) {
-    res.status(500).json({ error: (error as Error).message });
-  }
-};
-
-export const deleteComment = async (req: Request, res: Response) => {
-  try {
-    const { commentId } = req.params;
-
-    const deletedComment = await Comment.findByIdAndDelete(commentId);
-
-    if (!deletedComment) {
-      res.status(404).json({ error: 'Comment not found' });
-      return;
-    }
-
-    res.json({ message: 'Comment deleted successfully' });
-  } catch (error: unknown) {
-    res.status(500).json({ error: (error as Error).message });
-  }
-};
-
-export const likeComment = async (req: Request, res: Response) => {
-  try {
-    const { commentId, userId } = req.body;
-    console.log(commentId, userId);
-    
-
-    const comment = await Comment.findById(commentId);
- 
     if (!comment) {
-      res.status(404).json({ error: 'Comment not found' });
-      return;
+      return res.status(404).json({ error: "Comment not found" });
     }
-
-    const index = comment.likes.indexOf(userId);
-    if (index === -1) {
-      comment.likes.push(userId);
-    } else {
-      comment.likes.splice(index, 1); // Remove user from likes if already liked
-    }
-
+    comment.content = content;
     await comment.save();
     res.json(comment);
-  } catch (error: unknown) {
-    res.status(500).json({ error: (error as Error).message });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
   }
 };
 
+// Delete a comment
+exports.deleteComment = async (req: Request, res: Response) => {
+try {
+  const postId = req.params.id;
+    await Comment.findByIdAndDelete(postId);
+    res.json({ message: "Comment deleted successfully" });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Like a comment
+// Like a comment
+exports.likeComment = async (req: Request, res: Response) => {
+  try {
+    const postId = req.params.postId; // Get the comment's ID from the request parameters
+    const comment = await Comment.findById(postId);
+    if (!comment) {
+      return res.status(404).json({ error: "Comment not found" });
+    }
+    const userId = comment.userId; // Get the user's ID from the comment
+
+    // Check if the user has already liked the comment
+    if (comment.likes.includes(userId)) {
+      // If the user has already liked the comment, remove their like
+      comment.likes.pull(userId);
+    } else {
+      // If the user has not liked the comment, add their like
+      comment.likes.push(userId);
+    }
+    // Save the updated comment
+    await comment.save();
+    // Send the updated comment as the response
+    res.json(comment);
+  } catch (error: any) {
+    // If there was an error, send it as the response
+    res.status(500).json({ error: error.message });
+  }
+};
