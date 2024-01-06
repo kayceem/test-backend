@@ -1,5 +1,3 @@
-// const Blog = require("../models/Blog");
-// const mongoose = require("mongoose");
 import { Request, Response, NextFunction } from "express";
 import Blog from "../models/Blog";
 import mongoose from "mongoose";
