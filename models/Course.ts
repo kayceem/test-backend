@@ -1,7 +1,25 @@
-import { Schema, model, Document } from 'mongoose';
+import { Schema, model, Document } from "mongoose";
+
+interface ICourse extends Document {
+  name: string;
+  subTitle?: string;
+  thumbnail: string;
+  access: string;
+  views: number;
+  price: number;
+  finalPrice: number;
+  description: string;
+  level: string;
+  courseSlug: string;
+  userId: Schema.Types.ObjectId;
+  categoryId: Schema.Types.ObjectId;
+  requirements: string[];
+  willLearns: string[];
+  tags: string[];
+}
 
 // Declare the Schema of the Mongo model
-const courseSchema = new Schema(
+const courseSchema = new Schema<ICourse>(
   {
     name: {
       type: String,
@@ -72,9 +90,8 @@ const courseSchema = new Schema(
   { timestamps: true }
 );
 
-//  Define the text index on 'name' and 'description' fields
 courseSchema.index({ name: "text", description: "text" });
 
-//Export the model
-// module.exports = mongoose.model("Course", courseSchema);
-export default model<Document>('Course', courseSchema);
+const Course = model<ICourse>("Course", courseSchema);
+
+export default Course;

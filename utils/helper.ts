@@ -28,7 +28,7 @@ exports.openai = openai;
 // });
 // console.log(chatCompletion.data.choices[0].message);
 
-exports.updateStockQty = (courseList: any) => {
+export const updateStockQty = (courseList: any) => {
   courseList.forEach(async (course: any) => {
     const { prodId, qty } = course;
     console.log("update stock qty at database!!!");
@@ -38,7 +38,7 @@ exports.updateStockQty = (courseList: any) => {
   });
 };
 
-exports.getCoursesOrderByUserId = async (userId: string) => {
+export const getCoursesOrderByUserId = async (userId: string) => {
   const courses = await Order.find({
     "user._id": userId,
   })
@@ -55,7 +55,7 @@ exports.getCoursesOrderByUserId = async (userId: string) => {
   return results;
 };
 
-exports.getProgressOfCourse = async (courseId: string, userId: string) => {
+export const getProgressOfCourse = async (courseId: string, userId: string) => {
   const sectionsOfCourse = await Section.find({
     courseId,
   });
@@ -101,7 +101,7 @@ exports.getProgressOfCourse = async (courseId: string, userId: string) => {
 };
 
 // Function to generate random courses
-exports.generateRandomCoursesFakerjs = (numCourses: number) => {
+export const generateRandomCoursesFakerjs = (numCourses: number) => {
   const courses = [];
   for (let i = 0; i < numCourses; i++) {
     const course = {
@@ -114,7 +114,7 @@ exports.generateRandomCoursesFakerjs = (numCourses: number) => {
       finalPrice: faker.datatype.number({ min: 0, max: 100 }),
       description: "Description not available.",
       level: faker.random.arrayElement(["Beginner", "Intermediate", "Advanced"]),
-      courseSlug: faker.lorem.slug(), 
+      courseSlug: faker.lorem.slug(),
       userId: mongoose.Types.ObjectId(),
       categoryId: mongoose.Types.ObjectId(),
       requirements: Array.from({ length: faker.datatype.number({ min: 1, max: 5 }) }, () =>
@@ -315,7 +315,7 @@ const generateLessonBySectionName = async (outlineOfCourse: any) => {};
 exports.generateSectionsName = generateSectionsName;
 exports.createOutline = createOutline;
 
-exports.getCourseDetailInfo = async (courseId: string) => {
+export const getCourseDetailInfo = async (courseId: string) => {
   try {
     const course = await Course.findById(courseId)
       .populate("categoryId", "_id name")
@@ -387,7 +387,6 @@ exports.getCourseDetailInfo = async (courseId: string) => {
     }
   }
 };
-
 
 exports.getCoursesOrderedByUserInfo = async (userId: string) => {
   try {

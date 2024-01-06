@@ -1,8 +1,35 @@
-import { Schema, model, Document } from 'mongoose';
+import { Schema, model, Document } from "mongoose";
 
-// Declare the Schema of the Mongo model
+interface IUser {
+  _id: Schema.Types.ObjectId;
+  email: string;
+  name: string;
+  phone?: string;
+}
 
-const orderSchema = new Schema(
+interface IItem {
+  _id: Schema.Types.ObjectId;
+  finalPrice: number;
+  name: string;
+  thumbnail: string;
+  reviewed: boolean;
+}
+
+interface IOrder extends Document {
+  vatFee?: number;
+  transaction: {
+    method: string;
+  };
+  note?: string;
+  totalPrice?: number;
+  user: IUser;
+  items: IItem[];
+  status: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const orderSchema = new Schema<IOrder>(
   {
     // Id: auto genrate!!!
     vatFee: {
@@ -84,4 +111,4 @@ orderSchema.index(
 );
 //Export the model
 // module.exports = mongoose.model("Order", orderSchema);
-export default model<Document>('Order', orderSchema);
+export default model<IOrder>("Order", orderSchema);

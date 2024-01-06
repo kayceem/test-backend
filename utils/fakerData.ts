@@ -1,5 +1,5 @@
 // Sample course names and descriptions
-exports.courseNames = [
+export const courseNames = [
   "JavaScript Advanced: Mastering ES6+",
   "React - The Complete Guide (with Redux)",
   "Node.js: From Beginner to Advanced",
@@ -19,7 +19,7 @@ exports.courseNames = [
   //   Genereate 10 course title related to IOT fields
 ];
 
-exports.backendCourses = [
+export const backendCourses = [
   "Advanced Backend Development Techniques",
   "Deep Dive into Backend Architecture",
   "Backend Database Management",
@@ -32,20 +32,16 @@ exports.backendCourses = [
   "Cloud Computing for Backend Development",
 ];
 
-exports.devopsCourses = [
+export const devopsCourses = [
   "Introduction to DevOps Practices",
   "Continuous Integration and Deployment",
   "Configuration Management and Infrastructure as Code",
   "Containerization and Orchestration in DevOps",
   "Monitoring and Logging in DevOps",
   "DevOps Tools and Automation",
-  "Security in DevOps",
-  "DevOps in Cloud Environments",
-  "Scaling and Performance Optimization in DevOps",
-  "DevOps Culture and Collaboration",
 ];
 
-exports.aiCourses = [
+export const aiCourses = [
   "Introduction to Artificial Intelligence",
   "Machine Learning Fundamentals",
   "Deep Learning and Neural Networks",
@@ -58,7 +54,7 @@ exports.aiCourses = [
   "AI in Business and Industry",
 ];
 
-exports.blockchainCourses = [
+export const blockchainCourses = [
   "Introduction to Blockchain Technology",
   "Smart Contracts and Solidity Programming",
   "Decentralized Application Development",
@@ -71,7 +67,7 @@ exports.blockchainCourses = [
   "Legal and Regulatory Considerations in Blockchain",
 ];
 
-exports.mobileCourses = [
+export const mobileCourses = [
   "Introduction to Mobile App Development",
   "iOS App Development with Swift",
   "Android App Development with Java/Kotlin",
@@ -84,7 +80,7 @@ exports.mobileCourses = [
   "Emerging Trends in Mobile Development",
 ];
 
-exports.gameCourses = [
+export const gameCourses = [
   "Introduction to Game Development",
   "Game Design Fundamentals",
   "2D Game Development with Unity",
@@ -97,7 +93,7 @@ exports.gameCourses = [
   "Game Publishing and Marketing",
 ];
 
-exports.courseDescriptions = [
+export const courseDescriptions = [
   "Take your JavaScript skills to the next level and learn the latest features of ECMAScript 6 and beyond.",
   "Build powerful and interactive user interfaces with React and manage your app state with Redux.",
   "Master Node.js and create scalable, high-performance applications for web development.",
