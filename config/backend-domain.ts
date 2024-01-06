@@ -3,4 +3,4 @@
 
 const BACKEND_URL = "http://localhost:9000"; // Development mode!!!
 
-exports.BACKEND_URL = BACKEND_URL;
+export { BACKEND_URL };

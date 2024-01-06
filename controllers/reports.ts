@@ -1,15 +1,18 @@
 import CustomErrorMessage from "../utils/errorMessage";
-import {Request, Response, NextFunction } from "express";
+import { Request, Response, NextFunction } from "express";
 
 const { faker } = require("@faker-js/faker");
-const Category = require("../models/Category");
+import Category from "../models/Category";
 const Lesson = require("../models/Lesson");
-const Course = require("../models/Course");
+import Course from "../models/Course";
+
 const { deleteFile } = require("../utils/file");
 const { validationResult } = require("express-validator");
 const IsLessonDone = require("../models/IsLessonDone");
-const User = require("../models/User");
-const Order = require("../models/Order");
+import User from "../models/User";
+
+import Order from "../models/Order";
+
 const { getProgressOfCourse, getCourseDetailInfo } = require("../utils/helper");
 
 exports.getSummaryReports = async (req: Request, res: Response, next: NextFunction) => {
