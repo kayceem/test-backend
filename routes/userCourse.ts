@@ -1,12 +1,10 @@
-
 const express = require("express");
 import { Router } from "express";
 const router = Router();
-const coursesController = require("../controllers/userCourses")
+const coursesController = require("../controllers/userCourses");
 
 // GET Courses by User
-router.get('/coursesByUser/:userId', coursesController.getCoursesByUser);
-router.get('/wishlistcoursesByUser/:userId', coursesController.getCoursesWishlistByUser);
+router.get("/coursesByUser/:userId", coursesController.getCoursesByUser);
+router.get("/wishlistcoursesByUser/:userId", coursesController.getCoursesWishlistByUser);
 
-module.exports = router;
-    
+export default router;

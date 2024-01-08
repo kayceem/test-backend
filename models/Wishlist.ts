@@ -1,9 +1,21 @@
+import { Schema, model, Document } from "mongoose";
 
-import { Schema, model, Document } from 'mongoose';
+interface IWishlist extends Document {
+  user: {
+    _id: Schema.Types.ObjectId;
+    email: string;
+    name: string;
+    phone?: string;
+  };
+  items: {
+    _id: Schema.Types.ObjectId;
+    finalPrice: number;
+    name: string;
+    thumbnail: string;
+  }[];
+}
 
-// Declare the Schema of the Mongo model
-
-const wishlistSchema = new Schema(
+const wishlistSchema = new Schema<IWishlist>(
   {
     user: {
       _id: {
@@ -60,4 +72,4 @@ wishlistSchema.index(
 );
 //Export the model
 // module.exports = mongoose.model("Wishlist", wishlistSchema);
-export default model<Document>('Wishlist', wishlistSchema);
+export default model<IWishlist>("Wishlist", wishlistSchema);
