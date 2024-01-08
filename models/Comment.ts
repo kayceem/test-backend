@@ -1,55 +1,42 @@
+import mongoose, { Document, Schema } from 'mongoose';
 
-import { Schema, model, Document } from 'mongoose';
+interface IComment extends Document {
+  content: string;
+  userId: string;
+  postId: string;
+  likes: string[];
+  parentCommentId?: mongoose.Types.ObjectId; // Optional field for replies
+}
 
 const commentSchema = new Schema({
+  content: {
+    type: String,
+    required: true,
+  },
   userId: {
     type: Schema.Types.ObjectId,
     ref: "User",
     required: true,
   },
-  content: {
-    type: String,
-    required: true,
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now,
-  },
-  likes: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-    },
-  ],
-  replies: [
-    {
-      // Array of reply comment IDs
-      type: Schema.Types.ObjectId,
-      ref: "Comment",
-    },
-  ],
   postId: {
-    // ID of the post this comment belongs to
     type: Schema.Types.ObjectId,
-    ref: "Blog",
+    ref: "Post", // Thay đổi "Blog" thành "Post" nếu tên model bài viết của bạn là "Post"
     required: true,
   },
-},
-{ timestamps: true }
-);
+  parentCommentId: {
+    type: Schema.Types.ObjectId,
+    ref: "Comment",
+    default: null, // Mặc định là null để biết đây là bình luận chính, không phải phản hồi
+  },
+  likes: {
+    type: [Schema.Types.ObjectId],
+    ref: "User",
+    default: []
+  },
+}, {
+  timestamps: true // Sử dụng timestamps để tự động quản lý trường createdAt và updatedAt
+});
 
-// Index for text search on content, if needed
 commentSchema.index({ content: "text" });
 
-// Pre-save hook to update the timestamp on edit
-// commentSchema.pre("save", function (next) {
-//   this.updatedAt = new Date();
-//   next();
-// });
-
-// module.exports = mongoose.model("Comment", commentSchema);
-export default model<Document>('Comment', commentSchema);
+export default mongoose.model<IComment>('Comment', commentSchema);
