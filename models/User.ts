@@ -1,6 +1,4 @@
-
-import { Schema, model, Document } from 'mongoose';
-
+import { Schema, model, Document } from "mongoose";
 export interface IUser extends Document {
   providerId?: string;
   name: string;
@@ -121,4 +119,4 @@ userSchema.index({ name: "text", email: "text" });
 
 //Export the model
 // module.exports = mongoose.model("User", userSchema);
-export default model<any & Document>('User', userSchema);
+export default model<any & Document>("User", userSchema);
