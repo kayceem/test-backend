@@ -22,6 +22,8 @@ const blogRouter = require("./routes/blog");
 const paymentRouter = require("./routes/payment");
 import commentsRouter from './routes/comments'
 
+import userCourseRouter from "./routes/userCourse";
+
 const app = express();
 
 app.use(cors());
@@ -59,6 +61,8 @@ app.use("/admin", adminLessonRouter);
 app.use("/admin", adminUserRouter);
 app.use("/admin", adminOrderRouter);
 app.use("/admin", reportRouter);
+
+app.use("/userCourse", userCourseRouter);
 
 app.use("/blog", blogRouter);
 app.use('/comments',commentsRouter );
