@@ -1,7 +1,23 @@
-import { Schema, model, Document } from 'mongoose';
+import { Schema, model, Document } from "mongoose";
+import { ObjectId } from "mongodb";
+
+interface ISection extends Document {
+  courseId: ObjectId;
+  name: string;
+  access: string;
+  description: string;
+  oldPrice: number;
+  discount: number;
+  images: string;
+  thumbnail: string;
+  shortDesc: string;
+  fullDesc: string;
+  stockQty: number;
+  categoryId: ObjectId;
+}
 
 // Declare the Schema of the Mongo model
-const sectionSchema = new Schema(
+const sectionSchema = new Schema<ISection>(
   {
     courseId: {
       type: Schema.Types.ObjectId,
@@ -24,6 +40,6 @@ const sectionSchema = new Schema(
   { timestamps: true }
 );
 
-//Export the model
-// module.exports = mongoose.model("Section", sectionSchema);
-export default model<Document>('Section', sectionSchema);
+const Section = model<ISection>("Section", sectionSchema);
+
+export default Section;
