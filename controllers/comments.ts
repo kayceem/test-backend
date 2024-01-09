@@ -1,5 +1,5 @@
-import Comment from '../models/Comment';
-import { Request, Response } from 'express';
+import Comment from "../models/Comment";
+import { Request, Response } from "express";
 
 export const createComment = async (req: Request, res: Response) => {
   try {
@@ -8,8 +8,8 @@ export const createComment = async (req: Request, res: Response) => {
       content,
       userId,
       postId,
-      parentCommentId: parentCommentId || null
-    }); 
+      parentCommentId: parentCommentId || null,
+    });
 
     const savedComment = await newComment.save();
     res.status(201).json(savedComment);
@@ -21,27 +21,22 @@ export const createComment = async (req: Request, res: Response) => {
 export const getComments = async (req: Request, res: Response) => {
   try {
     const { postId } = req.params;
-    const comments = await Comment.find({ postId: postId }).populate('userId');
+    const comments = await Comment.find({ postId: postId }).populate("userId");
     res.json(comments);
   } catch (error: unknown) {
     res.status(500).json({ error: (error as Error).message });
   }
 };
 
-
 export const updateComment = async (req: Request, res: Response) => {
   try {
     const { commentId } = req.params;
     const { content } = req.body;
 
-    const updatedComment = await Comment.findByIdAndUpdate(
-      commentId,
-      { content },
-      { new: true }
-    );
+    const updatedComment = await Comment.findByIdAndUpdate(commentId, { content }, { new: true });
 
     if (!updatedComment) {
-      res.status(404).json({ error: 'Comment not found' });
+      res.status(404).json({ error: "Comment not found" });
       return;
     }
 
@@ -58,11 +53,11 @@ export const deleteComment = async (req: Request, res: Response) => {
     const deletedComment = await Comment.findByIdAndDelete(commentId);
 
     if (!deletedComment) {
-      res.status(404).json({ error: 'Comment not found' });
+      res.status(404).json({ error: "Comment not found" });
       return;
     }
 
-    res.json({ message: 'Comment deleted successfully' });
+    res.json({ message: "Comment deleted successfully" });
   } catch (error: unknown) {
     res.status(500).json({ error: (error as Error).message });
   }
@@ -72,12 +67,11 @@ export const likeComment = async (req: Request, res: Response) => {
   try {
     const { commentId, userId } = req.body;
     console.log(commentId, userId);
-    
 
     const comment = await Comment.findById(commentId);
- 
+
     if (!comment) {
-      res.status(404).json({ error: 'Comment not found' });
+      res.status(404).json({ error: "Comment not found" });
       return;
     }
 
@@ -95,3 +89,28 @@ export const likeComment = async (req: Request, res: Response) => {
   }
 };
 
+export const replyComment = async (req: Request, res: Response) => {
+  try {
+    const { content, userId } = req.body;
+    const { commentId } = req.params;
+
+    const comment = await Comment.findById(commentId);
+    if (!comment) {
+      return res.status(404).json({ error: "Comment not found" });
+    }
+
+    const reply = {
+      content,
+      userId,
+      parentCommentId: commentId,
+    };
+    console.log(reply);
+
+    comment.replies.push(reply);
+
+    const updatedComment = await comment.save();
+    res.status(201).json(updatedComment);
+  } catch (error: unknown) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+};
