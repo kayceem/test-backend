@@ -21,9 +21,11 @@ router.get("/lessons/:lessonId", adminLessonController.getLesson);
 router.get("/lessons/:sectionId/section", adminLessonController.getLessonsBySectionId);
 
 // POST Lesson
-router.post("/lesson", 
-// uploadMiddleware.array("images[]"), 
-adminLessonController.postLesson);
+router.post(
+  "/lesson",
+  // uploadMiddleware.array("images[]"),
+  adminLessonController.postLesson
+);
 
 // PUT Lesson
 router.put(

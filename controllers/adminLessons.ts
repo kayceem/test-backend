@@ -1,6 +1,6 @@
 const { faker } = require("@faker-js/faker");
 const Category = require("../models/Category");
-const Lesson = require("../models/Lesson");
+import Lesson from "../models/Lesson";
 const { deleteFile } = require("../utils/file");
 const { validationResult } = require("express-validator");
 const IsLessonDone = require("../models/IsLessonDone");
