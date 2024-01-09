@@ -1,9 +1,9 @@
-const { faker } = require("@faker-js/faker");
-const Category = require("../models/Category");
+import faker from "@faker-js/faker";
+import Category from "../models/Category";
 import Course from "../models/Course";
-const Section = require("../models/Section");
+import Section from "../models/Section";
 const { deleteFile } = require("../utils/file");
-const { validationResult } = require("express-validator");
+import validationResult from "express-validator";
 import CustomErrorMessage from "../utils/errorMessage";
 import { Request, Response, NextFunction } from "express";
 
@@ -16,7 +16,7 @@ export const getSections = async (req: Request, res: Response, next: NextFunctio
     });
   } catch (error) {
     if (!error) {
-      const error = new CustomErrorMessage("Failed to fetch Sections!",422);
+      const error = new CustomErrorMessage("Failed to fetch Sections!", 422);
       return error;
     }
     next(error);
@@ -42,7 +42,7 @@ export const getSectionsByCourseId = async (req: Request, res: Response, next: N
   }
 };
 
-export const getSection = async (req: Request, res: Response , next: NextFunction) => {
+export const getSection = async (req: Request, res: Response, next: NextFunction) => {
   const { sectionId } = req.params;
 
   try {

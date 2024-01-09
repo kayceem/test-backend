@@ -1,11 +1,10 @@
-const express = require("express");
-import { Router } from "express";
+import express, { Router } from "express";
 // const adminSectionController = require("../controllers/adminSections");
 import * as adminSectionController from "../controllers/adminSections";
-const uploadMiddleware = require("../middleware/upload");
+import uploadMiddleware from "../middleware/upload";
 const isAuth = require("../middleware/is-auth");
 const router = Router();
-const { check, body } = require("express-validator");
+import { check, body } from "express-validator";
 
 // GET Sections
 router.get("/sections", adminSectionController.getSections);
@@ -24,9 +23,11 @@ router.get("/sections/:sectionId", adminSectionController.getSection);
 router.get("/sections/:courseId/course", adminSectionController.getSectionsByCourseId);
 
 // POST Section
-router.post("/section", 
-// uploadMiddleware.array("images[]"), 
-adminSectionController.postSection);
+router.post(
+  "/section",
+  // uploadMiddleware.array("images[]"),
+  adminSectionController.postSection
+);
 
 // PUT Section
 router.put(
