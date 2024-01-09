@@ -1,7 +1,28 @@
-import { Schema, model, Document } from 'mongoose';
+import { Schema, model, Document } from "mongoose";
+import { ObjectId } from "mongodb";
+
+interface ILesson extends Document {
+  sectionId: ObjectId;
+  name: string;
+  icon: string;
+  description: string;
+  content: string;
+  videoLength: number;
+  access: string;
+  type: string;
+  password: string;
+  oldPrice: number;
+  discount: number;
+  images: string;
+  thumbnail: string;
+  shortDesc: string;
+  fullDesc: string;
+  stockQty: number;
+  categoryId: string;
+}
 
 // Declare the Schema of the Mongo model
-const lessonSchema = new Schema(
+const lessonSchema = new Schema<ILesson>(
   {
     sectionId: {
       type: Schema.Types.ObjectId,
@@ -44,4 +65,6 @@ const lessonSchema = new Schema(
 
 //Export the model
 // module.exports = mongoose.model("Lesson", lessonSchema);
-export default model<Document>('Lesson', lessonSchema);
+const Lesson = model<ILesson>("Lesson", lessonSchema);
+
+export default Lesson;
