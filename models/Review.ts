@@ -1,6 +1,7 @@
 import { Schema, model } from "mongoose";
 import baseSchema, { IBaseSchema } from "./BaseSchema";
 export interface IReview extends IBaseSchema {
+  userId: Schema.Types.ObjectId;
   courseId: Schema.Types.ObjectId;
   title: string;
   content: string;
@@ -10,6 +11,11 @@ export interface IReview extends IBaseSchema {
 
 const reviewSchema = new Schema<IReview>(
   {
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: "Course",
+      required: true,
+    },
     courseId: {
       type: Schema.Types.ObjectId,
       ref: "Course",

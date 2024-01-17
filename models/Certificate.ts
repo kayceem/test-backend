@@ -3,6 +3,7 @@ import baseSchema, { IBaseSchema } from "./BaseSchema";
 
 export interface ICertificate extends IBaseSchema {
   name: string;
+  userId: Schema.Types.ObjectId;
   courseId: Schema.Types.ObjectId;
   dateValid: Date;
 }
@@ -10,6 +11,11 @@ export interface ICertificate extends IBaseSchema {
 const certificateSchema = new Schema<ICertificate>(
   {
     name: { type: String, required: true },
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
     courseId: {
       type: Schema.Types.ObjectId,
       ref: "Course",

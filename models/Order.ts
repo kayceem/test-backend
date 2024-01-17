@@ -8,6 +8,7 @@ export interface IOrder extends IBaseSchema {
   note?: string;
   totalPrice?: number;
   user: {
+    _id: Schema.Types.ObjectId;
     email: string;
     name: string;
     phone?: string;
@@ -41,6 +42,10 @@ const orderSchema = new Schema<IOrder>(
       type: Number,
     },
     user: {
+      _id: {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+      },
       email: {
         type: String,
         required: true,
