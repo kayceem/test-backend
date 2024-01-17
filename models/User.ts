@@ -1,7 +1,7 @@
 import { Schema, model } from "mongoose";
 import baseSchema, { IBaseSchema } from "./BaseSchema";
 export interface IUser extends IBaseSchema {
-  provider: string;
+  providerId: string;
   name: string;
   avatar: string;
   email?: string;
@@ -29,7 +29,7 @@ export interface IUser extends IBaseSchema {
 
 const userSchema = new Schema<IUser>(
   {
-    provider: {
+    providerId: {
       type: "string",
       default: "local",
     },
