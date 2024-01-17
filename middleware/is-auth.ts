@@ -1,78 +1,75 @@
-const jwt = require("jsonwebtoken");
-const RevokedToken = require("../models/RevokedToken");
-
-import { Request, Response, NextFunction, RequestHandler } from "express";
+import { Request, Response, NextFunction } from "express";
+import jwt, { JwtPayload } from "jsonwebtoken";
+import CustomError from "../utils/error";
 import CustomErrorMessage from "../utils/errorMessage";
-import { ParamsDictionary } from "express-serve-static-core";
-import { ParsedQs } from "qs";
-interface CustomRequest extends Request {
-  userId: string; // Define the userId property
-  courseId?: string; // Define the courseId property as optional
-  decodedToken?: string; // Define the decodedToken property
+import RevokedToken from "../models/RevokedToken";
+
+interface DecodedToken extends JwtPayload {
+  userId: string;
+}
+
+export interface AuthorAuthRequest extends Request {
+  userId?: string;
+  courseId?: string;
+  decodedToken?: string | JwtPayload;
   token?: string;
 }
-//Some patterns
-module.exports = async (req: CustomRequest, res: Response, next: NextFunction) => {
-  const authHeader = req.get("Authorization");
 
-  if (!authHeader) {
-    const error = new CustomErrorMessage("Not authenticated.", 401);
-    error.statusCode = 401;
-    if (!error) {
-      const error = new CustomErrorMessage("Failed to authenticate user!", 401);
-      return error;
-    }
+export default async (req: AuthorAuthRequest, res: Response, next: NextFunction) => {
+  const authorizationHeader = req.headers.authorization;
+  const authorAuthReq = req as AuthorAuthRequest;
+
+  if (!authorizationHeader) {
+    const error = new CustomError("Unauthorized", "Authorization header is missing", 401);
     return next(error);
   }
 
-  console.log("auth header: ", authHeader);
+  const tokenArray = authorizationHeader.split(" ");
 
-  const token = req.get("Authorization").split(" ")[1];
+  if (tokenArray.length !== 2 || tokenArray[0] !== "Bearer") {
+    const error = new CustomError(
+      "Unauthorized",
+      "Invalid authorization header format. Expected 'Bearer [token]'",
+      401
+    );
+    return next(error);
+  }
 
-  let decodedToken;
+  const token = tokenArray[1];
+
+  let decodedToken: DecodedToken;
 
   try {
     const isTokenRevoked = await RevokedToken.exists({ token });
+
     if (isTokenRevoked) {
       return res.status(401).json({ message: "Token revoked" });
     }
 
-    decodedToken = jwt.verify(token, "somesupersecret");
+    decodedToken = jwt.verify(token, "somesupersecret") as DecodedToken;
   } catch (error) {
-    if (!error) {
-      const error = new CustomErrorMessage("Failed to authenticate user!", 500);
-      return error;
+    if (error instanceof CustomError) {
+      return next(error);
+    } else {
+      const customError = new CustomErrorMessage("Failed to authenticate user!", 500);
+      return next(customError);
     }
-    return next(error);
   }
 
   if (!decodedToken) {
-    const error = new CustomErrorMessage("Not authenticated.", 401);
+    const error = new CustomError("Unauthorized", "Not authenticated.", 401);
 
-    if (!error) {
-      const error = new CustomErrorMessage("Failed to authenticate user!", 422);
-      return error;
-    }
     return next(error);
   }
 
-  req.userId = decodedToken.userId;
+  authorAuthReq.userId = decodedToken.userId;
+
   if (req.query.courseId) {
-    req.courseId = req.query.courseId as string;  // Authorize for author (who added the course for theirself)
+    authorAuthReq.courseId = req.query.courseId as string;
   }
-  req.decodedToken = decodedToken;
 
-  console.log("admin role: ", req.headers.adminrole);
-  console.log("user role: ", req.headers.userrole);
-
-  // if (req.headers.adminrole === "admin") {
-  //   req.adminToken = token;
-  // } else if (req.headers.userrole === "user") {
-  //   req.token = token;
-  // }
-
-  req.token = token;
+  authorAuthReq.decodedToken = decodedToken;
+  authorAuthReq.token = token;
 
   next();
 };
-
