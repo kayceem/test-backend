@@ -2,9 +2,9 @@ import { Schema, Document } from "mongoose";
 
 export interface IBaseSchema extends Document {
   createdAt: Date;
-  createdBy: Schema.Types.ObjectId;
+  createdBy?: Schema.Types.ObjectId;
   updatedAt: Date;
-  updatedBy: Schema.Types.ObjectId;
+  updatedBy?: Schema.Types.ObjectId;
   isDeleted: boolean;
 }
 
@@ -17,7 +17,6 @@ const baseSchema: Schema<IBaseSchema> = new Schema<IBaseSchema>(
     createdBy: {
       type: Schema.Types.ObjectId,
       ref: "User",
-      required: true,
     },
     updatedAt: {
       type: Date,
@@ -26,7 +25,6 @@ const baseSchema: Schema<IBaseSchema> = new Schema<IBaseSchema>(
     updatedBy: {
       type: Schema.Types.ObjectId,
       ref: "User",
-      required: true,
     },
     isDeleted: {
       type: Boolean,

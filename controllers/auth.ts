@@ -1,64 +1,58 @@
-const express = require("express");
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-// const User = require("../models/User");
-import User from "../models/User";
-const crypto = require("crypto");
-const sendmail = require("../utils/sendmail");
-const passport = require("passport");
-const FacebookStrategy = require("passport-facebook").Strategy;
-const mongoose = require("mongoose");
-// const customError = require("../utils/error");
-import CustomError from "../utils/error";
-const { google } = require("googleapis");
-
-var admin = require("firebase-admin");
-
-var serviceAccount = require("../firebase/serviceAccountKey.json");
-// const { BACKEND_URL } = require("../../frontend/src/constant/backend-domain");
-
-const { BACKEND_URL } = require("../config/backend-domain");
-const RevokedToken = require("../models/RevokedToken");
-
-import CustomErrorMessage from "../utils/errorMessage";
 import { Request, Response, NextFunction } from "express";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import User, { IUser } from "../models/User";
+import RevokedToken, { IRevokedToken } from "../models/RevokedToken";
+import { UserAuthRequest } from "../middleware/is-user-auth";
+import { AuthorAuthRequest } from "../middleware/is-auth";
+import crypto from "crypto";
+import sendmail from "../utils/sendmail";
+import CustomError from "../utils/error";
+import CustomErrorMessage from "../utils/errorMessage";
+import { google } from "googleapis";
+import admin from "firebase-admin";
+import serviceAccount from "../firebase/serviceAccountKey.json";
+import { BACKEND_URL } from "../config/backend-domain";
+
+const serviceAccountConfig = {
+  type: serviceAccount.type,
+  projectId: serviceAccount.project_id,
+  privateKeyId: serviceAccount.private_key_id,
+  privateKey: serviceAccount.private_key,
+  clientEmail: serviceAccount.client_email,
+  clientId: serviceAccount.client_id,
+  authUri: serviceAccount.auth_uri,
+  tokenUri: serviceAccount.token_uri,
+  authProviderX509CertUrl: serviceAccount.auth_provider_x509_cert_url,
+  clientCertUrl: serviceAccount.client_x509_cert_url,
+  universeDomain: serviceAccount.universe_domain,
+};
 
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
+  credential: admin.credential.cert(serviceAccountConfig),
 });
 
-interface CustomRequest extends Request {
-  userId: string; // Define the userId property
-  courseId?: string; // Define the courseId property as optional
-  decodedToken?: string; // Define the decodedToken property
-  token?: string;
-}
-
 export const signup = async (req: Request, res: Response, next: NextFunction) => {
-  const { email, name, password, role, avatar, providerId, fbUserId } = req.body;
+  const { email, name, password, role, avatar } = req.body;
 
-  //   No validate yet!
   try {
-    const user = await User.findOne({ email, providerId });
+    const user = await User.findOne({ email });
 
     if (user) {
-      const error = new CustomError("email", "Email already existed at website!", 422);
+      const error = new CustomError("Email", "Email already existed at website!", 422);
       throw error;
     }
 
     const hashedPassword = await bcrypt.hash(password, 12);
-    const userData: any = {
+
+    const userData: Partial<IUser> = {
       email,
       name,
       password: hashedPassword,
       role,
       avatar,
-      providerId: providerId || "local",
+      providerId: "local",
     };
-
-    if (fbUserId) {
-      userData.fbUserId = fbUserId;
-    }
 
     const newUser = new User(userData);
 
@@ -68,11 +62,13 @@ export const signup = async (req: Request, res: Response, next: NextFunction) =>
       message: "User created successfully!",
       userId: result._id,
     });
-  } catch (error: any) {
-    if (!error.statusCode) {
-      error.statusCode = 500;
+  } catch (error) {
+    if (error instanceof CustomError) {
+      return next(error);
+    } else {
+      const customError = new CustomErrorMessage("Internal Server Error", 500);
+      return next(customError);
     }
-    next(error);
   }
 };
 
@@ -94,7 +90,8 @@ export const googleLogin = async (req: Request, res: Response, next: NextFunctio
     const userDoc = await User.findOne({ email, providerId: "google.com" });
 
     if (!userDoc) {
-      return res.status(401).json({ message: "User not registered!" });
+      const error = new CustomError("Email", "Could not find user by email!", 401);
+      throw error;
     }
 
     const jwtToken = jwt.sign(
@@ -104,51 +101,20 @@ export const googleLogin = async (req: Request, res: Response, next: NextFunctio
     );
 
     userDoc.loginToken = jwtToken;
-    userDoc.loginTokenExpiration = Date.now() + 60 * 60 * 1000;
+    userDoc.loginTokenExpiration = new Date(Date.now() + 60 * 60 * 1000);
     await userDoc.save();
     res.status(200).json({
       message: "Login successful!",
       token: jwtToken,
       userId: userDoc._id.toString(),
     });
-  } catch (error: any) {
-    if (!error.statusCode) {
-      error.statusCode = 500;
+  } catch (error) {
+    if (error instanceof CustomError) {
+      return next(error);
+    } else {
+      const customError = new CustomErrorMessage("Internal Server Error", 500);
+      return next(customError);
     }
-    next(error);
-  }
-};
-
-export const facebookLogin = async (req: Request, res: Response, next: NextFunction) => {
-  const { name, id } = req.body;
-
-  try {
-    const userDoc = await User.findOne({ socialUserId: id, providerId: "facebook" });
-
-    if (!userDoc) {
-      return res.status(401).json({ message: "User not registered!" });
-    }
-
-    // Generate a JWT token for the user
-    const jwtToken = jwt.sign({ userId: userDoc._id.toString() }, "somesupersecret", {
-      expiresIn: "1h",
-    });
-
-    // Save login Token to database
-
-    userDoc.loginToken = jwtToken;
-    userDoc.loginTokenExpiration = Date.now() + 60 * 60 * 1000;
-    await userDoc.save();
-    res.status(200).json({
-      message: "Login successful!",
-      token: jwtToken,
-      userId: userDoc._id.toString(),
-    });
-  } catch (error: any) {
-    if (!error.statusCode) {
-      error.statusCode = 500;
-    }
-    next(error);
   }
 };
 
@@ -156,29 +122,28 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
   const { email, password } = req.body;
 
   try {
-    const userDoc = await User.findOne({ email, providerId: "local" });
+    const userDoc: IUser | null = await User.findOne({ email, providerId: "local" });
 
     if (!userDoc) {
-      const error = new CustomError("email", "Could not find user by email!", 401);
-      error.statusCode = 401;
+      const error = new CustomError("Email", "Could not find user by email!", 401);
       throw error;
     }
 
-    const isMatched = await bcrypt.compare(password, userDoc.password);
+    const isMatched: boolean = await bcrypt.compare(password, userDoc.password);
+
     if (!isMatched) {
-      throw new CustomError("password", "Password wrong!", 401);
+      const error = new CustomError("Password", "Password wrong!", 401);
+      throw error;
     }
 
-    // Create json webtoken here!!!
     const token = jwt.sign(
       { email: userDoc.email, userId: userDoc._id.toString() },
       "somesupersecret",
       { expiresIn: "1h" }
     );
 
-    // Save token to database
     userDoc.loginToken = token;
-    userDoc.loginTokenExpiration = Date.now() + 60 * 60 * 1000;
+    userDoc.loginTokenExpiration = new Date(Date.now() + 60 * 60 * 1000);
     await userDoc.save();
 
     res.status(200).json({
@@ -186,10 +151,13 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
       token: token,
       userId: userDoc._id.toString(),
     });
-  } catch (error: any) {
-    if (!error.statusCode) {
+  } catch (error) {
+    if (error instanceof CustomError) {
+      return next(error);
+    } else {
+      const customError = new CustomErrorMessage("Internal Server Error", 500);
+      return next(customError);
     }
-    next(error);
   }
 };
 
@@ -197,26 +165,29 @@ export const adminLogin = async (req: Request, res: Response, next: NextFunction
   const { email, password } = req.body;
 
   try {
-    const userDoc = await User.findOne({ email, providerId: "local" });
+    const userDoc: IUser | null = await User.findOne({ email, providerId: "local" });
+
     if (!userDoc) {
-      const error = new CustomErrorMessage("Could not find user by this email", 401);
+      const error = new CustomError("Email", "Could not find user by email!", 401);
       throw error;
     }
 
     const { role } = userDoc;
 
-    // Authorization
     if (role !== "ADMIN" && role !== "INSTRUCTOR" && role !== "TEACHER") {
-      const error = new CustomErrorMessage("Could not authenticate because this account not admin role!", 422);
+      const error = new CustomErrorMessage(
+        "Could not authenticate because this account not admin role!",
+        422
+      );
       throw error;
     }
 
-    const isMatched = await bcrypt.compare(password, userDoc.password);
+    const isMatched: boolean = await bcrypt.compare(password, userDoc.password);
+
     if (!isMatched) {
-      throw new Error("Password wrong!!!");
+      throw new CustomError("Password", "Password wrong!", 401);
     }
 
-    // Create json webtoken here!!!
     const token = jwt.sign(
       { email: userDoc.email, userId: userDoc._id.toString(), adminRole: userDoc.role },
       "somesupersecret",
@@ -224,7 +195,7 @@ export const adminLogin = async (req: Request, res: Response, next: NextFunction
     );
 
     userDoc.loginToken = token;
-    userDoc.loginTokenExpiration = Date.now() + 60 * 60 * 1000;
+    userDoc.loginTokenExpiration = new Date(Date.now() + 60 * 60 * 1000);
     await userDoc.save();
 
     res.status(200).json({
@@ -232,167 +203,116 @@ export const adminLogin = async (req: Request, res: Response, next: NextFunction
       token: token,
       userId: userDoc._id.toString(),
     });
-  } catch (error: any) {
-    if (!error.statusCode) {
-      error.statusCode = 500;
-    }
-    next(error);
-  }
-};
-
-// Trường hợp logout này là chưa chính xác lắm!!!. Khi logout làm sao để clear token (revoke thu hồi quyền truy cập access -> sử dụng thêm database redis, hay tạo thêm một database revoke nữa!!!);
-export const logout = async (req: CustomRequest, res: Response, next: NextFunction) => {
-  const tokenToRevoke = req.token; // Assuming you have a middleware that extracts the token
-
-  try {
-    // Add the token to the revoked tokens collection
-    const revokedToken = new RevokedToken({ token: tokenToRevoke });
-    await revokedToken.save();
-
-    res.status(200).json({ message: "Logout successful" });
-  } catch (error: any) {
-    if (!error.statusCode) {
-      error.statusCode = 500;
-    }
-    next(error);
-  }
-};
-
-export const adminLogout = async (req: CustomRequest, res: Response, next: NextFunction) => {
-  const tokenToRevoke = req.token; // Assuming you have a middleware that extracts the token
-
-  try {
-    // Add the token to the revoked tokens collection
-    const revokedToken = new RevokedToken({ token: tokenToRevoke });
-    await revokedToken.save();
-
-    res.status(200).json({ message: "Logout successful" });
-  } catch (error: any) {
-    if (!error.statusCode) {
-      error.statusCode = 500;
-    }
-    next(error);
-  }
-};
-
-export const checkExistingEmail = async (req: Request, res: Response, next: NextFunction) => {
-  const { email, providerId } = req.body;
-
-  try {
-    const user = await User.findOne({ email, providerId });
-
-    if (!user) {
-      res.status(200).json({
-        message: `${email} with ${providerId} hasn't register yet`,
-        result: "not found",
-      });
-      return;
-    }
-
-    res.status(200).json({
-      message: "Email already registered",
-      result: "found",
-    });
-  } catch (error: any) {
-    if (!error.statusCode) {
-      error.statusCode = 500;
-    }
-    next(error);
-  }
-};
-
-export const checkExistingFacebook = async (req: Request, res: Response, next: NextFunction) => {
-  const { name, fbUserId } = req.body;
-
-  try {
-    const userDoc = await User.findOne({ providerId: "facebook", fbUserId: fbUserId });
-
-    if (!userDoc) {
-      res.status(200).json({
-        result: "not found",
-        message: "No facebook account at website",
-      });
+  } catch (error) {
+    if (error instanceof CustomError) {
+      return next(error);
     } else {
-      res.status(200).json({
-        result: "found",
-        message: "Facebook account has already existed at website",
-      });
+      const customError = new CustomErrorMessage("Internal Server Error", 500);
+      return next(customError);
     }
-  } catch (error: any) {
-    if (!error.statusCode) {
-      error.statusCode = 500;
-    }
-    next(error);
   }
 };
 
-// exports.getReset = async (req, res, next) => {};
+export const logout = async (req: UserAuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const tokenToRevoke = req.token;
+
+    const revokedTokenData: Partial<IRevokedToken> = { token: tokenToRevoke };
+    const revokedToken = new RevokedToken(revokedTokenData);
+    await revokedToken.save();
+
+    res.status(200).json({ message: "Logout successful" });
+  } catch (error) {
+    if (error instanceof CustomError) {
+      return next(error);
+    } else {
+      const customError = new CustomErrorMessage("Internal Server Error", 500);
+      return next(customError);
+    }
+  }
+};
+
+export const adminLogout = async (req: AuthorAuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const tokenToRevoke = req.token;
+
+    const revokedTokenData: Partial<IRevokedToken> = { token: tokenToRevoke };
+    const revokedToken = new RevokedToken(revokedTokenData);
+    await revokedToken.save();
+
+    res.status(200).json({ message: "Logout successful" });
+  } catch (error) {
+    if (error instanceof CustomError) {
+      return next(error);
+    } else {
+      const customError = new CustomErrorMessage("Internal Server Error", 500);
+      return next(customError);
+    }
+  }
+};
 
 export const postReset = async (req: Request, res: Response, next: NextFunction) => {
-  const { email, resetPassUrl } = req.body;
+  const { email, resetPassUrl }: { email: string; resetPassUrl?: string } = req.body;
 
-  crypto.randomBytes(32, (err: any, buffer: any) => {
+  crypto.randomBytes(32, async (err, buffer) => {
     if (err) {
-      console.log(err);
+      const error = new CustomErrorMessage("Error generating password reset", 503);
+      return next(error);
     }
 
     const token = buffer.toString("hex");
 
-    User.findOne({ email: email })
-      .then((user: any) => {
-        if (!user) {
-          const error = new CustomErrorMessage("No Email founded at this website!", 422);
-          res.status(402).json({
-            message: error,
-          });
-          throw error;
-        }
+    try {
+      const user = await User.findOne({ email: email });
 
-        user.resetToken = token;
-        user.resetTokenExpiration = Date.now() + 3600000;
-        return user.save();
-      })
-      .then((result: any) => {
-        const { email, _id } = result;
-        res.status(202).json({
-          message: "Check your email, we aldready send token to your account!",
-          user: { email, _id },
-        });
+      if (!user) {
+        const error = new CustomError("Email", "No Email founded at this website!", 422);
+        res.status(402).json({ message: error });
+        throw error;
+      }
 
-        const hrefLink = resetPassUrl
-          ? `${resetPassUrl}?token=${token}`
-          : `${BACKEND_URL}/site/reset-password.html?token=${token}`;
+      user.resetToken = token;
+      user.resetTokenExpiration = new Date(Date.now() + 3600000);
+      await user.save();
 
-        sendmail({
-          from: "nhatsang0101@gmail.com",
-          email: email,
-          subject: "Password reset",
-          html: `
-            <p>You requested a password reset!</p>
-            <p>Click this  <a href=${hrefLink}">Link Here</a>  to set a new password.</p>
-          `,
-        });
-      })
-      .catch((err: any) => console.log(err));
+      res.status(202).json({
+        message: "Check your email, we already sent token to your account!",
+        user: { email, _id: user._id },
+      });
+
+      const hrefLink = resetPassUrl
+        ? `${resetPassUrl}?token=${token}`
+        : `${BACKEND_URL}/site/reset-password.html?token=${token}`;
+
+      await sendmail({
+        from: "nhatsang0101@gmail.com",
+        to: email,
+        subject: "Password reset",
+        html: `<p>You requested a password reset!</p>
+               <p>Click this <a href="${hrefLink}">Link Here</a> to set a new password.</p>`,
+      });
+    } catch (error) {
+      if (error instanceof CustomError) {
+        return next(error);
+      } else {
+        const customError = new CustomErrorMessage("Internal Server Error", 500);
+        return next(customError);
+      }
+    }
   });
-};
-
-export const getNewPassword = async (req: Request, res: Response, next: NextFunction) => {
-  const { token } = req.params;
-  User.findOne({});
 };
 
 export const postNewPassword = async (req: Request, res: Response, next: NextFunction) => {
   const { password, userId, passwordToken } = req.body;
 
-  bcrypt.hash(password, 12).then((hashedPassword: any) => {
-    User.findOneAndUpdate(
+  try {
+    const hashedPassword = await bcrypt.hash(password, 12);
+
+    const updatedUser = await User.findOneAndUpdate(
       {
         _id: userId,
         resetToken: passwordToken,
-        resetTokenExpiration: {
-          $gt: Date.now(),
-        },
+        resetTokenExpiration: { $gt: Date.now() },
       },
       {
         $set: {
@@ -401,23 +321,27 @@ export const postNewPassword = async (req: Request, res: Response, next: NextFun
           resetTokenExpiration: undefined,
         },
       }
-    )
-      .then((user: any) => {
+    );
 
-        res.status(200).json({
-          message: "Update password successfully!",
-          user,
-        });
-      })
-      .catch((err: any) => {
-        console.log(err);
-      });
-  });
+    if (!updatedUser) {
+      res.status(404).json({ message: "User not found or token expired." });
+      const error = new CustomError("User", "User not found or token expired.", 404);
+      throw error;
+    }
+
+    res.status(200).json({
+      message: "Update password successfully!",
+      user: updatedUser,
+    });
+  } catch (error) {
+    if (error instanceof CustomError) {
+      return next(error);
+    } else {
+      const customError = new CustomErrorMessage("Internal Server Error", 500);
+      return next(customError);
+    }
+  }
 };
-
-// exports.getUserStatus = async (req, res, next) => {};
-
-// exports.postResetPassword = async (req, res, next) => {};
 
 export const updateLastLogin = async (req: Request, res: Response, next: NextFunction) => {
   const { userId } = req.params;
@@ -434,10 +358,11 @@ export const updateLastLogin = async (req: Request, res: Response, next: NextFun
       },
     });
   } catch (error) {
-    if (!error) {
-      const error = new CustomErrorMessage("Failed to update last login for user", 422);
-      return error;
+    if (error instanceof CustomError) {
+      return next(error);
+    } else {
+      const customError = new CustomErrorMessage("Failed to update last login for user", 422);
+      return next(customError);
     }
-    next(error);
   }
 };
