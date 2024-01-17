@@ -10,7 +10,7 @@ export interface ICourse extends IBaseSchema {
   finalPrice: number;
   description: string;
   level: string;
-  slug: string;
+  courseSlug: string;
   userId: Schema.Types.ObjectId;
   categoryId: Schema.Types.ObjectId;
   requirements?: string[];
@@ -57,7 +57,7 @@ const courseSchema = new Schema<ICourse>(
       type: String,
       required: true,
     },
-    slug: {
+    courseSlug: {
       type: String,
       required: true,
     },

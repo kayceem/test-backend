@@ -2,7 +2,7 @@ import { Schema, model } from "mongoose";
 import baseSchema, { IBaseSchema } from "./BaseSchema";
 
 export interface ICertificate extends IBaseSchema {
-  name: string;
+  certificateName: string;
   userId: Schema.Types.ObjectId;
   courseId: Schema.Types.ObjectId;
   dateValid: Date;
@@ -10,7 +10,7 @@ export interface ICertificate extends IBaseSchema {
 
 const certificateSchema = new Schema<ICertificate>(
   {
-    name: { type: String, required: true },
+    certificateName: { type: String, required: true },
     userId: {
       type: Schema.Types.ObjectId,
       ref: "User",

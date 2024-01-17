@@ -3,10 +3,10 @@ import baseSchema, { IBaseSchema } from "./BaseSchema";
 
 export interface ICategory extends IBaseSchema {
   name: string;
-  image: string;
+  cateImage: string;
   description: string;
-  slug: string;
-  parent: string;
+  cateSlug: string;
+  cateParent: string;
 }
 
 const categorySchema = new Schema<ICategory>(
@@ -16,7 +16,7 @@ const categorySchema = new Schema<ICategory>(
       required: true,
       index: true,
     },
-    image: {
+    cateImage: {
       type: String,
       required: true,
     },
@@ -24,11 +24,11 @@ const categorySchema = new Schema<ICategory>(
       type: String,
       required: true,
     },
-    slug: {
+    cateSlug: {
       type: String,
       required: true,
     },
-    parent: {
+    cateParent: {
       type: String,
     },
   },
