@@ -1,15 +1,14 @@
-import { Schema, model, Document } from 'mongoose';
+import { Schema, model } from "mongoose";
+import baseSchema, { IBaseSchema } from "./BaseSchema";
+export interface IIsLessonDone extends IBaseSchema {
+  lessonId: Schema.Types.ObjectId;
+  isDone: boolean;
+}
 
-// Declare the Schema of the Mongo model
-const isLessonDoneSchema = new Schema(
+const isLessonDoneSchema = new Schema<IIsLessonDone>(
   {
-    userId: {
-      type: Schema.Types.ObjectId,
-      required: true,
-      ref: "User",
-    },
     lessonId: {
-      type: String,
+      type: Schema.Types.ObjectId,
       required: true,
       ref: "Lesson",
     },
@@ -21,6 +20,8 @@ const isLessonDoneSchema = new Schema(
   { timestamps: true }
 );
 
-//Export the model
-// module.exports = mongoose.model("IsLessonDone", isLessonDoneSchema);
-export default model<Document>('IsLessonDone', isLessonDoneSchema);
+isLessonDoneSchema.add(baseSchema);
+
+const IsLessonDone = model<IIsLessonDone>("IsLessonDone", isLessonDoneSchema);
+
+export default IsLessonDone;

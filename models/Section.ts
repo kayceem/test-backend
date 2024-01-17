@@ -1,22 +1,12 @@
-import { Schema, model, Document } from "mongoose";
-import { ObjectId } from "mongodb";
-
-interface ISection extends Document {
-  courseId: ObjectId;
+import { Schema, model } from "mongoose";
+import baseSchema, { IBaseSchema } from "./BaseSchema";
+export interface ISection extends IBaseSchema {
+  courseId: Schema.Types.ObjectId;
   name: string;
   access: string;
-  description: string;
-  oldPrice: number;
-  discount: number;
-  images: string;
-  thumbnail: string;
-  shortDesc: string;
-  fullDesc: string;
-  stockQty: number;
-  categoryId: ObjectId;
+  description?: string;
 }
 
-// Declare the Schema of the Mongo model
 const sectionSchema = new Schema<ISection>(
   {
     courseId: {
@@ -39,6 +29,8 @@ const sectionSchema = new Schema<ISection>(
   },
   { timestamps: true }
 );
+
+sectionSchema.add(baseSchema);
 
 const Section = model<ISection>("Section", sectionSchema);
 

@@ -1,8 +1,23 @@
-import { Schema, model, Document } from 'mongoose';
+import { Schema, model } from "mongoose";
+import baseSchema, { IBaseSchema } from "./BaseSchema";
+export interface IDiscuss extends IBaseSchema {
+  lessonId: Schema.Types.ObjectId;
+  authorId: Schema.Types.ObjectId;
+  content: string;
+  replies: {
+    userId: Schema.Types.ObjectId;
+    contentReply: string;
+    createdAt: Date;
+    updatedAt?: Date;
+  }[];
+  emotions: {
+    userId: Schema.Types.ObjectId;
+    createdAt: Date;
+    updatedAt?: Date;
+  }[];
+}
 
-// Declare the Schema of the Mongo model
-
-const discussSchema = new Schema(
+const discussSchema = new Schema<IDiscuss>(
   {
     lessonId: {
       type: Schema.Types.ObjectId,
@@ -57,6 +72,8 @@ const discussSchema = new Schema(
   { timestamps: true }
 );
 
-//Export the model
-// module.exports = mongoose.model("Discuss", discussSchema);
-export default model<Document>('Discuss', discussSchema);
+discussSchema.add(baseSchema);
+
+const Discuss = model<IDiscuss>("Discuss", discussSchema);
+
+export default Discuss;

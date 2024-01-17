@@ -1,6 +1,6 @@
-import { Schema, model, Document } from "mongoose";
-
-interface ICourse extends Document {
+import { Schema, model } from "mongoose";
+import baseSchema, { IBaseSchema } from "./BaseSchema";
+export interface ICourse extends IBaseSchema {
   name: string;
   subTitle?: string;
   thumbnail: string;
@@ -10,15 +10,13 @@ interface ICourse extends Document {
   finalPrice: number;
   description: string;
   level: string;
-  courseSlug: string;
-  userId: Schema.Types.ObjectId;
+  slug: string;
   categoryId: Schema.Types.ObjectId;
-  requirements: string[];
-  willLearns: string[];
-  tags: string[];
+  requirements?: string[];
+  willLearns?: string[];
+  tags?: string[];
 }
 
-// Declare the Schema of the Mongo model
 const courseSchema = new Schema<ICourse>(
   {
     name: {
@@ -58,18 +56,14 @@ const courseSchema = new Schema<ICourse>(
       type: String,
       required: true,
     },
-    courseSlug: {
+    slug: {
       type: String,
-      required: true,
-    },
-    userId: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
       required: true,
     },
     categoryId: {
       type: Schema.Types.ObjectId,
       ref: "Category",
+      required: true,
     },
     requirements: [
       {
@@ -89,6 +83,8 @@ const courseSchema = new Schema<ICourse>(
   },
   { timestamps: true }
 );
+
+courseSchema.add(baseSchema);
 
 courseSchema.index({ name: "text", description: "text" });
 

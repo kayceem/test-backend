@@ -1,28 +1,27 @@
-import { Schema, model, Document } from 'mongoose';
+import { Schema, model } from "mongoose";
+import baseSchema, { IBaseSchema } from "./BaseSchema";
 
-// Declare the Schema of the Mongo model
+export interface ICertificate extends IBaseSchema {
+  name: string;
+  courseId: Schema.Types.ObjectId;
+  dateValid: Date;
+}
 
-const certificateSchema = new Schema(
+const certificateSchema = new Schema<ICertificate>(
   {
-    certificateName: { type: String, required: true },
-    user: {
-      _id: {
-        type: Schema.Types.ObjectId,
-        ref: "User",
-        required: true,
-      },
+    name: { type: String, required: true },
+    courseId: {
+      type: Schema.Types.ObjectId,
+      ref: "Course",
+      required: true,
     },
-    course: {
-      _id: {
-        type: Schema.Types.ObjectId,
-        ref: "Course",
-        required: true,
-      },
-    },
+    dateValid: { type: Date, required: true },
   },
   { timestamps: true }
 );
 
-//Export the model
-// module.exports = mongoose.model("Certificate", certificateSchema);
-export default model<Document>('Certificate', certificateSchema);
+certificateSchema.add(baseSchema);
+
+const Certificate = model<ICertificate>("Certificate", certificateSchema);
+
+export default Certificate;

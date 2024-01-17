@@ -1,15 +1,14 @@
-// const mongoose = require("mongoose"); // Erase if already required
-import { Schema, model, Document } from 'mongoose';
-// const Schema = mongoose.Schema;
-export interface ICategory {
+import { Schema, model } from "mongoose";
+import baseSchema, { IBaseSchema } from "./BaseSchema";
+
+export interface ICategory extends IBaseSchema {
   name: string;
+  image: string;
   description: string;
-  cateImage: string;
-  cateParent?: string;
-  cateSlug?: string;
-  // Add other properties as needed
+  slug: string;
+  parent: string;
 }
-// Declare the Schema of the Mongo model
+
 const categorySchema = new Schema<ICategory>(
   {
     name: {
@@ -17,7 +16,7 @@ const categorySchema = new Schema<ICategory>(
       required: true,
       index: true,
     },
-    cateImage: {
+    image: {
       type: String,
       required: true,
     },
@@ -25,16 +24,21 @@ const categorySchema = new Schema<ICategory>(
       type: String,
       required: true,
     },
-    cateParent: {
+    slug: {
+      type: String,
+      required: true,
+    },
+    parent: {
       type: String,
     },
   },
   { timestamps: true }
 );
 
-//  Define the text index on 'name' and 'description' fields
+categorySchema.add(baseSchema);
+
 categorySchema.index({ name: "text", description: "text" });
 
-//Export the model
-// module.exports = mongoose.model("Category", categorySchema);
-export default model<ICategory & Document>('Category', categorySchema);
+const Category = model<ICategory>("Category", categorySchema);
+
+export default Category;

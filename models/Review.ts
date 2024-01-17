@@ -1,14 +1,15 @@
-import { Schema, model, Document } from 'mongoose';
+import { Schema, model } from "mongoose";
+import baseSchema, { IBaseSchema } from "./BaseSchema";
+export interface IReview extends IBaseSchema {
+  courseId: Schema.Types.ObjectId;
+  title: string;
+  content: string;
+  ratingStar: number;
+  orderId: Schema.Types.ObjectId;
+}
 
-// Declare the Schema of the Mongo model
-
-const reviewSchema = new Schema(
+const reviewSchema = new Schema<IReview>(
   {
-    userId: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
     courseId: {
       type: Schema.Types.ObjectId,
       ref: "Course",
@@ -35,6 +36,8 @@ const reviewSchema = new Schema(
   { timestamps: true }
 );
 
-//Export the model
-// module.exports = mongoose.model("Review", reviewSchema);
-export default model<Document>('Review', reviewSchema);
+reviewSchema.add(baseSchema);
+
+const Review = model<IReview>("Review", reviewSchema);
+
+export default Review;
