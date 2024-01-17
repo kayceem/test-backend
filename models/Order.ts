@@ -1,37 +1,30 @@
-import { Schema, model, Document } from "mongoose";
-
-interface IUser {
-  _id: Schema.Types.ObjectId;
-  email: string;
-  name: string;
-  phone?: string;
-}
-
-interface IItem {
-  _id: Schema.Types.ObjectId;
-  finalPrice: number;
-  name: string;
-  thumbnail: string;
-  reviewed: boolean;
-}
-
-interface IOrder extends Document {
+import { Schema, model } from "mongoose";
+import baseSchema, { IBaseSchema } from "./BaseSchema";
+export interface IOrder extends IBaseSchema {
   vatFee?: number;
   transaction: {
     method: string;
   };
   note?: string;
   totalPrice?: number;
-  user: IUser;
-  items: IItem[];
+  user: {
+    _id: Schema.Types.ObjectId;
+    email: string;
+    name: string;
+    phone?: string;
+  };
+  items: {
+    _id: Schema.Types.ObjectId;
+    finalPrice: number;
+    name: string;
+    thumbnail: string;
+    reviewed?: boolean;
+  }[];
   status: string;
-  createdAt: Date;
-  updatedAt: Date;
 }
 
 const orderSchema = new Schema<IOrder>(
   {
-    // Id: auto genrate!!!
     vatFee: {
       type: Number,
     },
@@ -71,7 +64,6 @@ const orderSchema = new Schema<IOrder>(
         _id: {
           type: Schema.Types.ObjectId,
           ref: "Course",
-          // required: true,
         },
         finalPrice: {
           type: Number,
@@ -99,6 +91,8 @@ const orderSchema = new Schema<IOrder>(
   { timestamps: true }
 );
 
+orderSchema.add(baseSchema);
+
 orderSchema.index(
   {
     "user.name": "text",
@@ -109,6 +103,7 @@ orderSchema.index(
     name: "order_text_index",
   }
 );
-//Export the model
-// module.exports = mongoose.model("Order", orderSchema);
-export default model<IOrder>("Order", orderSchema);
+
+const Order = model<IOrder>("Order", orderSchema);
+
+export default Order;

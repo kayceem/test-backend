@@ -1,7 +1,8 @@
-// models/RevokedToken.js
-
-import { Schema, model, Document } from 'mongoose';
-
+import { Schema, model } from "mongoose";
+import baseSchema, { IBaseSchema } from "./BaseSchema";
+export interface IRevokedToken extends IBaseSchema {
+  token: string;
+}
 
 const revokedTokenSchema = new Schema({
   token: {
@@ -12,10 +13,12 @@ const revokedTokenSchema = new Schema({
   createdAt: {
     type: Date,
     default: Date.now,
-    // expires: 60 * 60,
     expires: 60 * 60 * 24 * 7, // The token will be automatically removed from the collection after 7 days
   },
 });
 
-// module.exports = mongoose.model("RevokedToken", revokedTokenSchema);
-export default model<Document>('RevokedToken', revokedTokenSchema);
+revokedTokenSchema.add(baseSchema);
+
+const RevokedToken = model<IRevokedToken>("RevokedToken", revokedTokenSchema);
+
+export default RevokedToken;
