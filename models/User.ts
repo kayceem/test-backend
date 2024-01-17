@@ -1,46 +1,41 @@
-import { Schema, model, Document } from "mongoose";
-export interface IUser extends Document {
-  providerId?: string;
+import { Schema, model } from "mongoose";
+import baseSchema, { IBaseSchema } from "./BaseSchema";
+export interface IUser extends IBaseSchema {
+  provider: string;
   name: string;
   avatar: string;
-  email: string;
-  phone: string;
-  address: string;
-  password: string;
-  role: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  password?: string;
+  role?: string;
   payment: string;
   lastLogin?: Date;
-  headline: string;
-  biography: string;
+  headline?: string;
+  biography?: string;
   website?: string;
-  facebook?: string;
   twitter?: string;
+  facebook?: string;
   linkedin?: string;
   youtube?: string;
-  language?: string;
-  showProfile?: boolean;
-  showCourses?: boolean;
-  courses?: string;
-  certificates?: string;
-  createdAt?: Date;
-  updatedAt?: Date;
+  language: string;
+  showProfile: boolean;
+  showCourses: boolean;
   resetToken?: string;
   resetTokenExpiration?: Date;
-  loginToken: string;
-  loginTokenExpiration: Date;
+  loginToken?: string;
+  loginTokenExpiration?: Date;
 }
 
-// Declare the Schema of the Mongo model
-const userSchema = new Schema<any>(
+const userSchema = new Schema<IUser>(
   {
-    providerId: {
+    provider: {
       type: "string",
       default: "local",
     },
     name: {
       type: String,
       required: true,
-      // index: true,
     },
     avatar: {
       type: String,
@@ -49,7 +44,6 @@ const userSchema = new Schema<any>(
     },
     email: {
       type: String,
-      // required: true,
     },
     phone: {
       type: String,
@@ -107,16 +101,14 @@ const userSchema = new Schema<any>(
     resetTokenExpiration: Date,
     loginToken: String,
     loginTokenExpiration: Date,
-    // fbUserId: {
-    //   type: String,
-    //   default: "",
-    // },
   },
   { timestamps: true }
 );
 
+userSchema.add(baseSchema);
+
 userSchema.index({ name: "text", email: "text" });
 
-//Export the model
-// module.exports = mongoose.model("User", userSchema);
-export default model<any & Document>("User", userSchema);
+const User = model<IUser>("User", userSchema);
+
+export default User;

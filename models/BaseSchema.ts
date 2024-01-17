@@ -1,27 +1,39 @@
-const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
+import { Schema, Document } from "mongoose";
 
-const baseSchema = new Schema({
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-  createdBy: {
-    type: String,
-    required: true,
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now,
-  },
-  updatedBy: {
-    type: String,
-    required: false,
-  },
-  isDeleted: {
-    type: Boolean,
-    default: false,
-  }
-}, { discriminatorKey: 'kind' });
+export interface IBaseSchema extends Document {
+  createdAt: Date;
+  createdBy: Schema.Types.ObjectId;
+  updatedAt: Date;
+  updatedBy: Schema.Types.ObjectId;
+  isDeleted: boolean;
+}
 
-module.exports = baseSchema;
+const baseSchema: Schema<IBaseSchema> = new Schema<IBaseSchema>(
+  {
+    createdAt: {
+      type: Date,
+      default: Date.now,
+    },
+    createdBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    updatedAt: {
+      type: Date,
+      default: Date.now,
+    },
+    updatedBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  { discriminatorKey: "kind" }
+);
+
+export default baseSchema;

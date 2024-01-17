@@ -1,27 +1,17 @@
-import { Schema, model, Document } from "mongoose";
-import { ObjectId } from "mongodb";
-
-interface ILesson extends Document {
-  sectionId: ObjectId;
+import { Schema, model } from "mongoose";
+import baseSchema, { IBaseSchema } from "./BaseSchema";
+export interface ILesson extends IBaseSchema {
+  sectionId: Schema.Types.ObjectId;
   name: string;
-  icon: string;
+  icon?: string;
   description: string;
   content: string;
-  videoLength: number;
+  videoLength?: number;
   access: string;
   type: string;
-  password: string;
-  oldPrice: number;
-  discount: number;
-  images: string;
-  thumbnail: string;
-  shortDesc: string;
-  fullDesc: string;
-  stockQty: number;
-  categoryId: string;
+  password?: string;
 }
 
-// Declare the Schema of the Mongo model
 const lessonSchema = new Schema<ILesson>(
   {
     sectionId: {
@@ -63,8 +53,8 @@ const lessonSchema = new Schema<ILesson>(
   { timestamps: true }
 );
 
-//Export the model
-// module.exports = mongoose.model("Lesson", lessonSchema);
+lessonSchema.add(baseSchema);
+
 const Lesson = model<ILesson>("Lesson", lessonSchema);
 
 export default Lesson;
