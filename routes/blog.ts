@@ -18,4 +18,4 @@ router.put("/create-blog/:id", blogController.updateBlog);
 // DELETE a blog by id
 router.delete("/:id", blogController.deleteBlogById);
 
-module.exports = router;
+export default router;

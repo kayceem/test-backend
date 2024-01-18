@@ -7,7 +7,7 @@ const IsLessonDone = require("../models/IsLessonDone");
 import CustomErrorMessage from "../utils/errorMessage";
 import { Request, Response, NextFunction } from "express";
 
-export const getLessons = async (req: Request, res: Response, next: NextFunction) => {
+export const getAllLessons = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const lessons = await Lesson.find();
     res.status(200).json({
@@ -43,7 +43,7 @@ export const getLessonsBySectionId = async (req: Request, res: Response, next: N
   }
 };
 
-export const getLesson = async (req: Request, res: Response, next: NextFunction) => {
+export const getSingleLesson = async (req: Request, res: Response, next: NextFunction) => {
   const { lessonId } = req.params;
 
   try {
@@ -61,7 +61,7 @@ export const getLesson = async (req: Request, res: Response, next: NextFunction)
   }
 };
 
-export const postLesson = async (req: Request, res: Response, next: NextFunction) => {
+export const createLesson = async (req: Request, res: Response, next: NextFunction) => {
   const { sectionId, name, icon, description, type, content, access, password, videoLength } =
     req.body;
 

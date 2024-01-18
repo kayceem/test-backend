@@ -1,12 +1,20 @@
-const express = require("express");
-const adminLessonController = require("../controllers/adminLessons");
-const uploadMiddleware = require("../middleware/upload");
-const isAuth = require("../middleware/is-auth");
+import express from "express";
+import {
+  createLesson,
+  deleteLesson,
+  getAllLessons,
+  getLessonsBySectionId,
+  getSingleLesson,
+  updateLesson,
+} from "../controllers/adminLessons";
+
+// const uploadMiddleware = require("../middleware/upload");
+// const isAuth = require("../middleware/is-auth");
+// const { check, body } = require("express-validator");
 const router = express.Router();
-const { check, body } = require("express-validator");
 
 // GET Lessons
-router.get("/lessons", adminLessonController.getLessons);
+router.get("/lessons", getAllLessons);
 
 // GET BY RANGES [MIN, MAX];
 
@@ -15,26 +23,26 @@ router.get("/lessons", adminLessonController.getLessons);
 
 // GET Lesson
 
-router.get("/lessons/:lessonId", adminLessonController.getLesson);
+router.get("/lessons/:lessonId", getSingleLesson);
 
 // GET LESSON BY SECTION ID
-router.get("/lessons/:sectionId/section", adminLessonController.getLessonsBySectionId);
+router.get("/lessons/:sectionId/section", getLessonsBySectionId);
 
 // POST Lesson
 router.post(
   "/lesson",
   // uploadMiddleware.array("images[]"),
-  adminLessonController.postLesson
+  createLesson
 );
 
 // PUT Lesson
 router.put(
   "/lesson/:lessonId",
   // uploadMiddleware.array("images[]"),
-  adminLessonController.updateLesson
+  updateLesson
 );
 
 // DELETE Lesson
-router.delete("/lessons/:lessonId", adminLessonController.deleteLesson);
+router.delete("/lessons/:lessonId", deleteLesson);
 
-module.exports = router;
+export default router;
