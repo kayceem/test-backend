@@ -10,6 +10,17 @@ export interface ILesson extends IBaseSchema {
   access: string;
   type: string;
   password?: string;
+  oldPrice: number;
+  newPrice: number;
+  discount: number;
+  thumbnail: string;
+  shortDesc: string;
+  fullDesc: string;
+  stockQty: number;
+  categoryId: string;
+  images: string;
+  oldImages: string;
+  thumb: string;
 }
 
 const lessonSchema = new Schema<ILesson>(
