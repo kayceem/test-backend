@@ -10,16 +10,17 @@ import authRouter from "./routes/auth";
 // const adminCategoryRouter = require("./routes/adminCategory");
 // const adminCourseRouter = require("./routes/adminCourse");
 // const adminSectionRouter = require("./routes/adminSection");
-// const adminLessonRouter = require("./routes/adminLesson");
+import adminLessonRouter from "./routes/adminLesson";
 // const adminUserRouter = require("./routes/adminUser");
 // const adminOrderRouter = require("./routes/adminOrder");
 // const clientRouter = require("./routes/client");
 // const reportRouter = require("./routes/report");
-// const blogRouter = require("./routes/blog");
+import blogRouter from "./routes/blog";
 // const paymentRouter = require("./routes/payment");
-// import commentsRouter from './routes/comments'
+import commentsRouter from "./routes/comments";
+import noteRouter from "./routes/note";
 
-// import userCourseRouter from "./routes/userCourse";
+import userCourseRouter from "./routes/userCourse";
 
 const app = express();
 
@@ -49,15 +50,15 @@ app.use("/auth", authRouter);
 // app.use("/admin", adminCategoryRouter);
 // app.use("/admin", adminCourseRouter);
 // app.use("/admin", adminSectionRouter);
-// app.use("/admin", adminLessonRouter);
+app.use("/admin", adminLessonRouter);
 // app.use("/admin", adminUserRouter);
 // app.use("/admin", adminOrderRouter);
 // app.use("/admin", reportRouter);
 
-// app.use("/userCourse", userCourseRouter);
-
-// app.use("/blog", blogRouter);
-// app.use('/comments',commentsRouter );
+app.use("/userCourse", userCourseRouter);
+app.use("/blog", blogRouter);
+app.use("/comments", commentsRouter);
+app.use("/note", noteRouter);
 
 // app.use("/payments", paymentRouter);
 
