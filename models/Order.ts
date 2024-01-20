@@ -1,4 +1,6 @@
 import { Schema, model } from "mongoose";
+import { ICourse } from "./Course";
+import { IUser } from "./User";
 import baseSchema, { IBaseSchema } from "./BaseSchema";
 export interface IOrder extends IBaseSchema {
   vatFee?: number;
@@ -7,20 +9,17 @@ export interface IOrder extends IBaseSchema {
   };
   note?: string;
   totalPrice?: number;
-  user: {
-    _id: Schema.Types.ObjectId;
-    email: string;
-    name: string;
-    phone?: string;
-  };
-  items: {
-    _id: Schema.Types.ObjectId;
-    finalPrice: number;
-    name: string;
-    thumbnail: string;
-    reviewed?: boolean;
-  }[];
+  user: IUser;
+  items: ICourse[];
   status: string;
+}
+
+export interface IOrderItem {
+  courseId: string;
+  name?: string;
+  finalPrice?: number;
+  thumbnail?: string;
+  reviewed?: boolean;
 }
 
 const orderSchema = new Schema<IOrder>(

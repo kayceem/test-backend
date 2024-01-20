@@ -1,16 +1,17 @@
-const multer = require("multer");
-const { v4: uuidv4 } = require("uuid");
-import { Request } from 'express';
+import multer from "multer";
+import { v4 as uuidv4 } from "uuid";
+import { Request } from "express";
+
 const fileStorage = multer.diskStorage({
-  destination: (req: Request, file: File, cb: Function) => {
+  destination: (req: Request, file: Express.Multer.File, cb) => {
     cb(null, "images");
   },
-  filename: (req: Request, file: Express.Multer.File, cb: Function) => {
+  filename: (req: Request, file: Express.Multer.File, cb) => {
     cb(null, uuidv4().substring(0, 8) + "-" + file.originalname);
   },
 });
 
-const fileFilter = (req: Request, file: Express.Multer.File, cb: Function) => {
+const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
   if (
     file.mimetype === "image/png" ||
     file.mimetype === "image/jpg" ||
@@ -22,14 +23,9 @@ const fileFilter = (req: Request, file: Express.Multer.File, cb: Function) => {
   }
 };
 
-// module.exports = multer({
-//   storage: fileStorage,
-//   filter: fileFilter,
-// });
-
-const uploadMiddleware = multer({
+const upload = multer({
   storage: fileStorage,
   fileFilter: fileFilter,
 });
 
-export default uploadMiddleware;
+export default upload;

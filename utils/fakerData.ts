@@ -1,5 +1,5 @@
 // Sample course names and descriptions
-export const courseNames = [
+export const courseNames: string[] = [
   "JavaScript Advanced: Mastering ES6+",
   "React - The Complete Guide (with Redux)",
   "Node.js: From Beginner to Advanced",
@@ -10,16 +10,14 @@ export const courseNames = [
   "Machine Learning A-Z™: Hands-On Python & R In Data Science",
   "Frontend Web Development Bootcamp: HTML, CSS, JavaScript, and More",
   "Complete Ethical Hacking Course: Beginner to Advanced",
-  // 30 more course names can be added here
-  // ...
-  //   Genereate 10 course title related to blockchain fields
-  //   Genereate 10 course title related to backend fields
-  //   Genereate 10 course title related to frontend fields
-  //   Genereate 10 course title related to ai fields
-  //   Genereate 10 course title related to IOT fields
+  // Add 10 course titles related to blockchain fields
+  // Add 10 course titles related to backend fields
+  // Add 10 course titles related to frontend fields
+  // Add 10 course titles related to AI fields
+  // Add 10 course titles related to IoT fields
 ];
 
-export const backendCourses = [
+export const backendCourses: string[] = [
   "Advanced Backend Development Techniques",
   "Deep Dive into Backend Architecture",
   "Backend Database Management",
@@ -32,16 +30,20 @@ export const backendCourses = [
   "Cloud Computing for Backend Development",
 ];
 
-export const devopsCourses = [
+export const devopsCourses: string[] = [
   "Introduction to DevOps Practices",
   "Continuous Integration and Deployment",
   "Configuration Management and Infrastructure as Code",
   "Containerization and Orchestration in DevOps",
   "Monitoring and Logging in DevOps",
   "DevOps Tools and Automation",
+  "Security in DevOps",
+  "DevOps in Cloud Environments",
+  "Scaling and Performance Optimization in DevOps",
+  "DevOps Culture and Collaboration",
 ];
 
-export const aiCourses = [
+export const aiCourses: string[] = [
   "Introduction to Artificial Intelligence",
   "Machine Learning Fundamentals",
   "Deep Learning and Neural Networks",
@@ -54,7 +56,7 @@ export const aiCourses = [
   "AI in Business and Industry",
 ];
 
-export const blockchainCourses = [
+export const blockchainCourses: string[] = [
   "Introduction to Blockchain Technology",
   "Smart Contracts and Solidity Programming",
   "Decentralized Application Development",
@@ -67,7 +69,7 @@ export const blockchainCourses = [
   "Legal and Regulatory Considerations in Blockchain",
 ];
 
-export const mobileCourses = [
+export const mobileCourses: string[] = [
   "Introduction to Mobile App Development",
   "iOS App Development with Swift",
   "Android App Development with Java/Kotlin",
@@ -80,7 +82,7 @@ export const mobileCourses = [
   "Emerging Trends in Mobile Development",
 ];
 
-export const gameCourses = [
+export const gameCourses: string[] = [
   "Introduction to Game Development",
   "Game Design Fundamentals",
   "2D Game Development with Unity",
@@ -93,7 +95,7 @@ export const gameCourses = [
   "Game Publishing and Marketing",
 ];
 
-export const courseDescriptions = [
+export const courseDescriptions: string[] = [
   "Take your JavaScript skills to the next level and learn the latest features of ECMAScript 6 and beyond.",
   "Build powerful and interactive user interfaces with React and manage your app state with Redux.",
   "Master Node.js and create scalable, high-performance applications for web development.",
@@ -104,6 +106,7 @@ export const courseDescriptions = [
   "Dive into the world of data science and machine learning with Python and R.",
   "Get started with web development and learn HTML, CSS, JavaScript, and other essential technologies.",
   "Become an ethical hacker and learn how to secure systems and networks from cyber threats.",
-  // 30 more course descriptions can be added here
-  // ...
+  // Add 30 more course descriptions here
 ];
+
+// Add types and interfaces as needed for your code
