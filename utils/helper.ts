@@ -1,79 +1,191 @@
+import { Request, Response, NextFunction } from "express";
 import CustomErrorMessage from "./errorMessage";
-
-const Course = require("../models/Course");
-const IsLessonDone = require("../models/IsLessonDone");
-const Lesson = require("../models/Lesson");
-const Order = require("../models/Order");
-const Section = require("../models/Section");
-const { Configuration, OpenAIApi } = require("openai");
-const mongoose = require("mongoose");
-const { courseNames, devopsCourses, blockchainCourses } = require("./fakerData");
-const slugify = require("slugify");
-const { faker } = require("@faker-js/faker");
-// const myApiKey = "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";
-const fs = require("fs");
-const path = require("path");
-const axios = require("axios");
-const { UNSPLASH_API_KEY, OPEN_AI_KEY } = require("../config/constant");
-const { BACKEND_URL } = require("../config/backend-domain");
-const Review = require("../models/Review");
+import CustomError from "./error";
+import Order, { IOrder } from "../models/Order";
+import Course, { ICourse, ICourseDetail } from "../models/Course";
+import Review from "../models/Review";
+import Section, { ISection } from "../models/Section";
+import Lesson, { ILesson } from "../models/Lesson";
+import IsLessonDone, { IIsLessonDone } from "../models/IsLessonDone";
+import { Configuration, OpenAIApi } from "openai";
+import mongoose from "mongoose";
+import { courseNames, devopsCourses, blockchainCourses } from "./fakerData";
+import slugify from "slugify";
+import { faker } from "@faker-js/faker";
+import fs from "fs";
+import path from "path";
+import axios from "axios";
+import { UNSPLASH_API_KEY, OPEN_AI_KEY } from "../config/constant";
+import { BACKEND_URL } from "../config/backend-domain";
 const configuration = new Configuration({
   apiKey: OPEN_AI_KEY,
 });
-const openai = new OpenAIApi(configuration);
-exports.openai = openai;
-// const chatCompletion = await openai.createChatCompletion({
-//   model: "gpt-3.5-turbo",
-//   messages: [{ role: "user", content: "Hello world" }],
-// });
-// console.log(chatCompletion.data.choices[0].message);
+export const openai = new OpenAIApi(configuration);
 
-export const updateStockQty = (courseList: any) => {
-  courseList.forEach(async (course: any) => {
-    const { prodId, qty } = course;
-    console.log("update stock qty at database!!!");
-    const courseItem = await course.findById(prodId);
-    courseItem.stockQty = courseItem.stockQty - qty;
-    courseItem.save();
-  });
+type AccentMap = Record<string, string>;
+
+const accentsMap: AccentMap = {
+  á: "a",
+  à: "a",
+  ả: "a",
+  ã: "a",
+  ạ: "a",
+  ă: "a",
+  ắ: "a",
+  ằ: "a",
+  ẳ: "a",
+  ẵ: "a",
+  ặ: "a",
+  â: "a",
+  ấ: "a",
+  ầ: "a",
+  ẩ: "a",
+  ẫ: "a",
+  ậ: "a",
+  đ: "d",
+  é: "e",
+  è: "e",
+  ẻ: "e",
+  ẽ: "e",
+  ẹ: "e",
+  ê: "e",
+  ế: "e",
+  ề: "e",
+  ể: "e",
+  ễ: "e",
+  ệ: "e",
+  í: "i",
+  ì: "i",
+  ỉ: "i",
+  ĩ: "i",
+  ị: "i",
+  ó: "o",
+  ò: "o",
+  ỏ: "o",
+  õ: "o",
+  ọ: "o",
+  ô: "o",
+  ố: "o",
+  ồ: "o",
+  ổ: "o",
+  ỗ: "o",
+  ộ: "o",
+  ơ: "o",
+  ớ: "o",
+  ờ: "o",
+  ở: "o",
+  ỡ: "o",
+  ợ: "o",
+  ú: "u",
+  ù: "u",
+  ủ: "u",
+  ũ: "u",
+  ụ: "u",
+  ư: "u",
+  ứ: "u",
+  ừ: "u",
+  ử: "u",
+  ữ: "u",
+  ự: "u",
+  ý: "y",
+  ỳ: "y",
+  ỷ: "y",
+  ỹ: "y",
+  ỵ: "y",
+  Á: "A",
+  À: "A",
+  Ả: "A",
+  Ã: "A",
+  Ạ: "A",
+  Ă: "A",
+  Ắ: "A",
+  Ằ: "A",
+  Ẳ: "A",
+  Ẵ: "A",
+  Ặ: "A",
+  Â: "A",
+  Ấ: "A",
+  Ầ: "A",
+  Ẩ: "A",
+  Ẫ: "A",
+  Ậ: "A",
+  Đ: "D",
+  É: "E",
+  È: "E",
+  Ẻ: "E",
+  Ẽ: "E",
+  Ẹ: "E",
+  Ê: "E",
+  Ế: "E",
+  Ề: "E",
+  Ể: "E",
+  Ễ: "E",
+  Ệ: "E",
+  Í: "I",
+  Ì: "I",
+  Ỉ: "I",
+  Ĩ: "I",
+  Ị: "I",
+  Ó: "O",
+  Ò: "O",
+  Ỏ: "O",
+  Õ: "O",
+  Ọ: "O",
+  Ô: "O",
+  Ố: "O",
+  Ồ: "O",
+  Ổ: "O",
+  Ỗ: "O",
+  Ộ: "O",
+  Ơ: "O",
+  Ớ: "O",
+  Ờ: "O",
+  Ở: "O",
+  Ỡ: "O",
+  Ợ: "O",
+  Ú: "U",
+  Ù: "U",
+  Ủ: "U",
+  Ũ: "U",
+  Ụ: "U",
+  Ư: "U",
+  Ứ: "U",
+  Ừ: "U",
+  Ử: "U",
+  Ữ: "U",
+  Ự: "U",
+  Ý: "Y",
+  Ỳ: "Y",
+  Ỷ: "Y",
+  Ỹ: "Y",
+  Ỵ: "Y",
 };
 
-export const getCoursesOrderByUserId = async (userId: string) => {
-  const courses = await Order.find({
-    "user._id": userId,
-  })
-    .select("items")
-    .populate("items._id");
-
-  const results = courses
-    .map((courseItem: any) => {
-      return courseItem.items;
-    })
-    .flat()
-    .map((item: any) => item._id);
-
-  return results;
+export const removeVietnameseAccents = (str: string): string => {
+  return str
+    .split("")
+    .map((char) => accentsMap[char] || char)
+    .join("");
 };
 
 export const getProgressOfCourse = async (courseId: string, userId: string) => {
-  const sectionsOfCourse = await Section.find({
+  const sectionsOfCourse: ISection[] = await Section.find({
     courseId,
   });
-  let numOfLessonDone = 0;
-  let totalVideosLengthDone = 0;
-  let lessonsOfCourse = [];
+
+  let numOfLessonDone: number = 0;
+  let totalVideosLengthDone: number = 0;
+  let lessonsOfCourse: ILesson[] = [];
 
   for (const section of sectionsOfCourse) {
-    const lessons = await Lesson.find({
+    const lessons: ILesson[] = await Lesson.find({
       sectionId: section._id,
     });
-    lessonsOfCourse.push(lessons);
+    lessonsOfCourse.push(...lessons);
   }
 
-  lessonsOfCourse = lessonsOfCourse.flat();
-
   for (const lesson of lessonsOfCourse) {
-    const isDone = await IsLessonDone.findOne({
+    const isDone: IIsLessonDone | null = await IsLessonDone.findOne({
       userId,
       lessonId: lesson._id,
     });
@@ -84,15 +196,9 @@ export const getProgressOfCourse = async (courseId: string, userId: string) => {
     }
   }
 
-  const numOfLessons = lessonsOfCourse.length;
+  const numOfLessons: number = lessonsOfCourse.length;
 
-  let progress = 0;
-
-  if (numOfLessons === 0) {
-    progress = 0;
-  } else {
-    progress = numOfLessonDone / numOfLessons;
-  }
+  let progress: number = numOfLessons === 0 ? 0 : numOfLessonDone / numOfLessons;
 
   return {
     progress,
@@ -100,256 +206,35 @@ export const getProgressOfCourse = async (courseId: string, userId: string) => {
   };
 };
 
-// Function to generate random courses
-export const generateRandomCoursesFakerjs = (numCourses: number) => {
-  const courses = [];
-  for (let i = 0; i < numCourses; i++) {
-    const course = {
-      name: courseNames[Math.floor(Math.random() * courseNames.length)],
-      subTitle: faker.lorem.sentence(),
-      thumbnail: `https://placeimg.com/640/480/tech/${i + 1}`,
-      access: faker.random.arrayElement(["Free", "Paid"]),
-      views: faker.datatype.number({ min: 0, max: 1000 }),
-      price: faker.datatype.number({ min: 0, max: 100 }),
-      finalPrice: faker.datatype.number({ min: 0, max: 100 }),
-      description: "Description not available.",
-      level: faker.random.arrayElement(["Beginner", "Intermediate", "Advanced"]),
-      courseSlug: faker.lorem.slug(),
-      userId: mongoose.Types.ObjectId(),
-      categoryId: mongoose.Types.ObjectId(),
-      requirements: Array.from({ length: faker.datatype.number({ min: 1, max: 5 }) }, () =>
-        mongoose.Types.ObjectId()
-      ),
-      willLearns: Array.from({ length: faker.datatype.number({ min: 1, max: 5 }) }, () =>
-        mongoose.Types.ObjectId()
-      ),
-      tags: Array.from({ length: faker.datatype.number({ min: 1, max: 5 }) }, () =>
-        mongoose.Types.ObjectId()
-      ),
-    };
-    courses.push(course);
-  }
-  return courses;
-};
-
-const generateCourseDescriptionByCourseName = async (courseName: string) => {
+export const getCourseDetailInfo = async (courseId: string): Promise<ICourseDetail> => {
   try {
-    const prompt = `Generate a course description for the course: "${courseName}".`;
-    const response = await openai.createCompletion({
-      model: "text-davinci-003", // Choose an appropriate engine
-      prompt,
-      max_tokens: 100, // Adjust the length of the generated description
-      n: 1,
-      temperature: 0.2,
-    });
-    const description = response.data.choices[0].text.trim();
-    return description;
-  } catch (error) {
-    console.log("Error generating description:", error);
-    // If there's an error, you can provide a fallback or placeholder description.
-    return "Description not available.";
-  }
-};
-
-const sanitizeFileName = (fileName: any) => {
-  // Replace invalid characters with an underscore
-  return fileName.replace(/[/\\?%*:|"<>]/g, "_");
-};
-
-const generateThumbnailFromAi = async (courseName: string) => {
-  try {
-    const response = await openai.createImage({
-      prompt: `${courseName} thumbnail course`,
-      n: 1,
-      size: "512x512",
-    });
-    const imageUrl = response.data.data[0].url;
-
-    // Extract the image file name from the URL
-    const parsedUrl = new URL(imageUrl);
-    const imageFileName = path.basename(parsedUrl.pathname);
-
-    console.log("image file name: " + imageFileName);
-
-    // Sanitize the course name for use as a file name
-    const sanitizedCourseName = sanitizeFileName(courseName);
-    const imagePath = path.join(
-      __dirname,
-      "..",
-      "images",
-      `${sanitizedCourseName}-${imageFileName}`
-    );
-
-    // Download the image using Axios
-    const imageResponse = await axios.get(imageUrl, { responseType: "stream" });
-
-    // Create a write stream to save the image
-    const writer = fs.createWriteStream(imagePath);
-    imageResponse.data.pipe(writer);
-
-    return new Promise((resolve, reject) => {
-      writer.on("finish", () => {
-        const imageUrlForFrontend = `${BACKEND_URL}/images/${sanitizedCourseName}-${imageFileName}`;
-        resolve(imageUrlForFrontend);
-      });
-      writer.on("error", reject);
-    });
-
-    return imagePath;
-  } catch (error) {
-    console.log("Error generating thumbnail:", error);
-    // If there's an error, you can provide a fallback thumbnail URL.
-    return faker.image.urlLoremFlickr({ category: courseName });
-  }
-};
-
-// Function to generate random courses
-exports.generateRandomCourses = async (numCourses: number) => {
-  // const courseDescriptions = await generateCourseDescriptions(numCourses);
-  const categoriesIdList = [
-    "646781266859a50acfca8e93",
-    "64b363573bbbb6317297378d",
-    "64b363b13bbbb6317297378f",
-    "64b364203bbbb63172973793",
-    "64bb4e1582a5abc6b1c13305",
-  ];
-  const backendId = "646781266859a50acfca8e93";
-  const frontendId = "64b363573bbbb6317297378d";
-  const iotId = "64b364203bbbb63172973793";
-  const blockchainId = "64bb4e1582a5abc6b1c13305";
-  const devopsId = "64bb411b19f0935f065b9898";
-
-  const courses = [];
-  for (let i = 0; i < numCourses; i++) {
-    const courseName = blockchainCourses[i];
-
-    // Generate thumbnail image using OpenAI
-    const thumbnail = await generateThumbnailFromAi(courseName);
-
-    const price = Math.floor(Math.random() * 50) + 100;
-    const description = await generateCourseDescriptionByCourseName(courseName);
-    const course: any = {
-      name: courseName,
-      subTitle: "Subtitle not available.", // You can provide a static value for the subtitle or generate it using OpenAI as well
-      thumbnail,
-      access: "PAID", // You can adjust this based on your requirements
-      views: 0,
-      price: price,
-      finalPrice: price - 20,
-      description: description,
-      level: "All Level", // You can adjust this based on your requirements
-      courseSlug: slugify(courseName, { lower: true, strict: true }), // Generate a unique slug for each course
-      userId: "6468a145401d3810494f4797", // You can adjust this based on your requirements
-      // categoryId: categoriesIdList[Math.floor(Math.random() * categoriesIdList.length)],
-      categoryId: blockchainId,
-      requirements: [],
-      willLearns: [],
-      tags: [],
-    };
-    courses.push(course);
-  }
-  return courses;
-};
-
-const generateThumbnailFromUnsplash = async (courseName: string) => {
-  try {
-    const response = await axios.get("https://api.unsplash.com/search/photos", {
-      params: {
-        query: courseName,
-        orientation: "landscape",
-        client_id: UNSPLASH_API_KEY,
-        per_page: 10,
-      },
-    });
-
-    return response.data.results[0].urls.regular;
-  } catch (error) {
-    console.log("Error generating thumbnail:", error);
-    // If there's an error, you can provide a fallback thumbnail URL.
-    return faker.image.urlLoremFlickr({ category: courseName });
-  }
-};
-
-const createOutline = async (courseId: string) => {
-  try {
-    // const courseId = "64c5d873c573c1ec5d4a1907"; // Replace with the actual course ID
-
-    const courseSections = await generateSectionsName(courseId);
-
-    // Generate and save the sections for the course
-    const sections = courseSections.map((sectionName: string, index: number) => ({
-      courseId,
-      name: `Section ${String(index + 1).padStart(2, "0")}: ${sectionName}`,
-      access: "PAID", // Adjust the access type as needed
-      description: "", // Add a description for each section if required
-    }));
-
-    const createdSections = await Section.insertMany(sections);
-    return createdSections;
-  } catch (error) {
-    return [];
-  }
-};
-
-const generateSectionsName = async (courseId: string) => {
-  try {
-    const courseName = (await Course.findById(courseId).select("name")).name;
-    const prompt = `Generate a course outline (curriculum) for the course: "${courseName}". and wrap all the section into an string like this: introduction, type of cyber attack, footerpring, section title, section title,...  .Remember that in each section name not break down the line`;
-    const response = await openai.createCompletion({
-      model: "text-davinci-003", // Choose an appropriate engine
-      prompt,
-      max_tokens: 200, // Adjust the length of the generated description
-      n: 1,
-      temperature: 0.2,
-    });
-    const courseOutline = response.data.choices[0].text.trim().replace(/\\n/g, ""); // Remove '\n' characters;
-    return courseOutline.split(",");
-  } catch (error) {
-    // If there's an error, you can provide a fallback or placeholder courseOutline.
-    return "courseSectionName not available.";
-  }
-};
-
-const generateLessonBySectionName = async (outlineOfCourse: any) => {};
-
-exports.generateSectionsName = generateSectionsName;
-exports.createOutline = createOutline;
-
-export const getCourseDetailInfo = async (courseId: string) => {
-  try {
-    const course = await Course.findById(courseId)
+    const course = (await Course.findById(courseId)
       .populate("categoryId", "_id name")
-      .populate("userId", "_id name avatar");
+      .populate("userId", "_id name avatar")) as ICourseDetail;
 
-    const sections = await Section.find({
-      courseId,
-    });
+    const sections = (await Section.find({ courseId })) as ISection[];
 
-    const lessonsOfCoursePromise = sections.map(async (sectionItem: any) => {
-      const lessons = await Lesson.find({
-        sectionId: sectionItem._id,
-      });
-
+    const lessonsOfCoursePromise = sections.map(async (sectionItem) => {
+      const lessons = (await Lesson.find({ sectionId: sectionItem._id })) as ILesson[];
       return lessons;
     });
 
     const lessonsOfCourse = (await Promise.all(lessonsOfCoursePromise)).flat();
 
-    const orders = await Order.find({
-      "items._id": courseId,
-    });
-
+    const orders = (await Order.find({ "items._id": courseId })) as IOrder[];
     const numOfStudents = orders.length;
 
-    const totalVideosLength = lessonsOfCourse.reduce((acc, lesson) => acc + lesson.videoLength, 0);
-    // console.log(sections);
+    const totalVideosLength = lessonsOfCourse.reduce(
+      (acc, lesson) => acc + (lesson.videoLength || 0),
+      0
+    );
 
     const reviews = await Review.find({ courseId });
 
     const avgRatingStars =
-      reviews.reduce((acc: number, review: any) => acc + review.ratingStar, 0) / reviews.length;
+      reviews.reduce((acc, review) => acc + review.ratingStar, 0) / reviews.length || 0;
 
-    const result = {
+    const result: ICourseDetail = {
       _id: course._id,
       name: course.name,
       price: course.price,
@@ -374,46 +259,40 @@ export const getCourseDetailInfo = async (courseId: string) => {
       students: numOfStudents,
       totalVideosLength,
       numOfReviews: reviews.length,
-      avgRatingStars: avgRatingStars || 0,
+      avgRatingStars,
       createdAt: course.createdAt,
       updatedAt: course.updatedAt,
     };
 
     return result;
   } catch (error) {
-    if (!error) {
-      const error = new CustomErrorMessage("Failed to fetch Courses!", 422);
-      return error;
+    if (error instanceof CustomError) {
+      throw error;
+    } else {
+      const customError = new CustomErrorMessage("Failed to fetch courses!", 422);
+      throw customError;
     }
   }
 };
 
-exports.getCoursesOrderedByUserInfo = async (userId: string) => {
+export const getCoursesOrderedByUserInfo = async (userId: string): Promise<ICourse[]> => {
   try {
-    const courses = await Order.find({
+    const orders = (await Order.find({
       "user._id": userId,
       status: "Success",
     })
       .select("items")
-      .populate("items._id");
+      .populate("items._id")) as IOrder[];
 
-    // .populate("categoryId", "_id name")
-    // .populate("userId", "_id name");
+    const courses = orders.flatMap((order) => order.items).map((item) => item._id as ICourse);
 
-    const results = courses
-      .map((courseItem: any) => {
-        return courseItem.items;
-      })
-      .flat()
-      .map((item: any) => item._id);
-
-    return results;
+    return courses;
   } catch (error) {
-    if (!error) {
-      const error = new CustomErrorMessage("Failed to fetch Courses!", 422);
-      return error;
+    if (error instanceof CustomError) {
+      throw error;
+    } else {
+      const customError = new CustomErrorMessage("Failed to fetch courses!", 422);
+      throw customError;
     }
-
-    return [];
   }
 };

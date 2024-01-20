@@ -1,149 +1,35 @@
-const express = require("express");
-import { Request, Response, NextFunction, Router } from "express";
-const clientController = require("../controllers/client");
-// const isAuth = require("../middleware/is-auth");
-// import isAuth from "../middleware/is-auth";
-const upload = require("../middleware/upload");
-const uploadVideoMiddleware = require("../middleware/uploadVideo");
+import { Router } from "express";
+import courseRouter from "./client/course";
+import categoryRouter from "./client/category";
+import userRouter from "./client/user";
+import orderRouter from "./client/order";
+import cartRouter from "./client/cart";
+import sectionRouter from "./client/section";
+import lessonRouter from "./client/lesson";
+import certificateRouter from "./client/certificate";
+import uploadRouter from "./client/upload";
+import paymentRouter from "./client/payment";
+
 const router = Router();
-const { check, body } = require("express-validator");
 
-// GET Courses/
-router.get("/courses", clientController.getCourses);
+router.use("/courses", courseRouter);
 
-// GET Courses After Logined
-router.get("/courses/logined", clientController.getCoursesAfterLogin);
+router.use("/categories", categoryRouter);
 
-// GET Popular courses
+router.use("/users", userRouter);
 
-router.get("/courses/popular", clientController.getPopularCourses);
+router.use("/orders", orderRouter);
 
-// POST Retrieve Cart
+router.use("/carts", cartRouter);
 
-router.get("/cart/retrieve", clientController.retrieveCartByIds);
+router.use("/sections", sectionRouter);
 
-// GET Authors/
-router.get("/authors", clientController.getAuthors);
+router.use("/lessons", lessonRouter);
 
-// GET Course
-router.get("/courses/:courseId", clientController.getCourse);
+router.use("/certificates", certificateRouter);
 
-// GET Course enrolled
-router.get("/courses/:courseId/enrolled", clientController.getCourseEnrolledByUserId);
+router.use("/uploads", uploadRouter);
 
-// GET Course Detail
-router.get("/courses/:courseId/detail", clientController.getCourseDetail);
+router.use("/payments", paymentRouter);
 
-// GET SECTIONS BY COURSE ID
-router.get("/sections/:courseId/course", clientController.getSectionsByCourseId);
-
-// GET SECTIONS BY COURSE ID
-router.get("/lessons/:sectionId/section", clientController.getLessonsBySectionId);
-
-// GET SECTIONS BY COURSE ID
-router.get(
-  "/lessons/:sectionId/section/course-enrolled",
-  clientController.getLessonsBySectionIdEnrolledCourse
-);
-
-// POST reset password
-
-// GET CATES
-router.get("/categories", clientController.getCategories);
-
-// GET MAX PRICE
-router.get("/course-max-price", clientController.getMaxPrice);
-
-// GET MIN PRICE
-router.get("/course-min-price", clientController.getMinPrice);
-
-// GET CATES -- ID
-router.get("/categories/:categoryId", clientController.getCategory);
-
-// router.get('/status', clientController.getUserStatus)
-
-router.patch("/courses/:courseId", clientController.updateViews);
-
-// UPDATE CURRENT LESSON DONE BY USER ID
-router.post("/lesson-done/:lessonId", clientController.updateLessonDoneByUser);
-
-//
-router.get("/lesson/:lessonId/is-done", clientController.checkLessonDoneUserId);
-
-// POST ORDER
-router.post("/order", clientController.postOrder);
-
-// GET ORDER: id
-router.get("/orders/:orderId", clientController.getOrder);
-
-router.get("/orders/user/:userId", clientController.getOrdersByUserId);
-
-// GET COURSE BY STUDENTS HAVE BOUGHT
-router.get("/courses/:userId/ordered", clientController.getCoursesOrderedByUser);
-
-// GET USER: id
-
-router.get("/users/:userId", clientController.getUser);
-
-// GET USER DETAIL
-router.get("/users/:userId/detail", clientController.getUserDetail);
-
-router.put("/users/:userId", 
-// upload.single("avatar"), 
-clientController.updateUser);
-
-// CREATE REVIEW FOR COURSE ID OF USER ID AFTER ORDER
-
-router.post("/courses/:courseId/reviews", clientController.postReview);
-
-// GET COURES REVIEWS
-router.get("/courses/:courseId/reviews", clientController.getCourseReviews);
-
-// POST CREATE CERTIFICATIONS
-router.post("/generate-certificate", clientController.postCertificate);
-
-// GET CERTIFICATION BY USER AND COURSE ID
-router.get("/get-certificate", clientController.getCertificate);
-
-// DELETE CERTIFICATIONS BY USER AND COURSE ID
-router.delete("/delete-certificates", clientController.deleteCertificate);
-
-// GENREATE AI IMAGES
-router.get("/genrate-ai-images", clientController.getAiImages);
-
-// GENREATE AI IMAGES
-router.get("/genrate-random-courses", clientController.generateRandomCourses);
-
-// GENERATE UNSPLASH IMAGES
-
-router.get("/get-unsplash-images", clientController.getImagesFromUnsplash);
-
-// GENERATE SECTIONS OUTLINE
-router.get("/generate-outline-course", clientController.generateOutlineCourse);
-
-// CREATE OUTLINE COURSE AND SAVE AT DB
-router.post("/create-outline-course", clientController.createOutlineCourse);
-
-// GENERATE LESSONS BASE ON OUTLINE
-router.get("/generate-lesson-of-outline", clientController.generateLessonOfOutline);
-
-// CREATE LESSONS AND SAVE AT DB BASE ON OUTLINE
-router.post("/create-lessons-of-outline-course", clientController.createLessonsOfOutlineCourse);
-
-// GENERATE WHOLE COURSE
-router.get("/generate-whole-course", clientController.generateTheWholeCourse);
-
-// GENERATE WHOLE COURSE
-router.post("/create-whole-course", clientController.createTheWholeCourse);
-
-router.get("/courses/related/:courseId", clientController.getRelatedCourses);
-
-router.post(
-  "/upload-video",
-  uploadVideoMiddleware.single("videoFile"),
-  clientController.uploadVideo
-);
-
-router.get("/courses/suggested/:userId", clientController.getSuggestedCourses);
-
-module.exports = router;
+export default router;

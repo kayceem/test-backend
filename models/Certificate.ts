@@ -1,27 +1,33 @@
 import { Schema, model } from "mongoose";
 import baseSchema, { IBaseSchema } from "./BaseSchema";
+import { IUser } from "./User";
+import { ICourse } from "./Course";
 
 export interface ICertificate extends IBaseSchema {
   certificateName: string;
-  userId: Schema.Types.ObjectId;
-  courseId: Schema.Types.ObjectId;
-  dateValid: Date;
+  user: IUser;
+  course: ICourse;
+  dateValid?: Date;
 }
 
 const certificateSchema = new Schema<ICertificate>(
   {
     certificateName: { type: String, required: true },
-    userId: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
+    user: {
+      _id: {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+        required: true,
+      },
     },
-    courseId: {
-      type: Schema.Types.ObjectId,
-      ref: "Course",
-      required: true,
+    course: {
+      _id: {
+        type: Schema.Types.ObjectId,
+        ref: "Course",
+        required: true,
+      },
     },
-    dateValid: { type: Date, required: true },
+    dateValid: { type: Date },
   },
   { timestamps: true }
 );
