@@ -7,6 +7,7 @@ import mongoose from "mongoose";
 import cors from "cors";
 
 import authRouter from "./routes/auth";
+import clientRouter from "./routes/client";
 // const adminCategoryRouter = require("./routes/adminCategory");
 // const adminCourseRouter = require("./routes/adminCourse");
 // const adminSectionRouter = require("./routes/adminSection");
@@ -47,6 +48,8 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 });
 
 app.use("/auth", authRouter);
+app.use(clientRouter);
+
 // app.use("/admin", adminCategoryRouter);
 // app.use("/admin", adminCourseRouter);
 // app.use("/admin", adminSectionRouter);
@@ -63,7 +66,14 @@ app.use("/note", noteRouter);
 // app.use("/payments", paymentRouter);
 
 // app.use(clientRouter);
-app.use((error: any, req: Request, res: Response, next: NextFunction) => {
+
+interface AppError extends Error {
+  statusCode?: number;
+  errorType?: string;
+  data?: any;
+}
+
+app.use((error: AppError, req: Request, res: Response, next: NextFunction): void => {
   console.log(error);
 
   const status = error.statusCode || 500;
@@ -73,18 +83,18 @@ app.use((error: any, req: Request, res: Response, next: NextFunction) => {
 
   res.status(status).json({
     message: message,
-    errorType,
+    errorType: errorType,
     data: data,
   });
 });
 
 mongoose
   .connect(MONGODB_URI)
-  .then((result: any) => {
+  .then(() => {
     app.listen(port, () => {
       console.log(`App listening on port ${port}`);
     });
   })
-  .catch((err: any) => {
+  .catch((err) => {
     console.log(err);
   });
