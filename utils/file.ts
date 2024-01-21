@@ -1,11 +1,11 @@
-const fs = require("fs");
+import * as fs from "fs";
 
-const deleteFile = (filePath: any) => {
-  fs.unlink(filePath, (err: any) => {
+const deleteFile = (filePath: string): void => {
+  fs.unlink(filePath, (err: NodeJS.ErrnoException | null) => {
     if (err) {
       throw err;
     }
   });
 };
 
-exports.deleteFile = deleteFile;
+export { deleteFile };
