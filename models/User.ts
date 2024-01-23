@@ -25,7 +25,6 @@ export interface IUser extends IBaseSchema {
   resetTokenExpiration?: Date;
   loginToken?: string;
   loginTokenExpiration?: Date;
-  github?: string;
 }
 
 const userSchema = new Schema<IUser>(
@@ -84,9 +83,6 @@ const userSchema = new Schema<IUser>(
       type: String,
     },
     youtube: {
-      type: String,
-    },
-    github: {
       type: String,
     },
     language: {
