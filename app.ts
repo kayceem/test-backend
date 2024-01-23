@@ -8,16 +8,8 @@ import cors from "cors";
 
 import authRouter from "./routes/auth";
 import clientRouter from "./routes/client";
-// const adminCategoryRouter = require("./routes/adminCategory");
-// const adminCourseRouter = require("./routes/adminCourse");
-// const adminSectionRouter = require("./routes/adminSection");
-import adminLessonRouter from "./routes/adminLesson";
-// const adminUserRouter = require("./routes/adminUser");
-// const adminOrderRouter = require("./routes/adminOrder");
-// const clientRouter = require("./routes/client");
-// const reportRouter = require("./routes/report");
+import adminRouter from "./routes/admin";
 import blogRouter from "./routes/blog";
-// const paymentRouter = require("./routes/payment");
 import commentsRouter from "./routes/comments";
 import noteRouter from "./routes/note";
 
@@ -48,24 +40,13 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 });
 
 app.use("/auth", authRouter);
+app.use("/admin", adminRouter);
 app.use(clientRouter);
-
-// app.use("/admin", adminCategoryRouter);
-// app.use("/admin", adminCourseRouter);
-// app.use("/admin", adminSectionRouter);
-app.use("/admin", adminLessonRouter);
-// app.use("/admin", adminUserRouter);
-// app.use("/admin", adminOrderRouter);
-// app.use("/admin", reportRouter);
 
 app.use("/userCourse", userCourseRouter);
 app.use("/blog", blogRouter);
 app.use("/comments", commentsRouter);
 app.use("/note", noteRouter);
-
-// app.use("/payments", paymentRouter);
-
-// app.use(clientRouter);
 
 interface AppError extends Error {
   statusCode?: number;

@@ -26,7 +26,6 @@ const categorySchema = new Schema<ICategory>(
     },
     cateSlug: {
       type: String,
-      required: true,
     },
     cateParent: {
       type: String,

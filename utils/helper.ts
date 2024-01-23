@@ -206,6 +206,23 @@ export const getProgressOfCourse = async (courseId: string, userId: string) => {
   };
 };
 
+export const getCoursesOrderByUserId = async (userId: string) => {
+  const courses = await Order.find({
+    "user._id": userId,
+  })
+    .select("items")
+    .populate("items._id");
+
+  const results = courses
+    .map((courseItem) => {
+      return courseItem.items;
+    })
+    .flat()
+    .map((item) => item._id);
+
+  return results;
+};
+
 export const getCourseDetailInfo = async (courseId: string): Promise<ICourseDetail> => {
   try {
     const course = (await Course.findById(courseId)
