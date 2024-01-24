@@ -9,6 +9,7 @@ import lessonRouter from "./client/lesson";
 import certificateRouter from "./client/certificate";
 import uploadRouter from "./client/upload";
 import paymentRouter from "./client/payment";
+import wishlistRouter from "./client/wishlist";
 
 const router = Router();
 
@@ -31,5 +32,7 @@ router.use("/certificates", certificateRouter);
 router.use("/uploads", uploadRouter);
 
 router.use("/payments", paymentRouter);
+
+router.use("/wishlists", wishlistRouter);
 
 export default router;
