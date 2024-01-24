@@ -14,6 +14,10 @@ router.get("/suggested/:userId", courseController.getSuggestedCourses);
 
 router.get("/ordered/:userId", courseController.getCoursesOrderedByUser);
 
+router.get("/id/wishlist/:userId", courseController.getCourseIdsFromWishlistByUserId);
+
+router.get("/wishlist/:userId", courseController.getCoursesFromWishlistByUserId);
+
 router.get("/course/:courseId", courseController.getCourse);
 
 router.get("/course/enrolled/:courseId", courseController.getCourseEnrolledByUserId);
