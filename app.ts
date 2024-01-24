@@ -43,7 +43,7 @@ app.use("/auth", authRouter);
 app.use("/admin", adminRouter);
 app.use(clientRouter);
 
-app.use("/userCourse", userCourseRouter);
+// app.use("/userCourse", userCourseRouter);
 app.use("/blog", blogRouter);
 app.use("/comments", commentsRouter);
 app.use("/note", noteRouter);

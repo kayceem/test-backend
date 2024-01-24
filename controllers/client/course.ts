@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import Category from "../../models/Category";
+import Wishlist from "../../models/Wishlist";
 import { getCourseDetailInfo } from "../../utils/helper";
 import Course, { ICourse } from "../../models/Course";
 import Section, { ISection } from "../../models/Section";
@@ -504,6 +504,72 @@ export const getSuggestedCourses = async (req: Request, res: Response, next: Nex
       return next(error);
     } else {
       const customError = new CustomErrorMessage("Failed to fetch courses!", 422);
+      return next(customError);
+    }
+  }
+};
+
+export const getCourseIdsFromWishlistByUserId = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { userId } = req.params;
+
+    const wishlists = await Wishlist.find({ userId, isDeleted: false });
+    const courseIds = wishlists.map((wishlist) => wishlist.courseId);
+
+    res.status(200).json({
+      message: "Wishlist retrieved successfully",
+      data: courseIds,
+    });
+  } catch (error) {
+    if (error instanceof CustomError) {
+      return next(error);
+    } else {
+      const customError = new CustomErrorMessage("Failed to retrieve wishlist", 422);
+      return next(customError);
+    }
+  }
+};
+
+export const getCoursesFromWishlistByUserId = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { userId } = req.params;
+
+    const wishlists = await Wishlist.find({ userId, isDeleted: false });
+    const courseIdsFromWishlist = wishlists.map((wishlist) => wishlist.courseId);
+
+    const courses = await Course.find({
+      _id: { $in: courseIdsFromWishlist },
+    })
+      .populate("categoryId", "_id name")
+      .populate("userId", "_id name avatar");
+
+    const coursesOfUser = await getCoursesOrderedByUserInfo(userId);
+    const courseIdOfUserList = coursesOfUser.map((course) => course._id.toString());
+
+    const result = courses.map((course) => {
+      return {
+        ...course.toObject(),
+        isBought: courseIdOfUserList.includes(course._id.toString()),
+      };
+    });
+
+    res.status(200).json({
+      message: "Courses retrieved from wishlist successfully",
+      courses: result,
+    });
+  } catch (error) {
+    if (error instanceof CustomError) {
+      return next(error);
+    } else {
+      const customError = new CustomErrorMessage("Failed to retrieve courses from wishlist", 422);
       return next(customError);
     }
   }
