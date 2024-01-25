@@ -15,6 +15,8 @@ router.post("/admin/logout", isAuth, authController.adminLogout);
 
 router.post("/google-login", authController.googleLogin);
 
+router.post("/facebook-login", authController.facebookLogin);
+
 router.post("/admin-login", authController.adminLogin);
 
 router.post("/reset", authController.postReset);

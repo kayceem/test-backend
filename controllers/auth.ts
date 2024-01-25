@@ -13,6 +13,8 @@ import { google } from "googleapis";
 import admin from "firebase-admin";
 import serviceAccount from "../firebase/serviceAccountKey.json";
 import { BACKEND_URL } from "../config/backend-domain";
+import passport from "passport";
+import { Strategy as FacebookStrategy } from "passport-facebook";
 
 const serviceAccountConfig = {
   type: serviceAccount.type,
@@ -28,8 +30,18 @@ const serviceAccountConfig = {
   universeDomain: serviceAccount.universe_domain,
 };
 
+const firebaseConfig = {
+  apiKey: "your-api-key",
+  authDomain: "your-auth-domain",
+  projectId: "fullstack-es6",
+  storageBucket: "your-storage-bucket",
+  messagingSenderId: "your-messaging-sender-id",
+  appId: "1143621327082143",
+};
+
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccountConfig),
+  databaseURL: `https://${firebaseConfig.projectId}.firebaseio.com`,
 });
 
 export const signup = async (req: Request, res: Response, next: NextFunction) => {
@@ -365,4 +377,78 @@ export const updateLastLogin = async (req: Request, res: Response, next: NextFun
       return next(customError);
     }
   }
+};
+
+passport.use(
+  new FacebookStrategy(
+    {
+      clientID: "1143621327082143",
+      clientSecret: "c22d321e19b7ad993227a7889c752a7f",
+      callbackURL: "http://localhost:8000",
+      profileFields: ["id", "emails", "name", "picture.type(large)"],
+    },
+    async (accessToken, refreshToken, profile, done) => {
+      try {
+        // Use the profile information to find or create a user
+        let user = await User.findOne({
+          email: profile.emails[0].value,
+          providerId: "facebook.com",
+        });
+
+        if (!user) {
+          user = new User({
+            email: profile.emails[0].value,
+            name: `${profile.name.givenName} ${profile.name.familyName}`,
+            avatar: profile.photos ? profile.photos[0].value : null,
+            providerId: "facebook.com",
+            role: "USER",
+            payment: "COD",
+            language: "en",
+            showProfile: true,
+            showCourses: true,
+          });
+          await user.save();
+        }
+
+        return done(null, user);
+      } catch (error) {
+        return done(error, false);
+      }
+    }
+  )
+);
+
+export const facebookLogin = (req: Request, res: Response, next: NextFunction) => {
+  passport.authenticate("facebook", { session: false }, (err: any, user: any) => {
+    if (err) {
+      return next(err);
+    }
+
+    if (!user) {
+      return next(new CustomError("Facebook Authentication", "Authentication failed", 401));
+    }
+
+    const jwtToken = jwt.sign(
+      { email: user.email, userId: user._id.toString() },
+      "somesupersecret",
+      { expiresIn: "1h" }
+    );
+
+    user.loginToken = jwtToken;
+    user.loginTokenExpiration = new Date(Date.now() + 60 * 60 * 1000);
+
+    user
+      .save()
+      .then(() => {
+        res.status(200).json({
+          message: "Login successful!",
+          token: jwtToken,
+          userId: user._id.toString(),
+        });
+      })
+      .catch((saveError: any) => {
+        console.error("Error saving user:", saveError);
+        next(new CustomError("User Save", "Error saving user", 500));
+      });
+  })(req, res, next);
 };
