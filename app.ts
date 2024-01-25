@@ -75,7 +75,6 @@ interface AppError extends Error {
 
 app.use((error: AppError, req: Request, res: Response, next: NextFunction): void => {
   console.log(error);
-
   const status = error.statusCode || 500;
   const message = error.message;
   const errorType = error.errorType || "unknown";
