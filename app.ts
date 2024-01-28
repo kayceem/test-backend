@@ -13,8 +13,6 @@ import blogRouter from "./routes/blog";
 import commentsRouter from "./routes/comments";
 import noteRouter from "./routes/note";
 
-import userCourseRouter from "./routes/userCourse";
-
 const app = express();
 
 app.use(cors());
@@ -43,7 +41,6 @@ app.use("/auth", authRouter);
 app.use("/admin", adminRouter);
 app.use(clientRouter);
 
-// app.use("/userCourse", userCourseRouter);
 app.use("/blog", blogRouter);
 app.use("/comments", commentsRouter);
 app.use("/note", noteRouter);
