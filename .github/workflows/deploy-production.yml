@@ -3,7 +3,7 @@ on:
     branches:
       - production
 
-name: 🚀 Deploy website on push
+name: 🚀 Deploy website on production site
 
 jobs:
   web-deploy:
