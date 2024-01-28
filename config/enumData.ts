@@ -691,5 +691,5 @@ export const enumData = {
     },
   }
   
-  export const millisecondInDay = 86400000
+
   
