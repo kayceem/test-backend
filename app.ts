@@ -12,14 +12,12 @@ import adminRouter from "./routes/admin";
 import blogRouter from "./routes/blog";
 import commentsRouter from "./routes/comments";
 import noteRouter from "./routes/note";
-
+import { MONGODB_URI } from "./config/constant";
 const app = express();
 
 app.use(cors());
 
 const port = process.env.PORT || 9000;
-
-const MONGODB_URI = "mongodb://127.0.0.1:27017/e_learning";
 
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, "public")));

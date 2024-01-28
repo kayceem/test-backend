@@ -108,6 +108,6 @@
     // "skipDefaultLibCheck": true,                      /* Skip type checking .d.ts files that are included with TypeScript. */
     "skipLibCheck": true                                 /* Skip type checking all .d.ts files. */
   },
-  "include": ["**/*", "package.json", ".node-version"], // This line includes every file in your project
+  "include": ["**/*", "package.json", ".node-version", "node-version"], // This line includes every file in your project
   "exclude": ["node_modules", "dist"]  // Exclude node_modules and dist directories
 }

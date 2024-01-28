@@ -1,9 +1,9 @@
 const UNSPLASH_API_KEY = "uq_ad2eH1y4LjziHL50dLDv8h1esiKtEUNejDcwEOgw";
-// const YOUTUBE_API_KEY = "AIzaSyDCh4pDvYFVJe5Lu_DbHT_kBgrJma83FxI";
-// const YOUTUBE_API_KEY = "AIzaSyCjjqjn7wqsKm5EcKn-n3gMJgcl3-iOlpc";
 const YOUTUBE_API_KEY = "AIzaSyBhd4f7KxGoXeR5HHXUZeYm5e5JHmS35Ws";
 const OPEN_AI_KEY = "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";
-
+// Mongodb URI remote
+// export const MONGODB_URI = "mongodb://localhost:27017//e_learning";
+export const MONGODB_URI = "mongodb+srv://nhatsang0101:48nJ1AfSQzAeKHoC@cluster0.aup360f.mongodb.net/e_learning";
 export const PWD_SALT_ROUNDS = 12
 export const ERROR_NOT_FOUND_DATA = 'Không tìm thấy dữ liệu!'
 export const ERROR_CODE_TAKEN = 'Mã đã được sử dụng!'
