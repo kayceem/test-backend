@@ -1,7 +1,7 @@
 on:
   push:
     branches:
-      - develop
+      - production
 
 name: 🚀 Deploy website on dev site
 
@@ -26,4 +26,4 @@ jobs:
         username: ${{secrets.ftp_username}}
         password: ${{secrets.ftp_password}}
         server-dir: /e-learning-api-dev.trannhatsang.com/
-        local-dir: dist
+        local-dir: dist/
