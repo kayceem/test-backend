@@ -1,5 +1,4 @@
-
-import { Schema, model, Document } from 'mongoose';
+import { Schema, model, Document } from "mongoose";
 
 const blogSchema = new Schema(
   {
@@ -47,10 +46,14 @@ const blogSchema = new Schema(
         required: true,
       },
     ],
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );
 
 blogSchema.index({ title: "text", content: "text" });
 // module.exports = mongoose.model("Blog", blogSchema);
-export default model<Document>('Blog', blogSchema);
+export default model<Document>("Blog", blogSchema);

@@ -5,6 +5,7 @@ import sectionRouter from "./admin/section";
 import lessonRouter from "./admin/lesson";
 import orderRouter from "./admin/order";
 import userRouter from "./admin/user";
+import blogRouter from "./admin/blog";
 
 const router = Router();
 
@@ -19,5 +20,7 @@ router.use("/lessons", lessonRouter);
 router.use("/orders", orderRouter);
 
 router.use("/users", userRouter);
+
+router.use("/blogs", blogRouter);
 
 export default router;
