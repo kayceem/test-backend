@@ -8,7 +8,8 @@
     "start": "node app.js",
     "start:js": "nodemon app.js",
     "start:dev": "nodemon app.ts",
-    "build": "tsc"
+    "build": "tsc",
+    "copy": "cp .node-version dist/"
   },
   "dependencies": {
     "@faker-js/faker": "^8.0.2",

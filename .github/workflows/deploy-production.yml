@@ -19,6 +19,9 @@ jobs:
     - name: 🚀 Build TypeScript
       run: yarn build
 
+    - name: Copy File Node Version (.node-version)
+      run: yarn copy
+
     - name: 📂 Sync files
       uses: SamKirkland/FTP-Deploy-Action@v4.3.4
       with:
