@@ -1,7 +1,7 @@
 on:
   push:
     branches:
-      - production
+      - develop
 
 name: 🚀 Deploy website on dev site
 
