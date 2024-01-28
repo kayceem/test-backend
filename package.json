@@ -5,6 +5,7 @@
   "author": "Sang Tran Dev",
   "license": "MIT",
   "scripts": {
+    "start": "node app.js",
     "start:js": "nodemon app.js",
     "start:dev": "nodemon app.ts",
     "build": "tsc"
