@@ -97,3 +97,28 @@ export const getOrders = async (req: Request, res: Response, next: NextFunction)
     }
   }
 };
+
+export const getOrder = async (req: Request, res: Response, next: NextFunction) => {
+  const { orderId } = req.params;
+
+  try {
+    const order = await Order.findById(orderId);
+
+    if (!order) {
+      const error = new CustomError("Order", "Order not found", 404);
+      throw error;
+    }
+
+    res.status(200).json({
+      message: "Get order by id successfully!",
+      order,
+    });
+  } catch (error) {
+    if (error instanceof CustomError) {
+      return next(error);
+    } else {
+      const customError = new CustomErrorMessage("Failed to get order by id!", 422);
+      return next(customError);
+    }
+  }
+};
