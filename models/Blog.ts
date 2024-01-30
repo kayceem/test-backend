@@ -40,12 +40,11 @@ const blogSchema = new Schema(
       ref: "User",
       required: true,
     },
-    category: [
-      {
-        type: String,
-        required: true,
-      },
-    ],
+    categoryId: {
+      type: Schema.Types.ObjectId,
+      ref: "Category",
+      required: true,
+    },
     isDeleted: {
       type: Boolean,
       default: false,

@@ -6,6 +6,7 @@ import lessonRouter from "./admin/lesson";
 import orderRouter from "./admin/order";
 import userRouter from "./admin/user";
 import blogRouter from "./admin/blog";
+import blogCategory from "./admin/blogCategory";
 
 const router = Router();
 
@@ -22,5 +23,9 @@ router.use("/orders", orderRouter);
 router.use("/users", userRouter);
 
 router.use("/blogs", blogRouter);
+
+router.use("/blogs", blogRouter);
+
+router.use("/blogCategory", blogCategory);
 
 export default router;
