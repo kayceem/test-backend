@@ -7,10 +7,20 @@ export const getAllBlog = async (req: Request, res: Response, next: NextFunction
   const page = parseInt(req.query.page as string) || 1;
   const limit = parseInt(req.query.limit as string) || 10;
   const skip = (page - 1) * limit;
+  const author = req.query._author as string;
+  const category = req.query._category as string;
 
   try {
-    const blogs = await Blog.find().skip(skip).limit(limit);
-    const total = await Blog.countDocuments();
+    const blogs = await Blog.find({
+      ...(author ? { author: author } : {}),
+      ...(category ? { category: category } : {}),
+    })
+      .skip(skip)
+      .limit(limit);
+    const total = await Blog.countDocuments({
+      ...(author ? { author: author } : {}),
+      ...(category ? { category: category } : {}),
+    });
 
     res.status(200).json({
       message: "Get all blogs successfully",
@@ -18,7 +28,7 @@ export const getAllBlog = async (req: Request, res: Response, next: NextFunction
       totalPages: Math.ceil(total / limit),
       currentPage: page,
     });
-  } catch (error) {
+  } catch (error: any) {
     next(error);
   }
 };
@@ -157,3 +167,4 @@ export const softDeleteBlog = async (req: Request, res: Response, next: NextFunc
     res.status(500).json({ message: error.message });
   }
 };
+

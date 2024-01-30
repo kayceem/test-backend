@@ -10,7 +10,9 @@ import certificateRouter from "./client/certificate";
 import uploadRouter from "./client/upload";
 import paymentRouter from "./client/payment";
 import wishlistRouter from "./client/wishlist";
+import blogCategory from "./client/blogCategory";
 import feedbackRouter from "./client/feedback";
+
 
 const router = Router();
 
@@ -36,6 +38,10 @@ router.use("/payments", paymentRouter);
 
 router.use("/wishlists", wishlistRouter);
 
+
+router.use("/blogCategory", blogCategory);
+
 router.use("/feedbacks", feedbackRouter);
+
 
 export default router;
