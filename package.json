@@ -5,9 +5,11 @@
   "author": "Sang Tran Dev",
   "license": "MIT",
   "scripts": {
+    "start": "node app.js",
     "start:js": "nodemon app.js",
     "start:dev": "nodemon app.ts",
-    "build": "tsc"
+    "build": "tsc",
+    "copy": "cp .node-version dist/"
   },
   "dependencies": {
     "@faker-js/faker": "^8.0.2",
@@ -26,6 +28,7 @@
     "moment": "^2.29.4",
     "mongoose": "^7.3.3",
     "multer": "^1.4.5-lts.1",
+    "nanoid": "^5.0.4",
     "nodemailer": "^6.9.2",
     "openai": "^3.3.0",
     "passport": "^0.6.0",

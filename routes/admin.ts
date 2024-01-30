@@ -7,6 +7,9 @@ import orderRouter from "./admin/order";
 import userRouter from "./admin/user";
 import blogRouter from "./admin/blog";
 import blogCategory from "./admin/blogCategory";
+import feedbackRouter from "./admin/feedback";
+import reportRouter from "./admin/report";
+
 
 const router = Router();
 
@@ -24,8 +27,14 @@ router.use("/users", userRouter);
 
 router.use("/blogs", blogRouter);
 
+
 router.use("/blogs", blogRouter);
 
 router.use("/blogCategory", blogCategory);
+
+router.use("/feedbacks", feedbackRouter);
+
+router.use("/reports", reportRouter);
+
 
 export default router;

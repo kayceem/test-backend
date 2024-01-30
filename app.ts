@@ -12,22 +12,19 @@ import adminRouter from "./routes/admin";
 import blogRouter from "./routes/blog";
 import commentsRouter from "./routes/comments";
 import noteRouter from "./routes/note";
-
-import userCourseRouter from "./routes/userCourse";
-
+import { MONGODB_URI } from "./config/constant";
 const app = express();
 
 app.use(cors());
 
 const port = process.env.PORT || 9000;
 
-const MONGODB_URI = "mongodb://127.0.0.1:27017/e_learning";
-
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, "public")));
 
 app.use("/images", express.static(path.join(__dirname, "images")));
 app.use("/videos", express.static(path.join(__dirname, "videos")));
+app.use("/pdfs", express.static(path.join(__dirname, "pdfs")));
 
 app.use((req: Request, res: Response, next: NextFunction) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -43,7 +40,6 @@ app.use("/auth", authRouter);
 app.use("/admin", adminRouter);
 app.use(clientRouter);
 
-// app.use("/userCourse", userCourseRouter);
 app.use("/blog", blogRouter);
 app.use("/comments", commentsRouter);
 app.use("/note", noteRouter);

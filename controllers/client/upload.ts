@@ -27,3 +27,25 @@ export const uploadVideo = async (req: Request, res: Response, next: NextFunctio
     }
   }
 };
+
+export const uploadPDF = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const pdfPath: string = req.file.path;
+
+    const fullPDFPath: string = `${BACKEND_URL}/${pdfPath}`;
+
+    const response = {
+      message: "PDF uploaded successfully",
+      pdfPath: fullPDFPath,
+    };
+
+    res.status(200).json(response);
+  } catch (error) {
+    if (error instanceof CustomError) {
+      return next(error);
+    } else {
+      const customError = new CustomErrorMessage("An error occurred while uploading the PDF", 422);
+      return next(customError);
+    }
+  }
+};
