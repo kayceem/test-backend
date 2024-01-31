@@ -95,11 +95,31 @@ export const handleVnpayReturn = async (req: Request, res: Response, next: NextF
     if (secureHash === signed) {
       const orderId = vnp_Params["vnp_TxnRef"];
       const transactionStatus = vnp_Params["vnp_TransactionStatus"];
+      const vnp_AmountVND: number = Number(vnp_Params["vnp_Amount"]);
+      const vnp_PayDate = vnp_Params["vnp_PayDate"] as string;
+
+      const payDate = new Date(
+        `${vnp_PayDate.slice(0, 4)}-${vnp_PayDate.slice(4, 6)}-${vnp_PayDate.slice(6, 8)}T${vnp_PayDate.slice(8, 10)}:${vnp_PayDate.slice(10, 12)}:${vnp_PayDate.slice(12, 14)}.000Z`
+      );
+
+      const vnp_AmountUSD: number = vnp_AmountVND / 100 / 23000;
 
       if (transactionStatus === "00") {
         const updatedOrder = await Order.findOneAndUpdate(
           { _id: orderId },
-          { status: "Success" },
+          {
+            status: "Success",
+            transaction: {
+              method: "VN Pay",
+              amount: vnp_AmountUSD,
+              bankCode: vnp_Params["vnp_BankCode"],
+              bankTranNo: vnp_Params["vnp_BankTranNo"],
+              cardType: vnp_Params["vnp_CardType"],
+              payDate: payDate,
+              orderInfo: vnp_Params["vnp_OrderInfo"],
+              transactionNo: vnp_Params["vnp_TransactionNo"],
+            },
+          },
           { new: true }
         );
 
