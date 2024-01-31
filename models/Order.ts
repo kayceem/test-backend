@@ -4,9 +4,7 @@ import { IUser } from "./User";
 import baseSchema, { IBaseSchema } from "./BaseSchema";
 export interface IOrder extends IBaseSchema {
   vatFee?: number;
-  transaction: {
-    method: string;
-  };
+  transaction: ITransaction;
   note?: string;
   totalPrice?: number;
   user: IUser;
@@ -22,6 +20,17 @@ export interface IOrderItem {
   reviewed?: boolean;
 }
 
+export interface ITransaction {
+  method: string;
+  amount?: number;
+  bankCode?: string;
+  bankTranNo?: string;
+  cardType?: string;
+  payDate?: Date;
+  orderInfo?: string;
+  transactionNo?: string;
+}
+
 const orderSchema = new Schema<IOrder>(
   {
     vatFee: {
@@ -32,6 +41,27 @@ const orderSchema = new Schema<IOrder>(
         type: String,
         required: true,
         default: "COD",
+      },
+      amount: {
+        type: Number,
+      },
+      bankCode: {
+        type: String,
+      },
+      bankTranNo: {
+        type: String,
+      },
+      cardType: {
+        type: String,
+      },
+      payDate: {
+        type: Date,
+      },
+      orderInfo: {
+        type: String,
+      },
+      transactionNo: {
+        type: String,
       },
     },
     note: {
