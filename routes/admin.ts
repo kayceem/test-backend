@@ -10,6 +10,7 @@ import blogCategory from "./admin/blogCategory";
 import feedbackRouter from "./admin/feedback";
 import reportRouter from "./admin/report";
 import transactionRouter from "./admin/transaction";
+import reviewRouter from "./admin/review";
 
 
 const router = Router();
@@ -27,6 +28,8 @@ router.use("/orders", orderRouter);
 router.use("/users", userRouter);
 
 router.use("/transactions", transactionRouter);
+
+router.use("/reviews", reviewRouter);
 
 router.use("/blogs", blogRouter);
 
