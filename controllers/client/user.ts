@@ -3,9 +3,27 @@ import User, { IUser } from "../../models/User";
 import Course, { ICourse } from "../../models/Course";
 import Order from "../../models/Order";
 import { BACKEND_URL } from "../../config/backend-domain";
-import { getProgressOfCourse } from "../../utils/helper";
+import { getProgressOfCourse, getCoursesOrderByUserId } from "../../utils/helper";
 import CustomError from "../../utils/error";
 import CustomErrorMessage from "../../utils/errorMessage";
+
+interface PublicProfileResponse {
+  _id: any;
+  name: string;
+  avatar: string;
+  headline: string;
+  biography: string;
+  website: string;
+  twitter: string;
+  facebook: string;
+  linkedin: string;
+  youtube: string;
+  language: string;
+  createdAt: Date;
+  updatedAt: Date;
+  courses?: ICourse[]; 
+}
+
 
 export const getUser = async (req: Request, res: Response, next: NextFunction) => {
   const { userId } = req.params;
@@ -143,6 +161,59 @@ export const updateUser = async (req: Request, res: Response, next: NextFunction
       return next(error);
     } else {
       const customError = new CustomErrorMessage("Failed to updated user!", 422);
+      return next(customError);
+    }
+  }
+};
+
+export const getPublicProfile = async (req: Request, res: Response, next: NextFunction) => {
+  const { userId } = req.params;
+
+  try {
+    const user = await User.findById(userId).select(
+      "_id name avatar email phone headline biography website twitter facebook linkedin youtube language showProfile showCourses createdAt updatedAt"
+    );
+
+    if (!user) {
+      throw new CustomError("User", "User not found", 404);
+    }
+
+    if (!user.showProfile) {
+      return res.status(403).json({
+        message: "User has chosen not to show their profile.",
+      });
+    }
+
+    let response: PublicProfileResponse = {
+      _id: user._id,
+      name: user.name,
+      avatar: user.avatar,
+      headline: user.headline,
+      biography: user.biography,
+      website: user.website,
+      twitter: user.twitter,
+      facebook: user.facebook,
+      linkedin: user.linkedin,
+      youtube: user.youtube,
+      language: user.language,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
+    
+    if (user.showCourses) {
+      const courses = await getCoursesOrderByUserId(user._id);
+      response.courses = courses;
+    }
+
+    res.status(200).json({
+      message: "Fetch single user publicly successfully!",
+      user: response,
+    });
+  } catch (error) {
+    if (error instanceof CustomError) {
+      return next(error);
+    } else {
+      const customError = new CustomErrorMessage("Failed to fetch public profile!", 422);
       return next(customError);
     }
   }
