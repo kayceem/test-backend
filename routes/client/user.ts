@@ -12,4 +12,6 @@ router.put("/user/:userId", upload.single("avatar"), userController.updateUser);
 
 router.get("/user/detail/:userId", userController.getUserDetail);
 
+router.get("/user/public-profile/:userId", userController.getPublicProfile);
+
 export default router;
