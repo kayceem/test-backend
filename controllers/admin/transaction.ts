@@ -12,20 +12,21 @@ export const getTransactions = async (req: Request, res: Response, next: NextFun
 
     const query = {
       status: "Success",
-      ...(searchTerm ? { "user.name": { $regex: searchTerm, $options: "i" } } : {})
+      totalPrice: { $gt: 0 },
+      ...(searchTerm ? { "user.name": { $regex: searchTerm, $options: "i" } } : {}),
     };
 
     const total = await Order.countDocuments(query);
     const orders = await Order.find(query)
-                              .select('transaction _id user')
-                              .skip(skip)
-                              .limit(limit)
-                              .populate('user', 'name email');
+      .select("transaction _id user")
+      .skip(skip)
+      .limit(limit)
+      .populate("user", "name email");
 
-    const transactions = orders.map(order => ({
+    const transactions = orders.map((order) => ({
       orderId: order._id,
       user: order.user,
-      transaction: order.transaction
+      transaction: order.transaction,
     }));
 
     res.status(200).json({
