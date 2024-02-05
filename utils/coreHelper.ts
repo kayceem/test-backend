@@ -1,12 +1,42 @@
-import { customAlphabet } from 'nanoid'
+// import { customAlphabet } from 'nanoid'
 import { millisecondInDay } from '../config/constant'
+export interface TreeNode {
+  title: string
+  key: string
+  code?: string
+  children?: TreeNode[]
+  expanded?: boolean
+  checked?: boolean
+  selected?: boolean
+  isLeaf?: boolean
+}
+
+export interface Action {
+  name: string
+  code: string
+  value: boolean
+}
+
+export interface GroupChild {
+  code: string
+  name: string
+  [key: string]: Action | string
+}
+
+export interface RoleGroup {
+  id: number
+  name: string
+  code: string
+  children: GroupChild[]
+}
+
 class CoreHelper {
   /** Hàm gen code */
-  async genCodeDefault(data: string, isFinance = true) {
-    const nanoid = customAlphabet('ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890', 5)
-    const genCode = `${data}-${nanoid()}`
-    return genCode
-  }
+  // async genCodeDefault(data: string, isFinance = true) {
+  //   const nanoid = customAlphabet('ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890', 5)
+  //   const genCode = `${data}-${nanoid()}`
+  //   return genCode
+  // }
   /** Get array từ obj */
   public convertObjToArray(obj: any) {
     const arr = []
@@ -236,6 +266,54 @@ class CoreHelper {
     for (const item of arr) if (item[field]) set.add(item[field])
     return [...set]
   }
+
+  convertToTreeNodes(roleGroups: { [key: string]: RoleGroup }): TreeNode[][] {
+    const result: TreeNode[][] = []
+
+    Object.keys(roleGroups).forEach((groupKey) => {
+      const group = roleGroups[groupKey]
+      const groupNode: TreeNode = {
+        title: group.name,
+        code: group.code, // Add code for the parent root node!
+        key: `${group.id}`,
+        children: [],
+        expanded: true, // Assuming you want the group nodes to be initially expanded
+      }
+
+      group.children.forEach((child, index) => {
+        const childNode: TreeNode = {
+          title: child.name,
+          key: `${group.id}-${index}`,
+          children: [],
+          expanded: false, // Child nodes are not expanded by default
+        }
+
+        Object.keys(child).forEach((actionKey) => {
+          if (typeof child[actionKey] === 'object') {
+            const action = child[actionKey] as Action
+            childNode.children?.push({
+              title: action.name,
+              key: action.code,
+              isLeaf: true,
+              checked: action.value,
+              selected: action.value, // Assuming the 'selected' state is determined by 'value'
+            })
+          }
+        })
+
+        if (childNode.children.length > 0) {
+          groupNode.children?.push(childNode)
+        }
+      })
+
+      if (groupNode.children.length > 0) {
+        result.push([groupNode])
+      }
+    })
+
+    return result
+  }
+
 }
 
 export const coreHelper = new CoreHelper()
