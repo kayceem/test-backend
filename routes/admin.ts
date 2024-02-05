@@ -11,11 +11,14 @@ import feedbackRouter from "./admin/feedback";
 import reportRouter from "./admin/report";
 import transactionRouter from "./admin/transaction";
 import reviewRouter from "./admin/review";
+import permissionRouter from "./admin/permission";
 
 
 const router = Router();
 
 router.use("/categories", categoryRouter);
+
+router.use("/permissions", permissionRouter);
 
 router.use("/courses", courseRouter);
 

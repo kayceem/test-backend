@@ -15,6 +15,7 @@ import serviceAccount from "../firebase/serviceAccountKey.json";
 import { BACKEND_URL } from "../config/backend-domain";
 import passport from "passport";
 import { Strategy as FacebookStrategy } from "passport-facebook";
+import { enumData } from "../config/enumData";
 
 const serviceAccountConfig = {
   type: serviceAccount.type,
@@ -162,6 +163,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
       message: "Login successfuly!",
       token: token,
       userId: userDoc._id.toString(),
+   
     });
   } catch (error) {
     if (error instanceof CustomError) {
@@ -214,6 +216,7 @@ export const adminLogin = async (req: Request, res: Response, next: NextFunction
       message: "Login administrator successfuly!",
       token: token,
       userId: userDoc._id.toString(),
+      enumData: enumData
     });
   } catch (error) {
     if (error instanceof CustomError) {
