@@ -1,11 +1,13 @@
 // controllers/categoryController.ts
-import Category, { ICategory } from "../../models/BlogCategory";
+import BlogCategory, { ICategory } from "../../models/BlogCategory";
 import { Request, Response } from "express";
 
 export const getAllCategories = async (req: Request, res: Response): Promise<void> => {
   try {
-    const categories: ICategory[] = await Category.find();
-    res.json(categories);
+    const categories: ICategory[] = await BlogCategory.find();
+    // Gói mảng các danh mục thành một đối tượng với thuộc tính blogsCategories
+    const response = { blogsCategories: categories };
+    res.json(response);
   } catch (err) {
     if (err instanceof Error) {
       res.status(500).json({ message: err.message });
@@ -18,12 +20,13 @@ export const getAllCategories = async (req: Request, res: Response): Promise<voi
 export const getCategoryById = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
   try {
-    const category: ICategory | null = await Category.findById(id);
-    if (!category) {
+    const categories = await BlogCategory.findById(id);
+    if (!categories) {
       res.status(404).json({ message: "Category not found" });
       return;
     }
-    res.json(category);
+    const response = { blogCategories: categories };
+    res.json(response);
   } catch (err) {
     if (err instanceof Error) {
       res.status(500).json({ message: err.message });
@@ -34,10 +37,10 @@ export const getCategoryById = async (req: Request, res: Response): Promise<void
 };
 
 export const createCategory = async (req: Request, res: Response): Promise<void> => {
-  const category = req.body;
+  const categories = req.body;
   try {
-    const newCategory: ICategory = await Category.create(category);
-    res.status(201).json(newCategory);
+    const newCategory = await BlogCategory.create(categories);
+    res.status(201).json({ blogCategories: newCategory });
   } catch (err) {
     if (err instanceof Error) {
       res.status(500).json({ message: err.message });
@@ -49,9 +52,9 @@ export const createCategory = async (req: Request, res: Response): Promise<void>
 
 export const updateCategory = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
-  const category = req.body;
+  const categories = req.body;
   try {
-    const updatedCategory: ICategory | null = await Category.findByIdAndUpdate(id, category, {
+    const updatedCategory = await BlogCategory.findByIdAndUpdate(id, categories, {
       new: true,
     });
     if (!updatedCategory) {
@@ -71,12 +74,12 @@ export const updateCategory = async (req: Request, res: Response): Promise<void>
 export const deleteCategoryById = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
   try {
-    const category: ICategory | null = await Category.findById(id);
-    if (!category) {
-      res.status(404).json({ message: "Category not found" });
+    const categories = await BlogCategory.findById(id);
+    if (!categories) {
+      res.status(404).json({ message: "Categories not found" });
       return;
     }
-    await Category.findByIdAndRemove(id);
+    await BlogCategory.findByIdAndRemove(id);
     res.status(200).json({
       message: "Delete category successfully",
     });

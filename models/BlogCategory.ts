@@ -1,12 +1,14 @@
-import mongoose, { Document, Schema, Model } from "mongoose";
+import mongoose, { Document, Schema, Model, model, ObjectId } from "mongoose";
 
 export interface ICategory extends Document {
+  _id: ObjectId;
   name: string;
   description: string;
   cateImage: string;
+  blogs: string[]; // Thêm trường blogs vào đây
 }
 
-const categorySchema: Schema = new Schema(
+const blogCategorySchema: Schema = new Schema(
   {
     name: {
       type: String,
@@ -15,11 +17,10 @@ const categorySchema: Schema = new Schema(
     },
     description: {
       type: String,
-      required: true, // remove this line if description should not be required
+      required: true,
     },
     cateImage: {
       type: String,
-      required: true, // remove this line if cateImage should not be required
     },
   },
   {
@@ -27,11 +28,6 @@ const categorySchema: Schema = new Schema(
   }
 );
 
-let Category: Model<ICategory> | undefined;
-if (mongoose.models.Category) {
-  Category = mongoose.model<ICategory>("Category");
-} else {
-  Category = mongoose.model<ICategory>("Category", categorySchema);
-}
+blogCategorySchema.index({ title: "text", content: "text" });
 
-export default Category;
+export default model<Document>("BlogCategory", blogCategorySchema);
