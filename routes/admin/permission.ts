@@ -1,17 +1,18 @@
 import { Router } from "express";
 import * as permissionController from "../../controllers/admin/permission";
+import isAuth from "../../middleware/is-auth";
+
 const router = Router();
 
 router.get("/", permissionController.getPermissions);
 
 // router.get("/course/:courseId", isAuth, permissionController.getCourse);
 
-// router.post(
-//   "/course/create",
-//   isAuth,
-//   uploadMiddleware.array("images[]"),
-//   permissionController.postCourse
-// );
+router.put(
+  "/update",
+  isAuth,
+  permissionController.updatePermission
+);
 
 // router.delete("/course/delete/:courseId", isAuth, permissionController.deleteCourse);
 

@@ -55,6 +55,35 @@ export const getUsers = async (req: Request, res: Response, next: NextFunction) 
   }
 };
 
+export const getUsersSelectBox = async (req: Request, res: Response, next: NextFunction) => {
+ 
+  try {
+
+    const users = await User.find({
+    }).select("_id name");
+
+    const result = users.map((user) => {
+      return {
+        value: user._id,
+        label: user.name
+      }
+    })
+
+    res.status(200).json({
+      message: "Fetch users sucessfully!",
+      users: result,
+    });
+    
+  } catch (error) {
+    if (error instanceof CustomError) {
+      return next(error);
+    } else {
+      const customError = new CustomErrorMessage("Failed to fetch users!", 422);
+      return next(customError);
+    }
+  }
+};
+
 export const getUser = async (req: Request, res: Response, next: NextFunction) => {
   const { userId } = req.params;
 

@@ -8,6 +8,8 @@ const router = Router();
 
 router.get("/", isAuth, isAdmin, userController.getUsers);
 
+router.get("/select", isAuth, isAdmin, userController.getUsersSelectBox);
+
 router.get("/user/:userId", isAuth, userController.getUser);
 
 router.post(

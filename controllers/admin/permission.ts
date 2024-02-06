@@ -3,7 +3,9 @@ import CustomError from "../../utils/error";
 import CustomErrorMessage from "../../utils/errorMessage";
 import { coreHelper } from "../../utils/coreHelper";
 import { enumData } from "../../config/enumData";
-import { CREATE_SUCCESS } from "config/constant";
+import { CREATE_SUCCESS } from "../../config/constant";
+import Permission from "../../models/Permission";
+import mongoose, { ClientSession } from "mongoose";
 
 interface GetPermissionsQuery {
   $text?: { $search: string };
@@ -92,13 +94,38 @@ export const postPermission = async (req: Request, res: Response, next: NextFunc
 export const updatePermission = async (req: Request, res: Response, next: NextFunction) => {
   const { userId, listPermission
   } = req.body;
-
+  let session: ClientSession | null = null;
+  
+  
   try {
 
+    session = await mongoose.startSession();
+    session.startTransaction();
+  
+    const foundPermissionOfUser = await Permission.findOne({
+      userId: userId
+    }).session(session);
+  
+    if (!foundPermissionOfUser) {
+      throw new Error("Permission not found!");
+    }
+  
+    foundPermissionOfUser.listPermission = listPermission;
+  
+    await Permission.updateOne({ userId: userId }, foundPermissionOfUser).session(session);
+  
+    await session.commitTransaction();
+    session.endSession();
+  
     res.json({
       message: "Create permission successfully!",
     });
   } catch (error) {
+    if (session) {
+      await session.abortTransaction();
+      session.endSession();
+    }
+
     if (error instanceof CustomError) {
       return next(error);
     } else {
