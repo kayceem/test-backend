@@ -16,11 +16,23 @@ interface GetPermissionsQuery {
 export const getPermissions = async (req: Request, res: Response, next: NextFunction) => {
 
   const listPermissionDefault = coreHelper.convertToTreeNodes(enumData.RoleGroup)
+  const {userId } = req.query;
 
   try {
+    let result = [];
+  const foundPermissionByUserId = await Permission.findOne({
+    userId: userId
+  })
+
+  if(foundPermissionByUserId) {
+    result = JSON.parse(foundPermissionByUserId.listPermission)
+  }else {
+    result = listPermissionDefault
+  }
+
     res.status(200).json({
       message: "Fetch all permissions successfully!",
-      listPermission: listPermissionDefault
+      listPermission: result
     });
   } catch (error) {
     if (error instanceof CustomError) {
@@ -96,7 +108,6 @@ export const updatePermission = async (req: Request, res: Response, next: NextFu
   } = req.body;
   let session: ClientSession | null = null;
   
-  
   try {
 
     session = await mongoose.startSession();
@@ -106,13 +117,19 @@ export const updatePermission = async (req: Request, res: Response, next: NextFu
       userId: userId
     }).session(session);
   
-    if (!foundPermissionOfUser) {
-      throw new Error("Permission not found!");
+    if (foundPermissionOfUser) {
+      foundPermissionOfUser.listPermission = JSON.stringify(listPermission);
+      foundPermissionOfUser.updatedBy = (req as any).userId
+      await Permission.updateOne({ userId: userId }, foundPermissionOfUser).session(session);
+    }else {
+      const newPermission = new Permission({
+        userId: userId,
+        listPermission: JSON.stringify(listPermission),
+        createdBy: (req as any).userId
+      });
+      await newPermission.save()
     }
   
-    foundPermissionOfUser.listPermission = listPermission;
-  
-    await Permission.updateOne({ userId: userId }, foundPermissionOfUser).session(session);
   
     await session.commitTransaction();
     session.endSession();
@@ -129,7 +146,7 @@ export const updatePermission = async (req: Request, res: Response, next: NextFu
     if (error instanceof CustomError) {
       return next(error);
     } else {
-      const customError = new CustomErrorMessage("Failed to fetch permissions!", 422);
+      const customError = new CustomErrorMessage((error as any)._message, 422);
       return next(customError);
     }
   }

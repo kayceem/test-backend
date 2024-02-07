@@ -20,7 +20,7 @@ const baseSchema: Schema<IBaseSchema> = new Schema<IBaseSchema>(
     },
     updatedAt: {
       type: Date,
-      default: Date.now,
+      // default: Date.now,
     },
     updatedBy: {
       type: Schema.Types.ObjectId,

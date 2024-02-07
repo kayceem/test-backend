@@ -285,7 +285,7 @@ class CoreHelper {
           title: child.name,
           key: `${group.id}-${index}`,
           children: [],
-          expanded: false, // Child nodes are not expanded by default
+          expanded: true, // Child nodes are not expanded by default
         }
 
         Object.keys(child).forEach((actionKey) => {

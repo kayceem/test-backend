@@ -175,9 +175,9 @@ export const enumData = {
             code: 'CourseNote',
             name: 'Ghi chú bài học',
             View: { name: 'Xem', code: 'CourseNote_View', value: false },
-            Detail: { name: 'Xem chi tiết', code: 'CourseDiscuss_Detail', value: false },
-            Edit: { name: 'Chỉnh Sửa', code: 'CourseDiscuss_Edit', value: false },
-            Delete: { name: 'Xóa', code: 'CourseDiscuss_Delete', value: false },
+            Detail: { name: 'Xem chi tiết', code: 'CourseNote_Detail', value: false },
+            Edit: { name: 'Chỉnh Sửa', code: 'CourseNote_Edit', value: false },
+            Delete: { name: 'Xóa', code: 'CourseNote_Delete', value: false },
           },
         ]
       },
