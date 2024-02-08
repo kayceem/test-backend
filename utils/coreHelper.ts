@@ -228,6 +228,7 @@ class CoreHelper {
     return res
   }
 
+  // Convert RoleGroup to Role have each key instead of each module
   getEnumMultiLevelToArray(enumData: Object) {
     const enumObj = {}
 

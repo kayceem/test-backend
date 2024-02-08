@@ -1,5 +1,6 @@
 import { Schema, Types, model } from "mongoose";
 import baseSchema, { IBaseSchema } from "./BaseSchema";
+import { TreeNode } from "utils/coreHelper";
 
 export interface IPermission extends IBaseSchema {
   listPermission: string;
