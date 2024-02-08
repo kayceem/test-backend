@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import CustomError from "../../utils/error";
 import CustomErrorMessage from "../../utils/errorMessage";
-import { coreHelper } from "../../utils/coreHelper";
+import { TreeNode, coreHelper } from "../../utils/coreHelper";
 import { enumData } from "../../config/enumData";
 import { CREATE_SUCCESS } from "../../config/constant";
 import Permission from "../../models/Permission";
@@ -19,10 +19,10 @@ export const getPermissions = async (req: Request, res: Response, next: NextFunc
   const {userId } = req.query;
 
   try {
-    let result = [];
-  const foundPermissionByUserId = await Permission.findOne({
-    userId: userId
-  })
+    let result: TreeNode[][] = [];
+    const foundPermissionByUserId = await Permission.findOne({
+      userId: userId
+    })
 
   if(foundPermissionByUserId) {
     result = JSON.parse(foundPermissionByUserId.listPermission)

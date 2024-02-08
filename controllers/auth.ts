@@ -16,6 +16,8 @@ import { BACKEND_URL } from "../config/backend-domain";
 import passport from "passport";
 import { Strategy as FacebookStrategy } from "passport-facebook";
 import { enumData } from "../config/enumData";
+import Permission from "../models/Permission";
+import { TreeNode, coreHelper } from "../utils/coreHelper";
 import { createOAuthAppAuth } from "@octokit/auth-oauth-app";
 import { Octokit } from "@octokit/rest";
 
@@ -212,12 +214,40 @@ export const adminLogin = async (req: Request, res: Response, next: NextFunction
     userDoc.loginToken = token;
     userDoc.loginTokenExpiration = new Date(Date.now() + 60 * 60 * 1000);
     await userDoc.save();
+      
+      // Check Permission role
+      const listKeyPermission = [];
+      const userPermission = await Permission.findOne({
+        userId: userDoc._id
+      });
+
+      if(userPermission) {
+        const listPermissionJSON = JSON.parse(userPermission.listPermission) as TreeNode[][];
+        const list = listPermissionJSON.map((item) => item[0]).map((nodeItem) => nodeItem.children)
+        const listPermissionObj = list.flat().flatMap((item) => item.children);
+
+        listPermissionObj.forEach((permissionObj) => {
+          if(permissionObj.checked) {
+            listKeyPermission.push(permissionObj.key)
+          }
+        })
+      }
+      
+      const roleEnum = coreHelper.getEnumMultiLevelToArray(enumData.RoleGroup)
+
+      // Convert enumData
+      const resEnumData = {
+        ...enumData,
+        Role: roleEnum,
+      }
 
     res.status(200).json({
       message: "Login administrator successfuly!",
       token: token,
       userId: userDoc._id.toString(),
-      enumData: enumData,
+      enumData: resEnumData,
+      role: roleEnum,
+      listPermission: listKeyPermission
     });
   } catch (error) {
     if (error instanceof CustomError) {
