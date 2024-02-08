@@ -18,6 +18,8 @@ import { Strategy as FacebookStrategy } from "passport-facebook";
 import { enumData } from "../config/enumData";
 import Permission from "../models/Permission";
 import { TreeNode, coreHelper } from "../utils/coreHelper";
+import { createOAuthAppAuth } from "@octokit/auth-oauth-app";
+import { Octokit } from "@octokit/rest";
 
 const serviceAccountConfig = {
   type: serviceAccount.type,
@@ -165,7 +167,6 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
       message: "Login successfuly!",
       token: token,
       userId: userDoc._id.toString(),
-   
     });
   } catch (error) {
     if (error instanceof CustomError) {
@@ -412,6 +413,7 @@ export const updateLastLogin = async (req: Request, res: Response, next: NextFun
   }
 };
 
+//facebook
 passport.use(
   new FacebookStrategy(
     {
@@ -450,6 +452,54 @@ passport.use(
     }
   )
 );
+
+export const githubLogin = async (req: Request, res: Response, next: NextFunction) => {
+  const { code } = req.body;
+  const githubToken = "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";
+  try {
+    // Get user information using the GitHub token
+    const octokit = new Octokit({ auth: `token ${githubToken}` });
+    const { data: userData } = await octokit.users.getAuthenticated();
+    let userDoc = await User.findOne({ email: userData.email, providerId: "github.com" });
+    if (!userDoc) {
+      // Create a new user if not found
+      userDoc = new User({
+        email: userData.email || "",
+        name: userData.name || userData.login,
+        avatar: userData.avatar_url,
+        providerId: "github.com",
+        role: "USER",
+        payment: "COD",
+        language: "en",
+        showProfile: true,
+        showCourses: true,
+      });
+      console.log(userDoc);
+      await userDoc.save();
+    }
+
+    const jwtToken = jwt.sign(
+      { email: userDoc.email, userId: userDoc._id.toString() },
+      "somesupersecret",
+      { expiresIn: "1h" }
+    );
+    userDoc.loginToken = jwtToken; // Use loginToken instead of token
+    userDoc.loginTokenExpiration = new Date(Date.now() + 60 * 60 * 1000);
+    await userDoc.save();
+
+    res.status(200).json({
+      message: "Login successful!",
+      token: jwtToken,
+      userId: userDoc._id.toString(),
+    });
+  } catch (error: any) {
+    if (error.message === "Bad credentials") {
+      console.error("The provided GitHub token is invalid.");
+    } else {
+      console.error(`Error fetching data from GitHub: ${error.message}`);
+    }
+  }
+};
 
 export const facebookLogin = (req: Request, res: Response, next: NextFunction) => {
   passport.authenticate("facebook", { session: false }, (err: any, user: any) => {

@@ -1,5 +1,3 @@
-// routes/category.ts
-
 import {
   createCategory,
   deleteCategoryById,
