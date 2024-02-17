@@ -16,6 +16,9 @@ jobs:
     - name: 🛠 Install Dependencies
       run: yarn
 
+    - name: testing the app
+      run: yarn test
+
     - name: 🚀 Build TypeScript
       run: yarn build
 

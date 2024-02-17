@@ -12,9 +12,12 @@ jobs:
     steps:
     - name: 🚚 Get latest code
       uses: actions/checkout@v3
-    
+
     - name: 🛠 Install Dependencies
       run: yarn
+
+    - name: testing the app
+      run: yarn test
 
     - name: 🚀 Build TypeScript
       run: yarn build
