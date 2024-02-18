@@ -17,16 +17,16 @@ import getIO from "../socket";
 
 const router = Router();
 
-router.use("/", async (req: Request, res: Response, next: NextFunction) => {
-    const socketIO = getIO()
-    socketIO.emit('init', {
-        action: 'init',
-        data: 'Hello World'
-      });
-      res.status(200).json({
-        message: "Welcome to the app!"
-      })
-});
+// router.use("/", async (req: Request, res: Response, next: NextFunction) => {
+//     const socketIO = getIO()
+//     socketIO.emit('init', {
+//         action: 'init',
+//         data: 'Hello World'
+//       });
+//       res.status(200).json({
+//         message: "Welcome to the app!"
+//       })
+// });
 
 router.use("/courses", courseRouter);
 
