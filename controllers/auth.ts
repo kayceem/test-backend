@@ -20,7 +20,7 @@ import Permission from "../models/Permission";
 import { TreeNode, coreHelper } from "../utils/coreHelper";
 import { createOAuthAppAuth } from "@octokit/auth-oauth-app";
 import { Octokit } from "@octokit/rest";
-
+import {getIO} from '../socket'
 const serviceAccountConfig = {
   type: serviceAccount.type,
   projectId: serviceAccount.project_id,
@@ -162,6 +162,12 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     userDoc.loginToken = token;
     userDoc.loginTokenExpiration = new Date(Date.now() + 60 * 60 * 1000);
     await userDoc.save();
+
+    // Add realtime socket
+    const socketIO = getIO()
+    socketIO.emit("login", {
+      message: `User ${userDoc.name} has been login at ${new Date(Date.now() + 60 * 60 * 1000)}`
+    })
 
     res.status(200).json({
       message: "Login successfuly!",
