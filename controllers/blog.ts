@@ -136,6 +136,7 @@ exports.deleteBlogById = async (req: Request, res: Response, next: NextFunction)
       error.statusCode = 404;
       throw error;
     }
+
     await Blog.findByIdAndRemove(blogId);
     res.status(200).json({
       message: "Delete blog successfully",
