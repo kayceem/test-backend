@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { NextFunction, Router, Request, Response } from "express";
 import courseRouter from "./client/course";
 import categoryRouter from "./client/category";
 import userRouter from "./client/user";
@@ -12,9 +12,21 @@ import paymentRouter from "./client/payment";
 import wishlistRouter from "./client/wishlist";
 import blogCategory from "./client/blogCategory";
 import feedbackRouter from "./client/feedback";
+import getIO from "../socket";
 
 
 const router = Router();
+
+router.use("/", async (req: Request, res: Response, next: NextFunction) => {
+    const socketIO = getIO()
+    socketIO.emit('init', {
+        action: 'init',
+        data: 'Hello World'
+      });
+      res.status(200).json({
+        message: "Welcome to the app!"
+      })
+});
 
 router.use("/courses", courseRouter);
 
