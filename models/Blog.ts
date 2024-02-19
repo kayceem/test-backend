@@ -1,6 +1,22 @@
 import { Schema, model, Document } from "mongoose";
+import baseSchema from "./BaseSchema";
 
-const blogSchema = new Schema(
+export interface IBlog extends Document {
+  title: string;
+  author: string;
+  blogImg: string;
+  technology: string;
+  tags: string[];
+  readTime: string;
+  datePublished: Date;
+  content: string;
+  userId: Schema.Types.ObjectId;
+  categoryId: Schema.Types.ObjectId;
+  isDeleted: boolean;
+}
+
+// Schema cho Blog
+const blogSchema = new Schema<IBlog>(
   {
     title: {
       type: String,
@@ -42,7 +58,7 @@ const blogSchema = new Schema(
     },
     categoryId: {
       type: Schema.Types.ObjectId,
-      ref: "Category",
+      ref: "BlogCategory",
       required: true,
     },
     isDeleted: {
@@ -50,9 +66,11 @@ const blogSchema = new Schema(
       default: false,
     },
   },
-  { timestamps: true }
+  {
+    timestamps: true, 
+  }
 );
 
+blogSchema.add(baseSchema);
 blogSchema.index({ title: "text", content: "text" });
-// module.exports = mongoose.model("Blog", blogSchema);
-export default model<Document>("Blog", blogSchema);
+export default model<IBlog>("Blog", blogSchema);

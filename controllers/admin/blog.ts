@@ -7,19 +7,21 @@ export const getAllBlog = async (req: Request, res: Response, next: NextFunction
   const page = parseInt(req.query.page as string) || 1;
   const limit = parseInt(req.query.limit as string) || 10;
   const skip = (page - 1) * limit;
-  const author = req.query._author as string;
-  const category = req.query._category as string;
+  const author = req.query.author as string; // Sử dụng tên trường 'author' nếu là một trường trong schema
+  const categoryId = req.query.categoryId as string; // Đổi _category thành categoryId
 
   try {
     const blogs = await Blog.find({
       ...(author ? { author: author } : {}),
-      ...(category ? { category: category } : {}),
+      ...(categoryId ? { categoryId: categoryId } : {}),
+      isDeleted: { $ne: true }, // Thêm điều kiện để loại trừ các blog đã bị xóa mềm
     })
       .skip(skip)
       .limit(limit);
     const total = await Blog.countDocuments({
       ...(author ? { author: author } : {}),
-      ...(category ? { category: category } : {}),
+      ...(categoryId ? { categoryId: categoryId } : {}),
+      isDeleted: { $ne: true },
     });
 
     res.status(200).json({
@@ -34,52 +36,45 @@ export const getAllBlog = async (req: Request, res: Response, next: NextFunction
 };
 
 export const createBlog = async (req: Request, res: Response, next: NextFunction) => {
-  const { title, author, blogImg, technology, tags, readTime, content, userId, category } =
+  const { title, author, blogImg, technology, tags, readTime, content, userId, categoryId } =
     req.body;
-  console.log(req.body);
-  try {
-    if (
-      !title ||
-      !author ||
-      !blogImg ||
-      !technology ||
-      !tags ||
-      !readTime ||
-      !content ||
-      !userId ||
-      !category
-    ) {
-      const error = new CustomErrorMessage("Missing required fields", 400);
-      error.statusCode = 400;
-      throw error;
-    }
 
-    // Create a new blog post instance
+  if (
+    !title ||
+    !author ||
+    !blogImg ||
+    !technology ||
+    !tags ||
+    !readTime ||
+    !content ||
+    !userId ||
+    !categoryId
+  ) {
+    return next(new CustomErrorMessage("Missing required fields", 400));
+  }
+
+  try {
     const blogPost = new Blog({
       title,
       author,
       blogImg,
       technology,
-      tags,
+      tags: Array.isArray(tags) ? tags : tags.split(",").map((tag) => tag.trim()),
       readTime,
-      datePublished: Date.now(), // Use current date
       content,
-      userId, // Use the corrected variable name
-      category,
+      userId,
+      categoryId,
+      datePublished: new Date(),
+      isDeleted: false,
     });
 
-    // Save the blog post to the database
     await blogPost.save();
 
     res.status(201).json({
       message: "Blog post created successfully",
       blogPost,
     });
-  } catch (error: any) {
-    // Handle errors
-    if (!error.statusCode) {
-      error.statusCode = 500; // Internal Server Error
-    }
+  } catch (error) {
     next(error);
   }
 };
@@ -167,4 +162,3 @@ export const softDeleteBlog = async (req: Request, res: Response, next: NextFunc
     res.status(500).json({ message: error.message });
   }
 };
-
