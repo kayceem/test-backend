@@ -468,7 +468,6 @@ export const githubLogin = async (req: Request, res: Response, next: NextFunctio
     const { data: userData } = await octokit.users.getAuthenticated();
     let userDoc = await User.findOne({ email: userData.email, providerId: "github.com" });
     if (!userDoc) {
-      // Create a new user if not found
       userDoc = new User({
         email: userData.email || "",
         name: userData.name || userData.login,

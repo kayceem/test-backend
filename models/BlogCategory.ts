@@ -1,14 +1,14 @@
-import mongoose, { Document, Schema, Model, model, ObjectId } from "mongoose";
+import mongoose, { Document, Schema, model, ObjectId } from "mongoose";
 
-export interface ICategory extends Document {
+export interface ICategoryBlog extends Document {
   _id: ObjectId;
   name: string;
   description: string;
   cateImage: string;
-  blogs: string[]; // Thêm trường blogs vào đây
+  blogs: ObjectId[]; // Sử dụng ObjectId để tham chiếu đến các Blog
 }
 
-const blogCategorySchema: Schema = new Schema(
+const blogCategorySchema = new Schema<ICategoryBlog>(
   {
     name: {
       type: String,
@@ -22,12 +22,17 @@ const blogCategorySchema: Schema = new Schema(
     cateImage: {
       type: String,
     },
+    blogs: [{
+      type: Schema.Types.ObjectId,
+      ref: 'Blog', // Tham chiếu đến Model Blog
+    }],
   },
   {
     timestamps: true,
   }
 );
 
-blogCategorySchema.index({ title: "text", content: "text" });
+// Cập nhật chỉ mục để phản ánh đúng các trường trong schema
+blogCategorySchema.index({ name: "text", description: "text" });
 
-export default model<Document>("BlogCategory", blogCategorySchema);
+export default model<ICategoryBlog>("BlogCategory", blogCategorySchema);

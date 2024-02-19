@@ -1,10 +1,10 @@
 // controllers/categoryController.ts
-import BlogCategory, { ICategory } from "../../models/BlogCategory";
+import BlogCategory, { ICategoryBlog } from "../../models/BlogCategory";
 import { Request, Response } from "express";
 
 export const getAllCategories = async (req: Request, res: Response): Promise<void> => {
   try {
-    const categories: ICategory[] = await BlogCategory.find();
+    const categories: ICategoryBlog[] = await BlogCategory.find();
     // Gói mảng các danh mục thành một đối tượng với thuộc tính blogsCategories
     const response = { blogsCategories: categories };
     res.json(response);
