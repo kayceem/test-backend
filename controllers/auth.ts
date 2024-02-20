@@ -1,8 +1,10 @@
 import { Request, Response, NextFunction } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import User, { IUser } from "../models/User";
-import RevokedToken, { IRevokedToken } from "../models/RevokedToken";
+import User from "../models/User";
+import { IUser } from "../types/user.type";
+import RevokedToken from "../models/RevokedToken";
+import { IRevokedToken } from "../types/token.type";
 import { UserAuthRequest } from "../middleware/is-user-auth";
 import { AuthorAuthRequest } from "../middleware/is-auth";
 import crypto from "crypto";

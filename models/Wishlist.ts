@@ -1,10 +1,6 @@
 import { Schema, model } from "mongoose";
-import baseSchema, { IBaseSchema } from "./BaseSchema";
-
-export interface IWishlist extends IBaseSchema {
-  userId: Schema.Types.ObjectId;
-  courseId: Schema.Types.ObjectId;
-}
+import baseSchema from "./BaseSchema";
+import { IWishlist } from "../types/wishlist.type";
 
 const wishlistSchema = new Schema<IWishlist>(
   {

@@ -1,11 +1,6 @@
 import { Schema, model } from "mongoose";
-import baseSchema, { IBaseSchema } from "./BaseSchema";
-
-export interface IFeedback extends IBaseSchema {
-  name: string;
-  email: string;
-  message: string;
-}
+import baseSchema from "./BaseSchema";
+import { IFeedback } from "../types/feedback.type";
 
 const feedbackSchema = new Schema<IFeedback>(
   {

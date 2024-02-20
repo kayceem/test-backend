@@ -1,12 +1,16 @@
 import { Request, Response, NextFunction } from "express";
 import CustomErrorMessage from "./errorMessage";
 import CustomError from "./error";
-import Order, { IOrder } from "../models/Order";
-import Course, { ICourse, ICourseDetail } from "../models/Course";
+import Order from "../models/Order";
+import { IOrder } from "../types/order.type";
+import Course from "../models/Course";
+import { ICourse, ICourseDetail } from "../types/course.type";
 import Review from "../models/Review";
-import Section, { ISection } from "../models/Section";
-import Lesson, { ILesson } from "../models/Lesson";
-import IsLessonDone, { IIsLessonDone } from "../models/IsLessonDone";
+import Section from "../models/Section";
+import { ISection } from "../types/section.type";
+import Lesson from "../models/Lesson";
+import { ILesson, IIsLessonDone } from "../types/lesson.type";
+import IsLessonDone from "../models/IsLessonDone";
 import { Configuration, OpenAIApi } from "openai";
 import mongoose from "mongoose";
 import { courseNames, devopsCourses, blockchainCourses } from "./fakerData";
@@ -313,5 +317,3 @@ export const getCoursesOrderedByUserInfo = async (userId: string): Promise<ICour
     }
   }
 };
-
-

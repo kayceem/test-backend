@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from "express";
-import User, { IUser } from "../../models/User";
-import Course, { ICourse } from "../../models/Course";
+import User from "../../models/User";
+import { IUser } from "../../types/user.type";
+import Course from "../../models/Course";
+import { ICourse } from "../../types/course.type";
 import Order from "../../models/Order";
 import { BACKEND_URL } from "../../config/backend-domain";
 import { getProgressOfCourse, getCoursesOrderByUserId } from "../../utils/helper";

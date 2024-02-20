@@ -1,13 +1,6 @@
 import { Schema, model } from "mongoose";
-import baseSchema, { IBaseSchema } from "./BaseSchema";
-
-export interface ICategory extends IBaseSchema {
-  name: string;
-  cateImage: string;
-  description: string;
-  cateSlug: string;
-  cateParent: string;
-}
+import baseSchema from "./BaseSchema";
+import { ICategory } from "../types/category.type";
 
 const categorySchema = new Schema<ICategory>(
   {

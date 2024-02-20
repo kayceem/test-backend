@@ -1,11 +1,7 @@
-import { Schema, Types, model } from "mongoose";
-import baseSchema, { IBaseSchema } from "./BaseSchema";
+import { Schema, model } from "mongoose";
+import baseSchema from "./BaseSchema";
 import { TreeNode } from "utils/coreHelper";
-
-export interface IPermission extends IBaseSchema {
-  listPermission: string;
-  userId: Types.ObjectId;
-}
+import { IPermission } from "../types/permission.type";
 
 const permissionSchema = new Schema<IPermission>(
   {

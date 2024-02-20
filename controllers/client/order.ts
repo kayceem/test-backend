@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
-import Order, { IOrderItem } from "../../models/Order";
+import Order from "../../models/Order";
+import { IOrderItem } from "../../types/order.type";
 import Course from "../../models/Course";
 import CustomError from "../../utils/error";
 import CustomErrorMessage from "../../utils/errorMessage";

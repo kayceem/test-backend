@@ -1,8 +1,6 @@
 import { Schema, model } from "mongoose";
-import baseSchema, { IBaseSchema } from "./BaseSchema";
-export interface IRevokedToken extends IBaseSchema {
-  token: string;
-}
+import baseSchema from "./BaseSchema";
+import { IRevokedToken } from "../types/token.type";
 
 const revokedTokenSchema = new Schema({
   token: {

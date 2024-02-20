@@ -1,27 +1,6 @@
 import { Schema, model } from "mongoose";
-import baseSchema, { IBaseSchema } from "./BaseSchema";
-export interface ILesson extends IBaseSchema {
-  sectionId: Schema.Types.ObjectId;
-  name: string;
-  icon?: string;
-  description: string;
-  content: string;
-  videoLength?: number;
-  access: string;
-  type: string;
-  password?: string;
-  oldPrice: number;
-  newPrice: number;
-  discount: number;
-  thumbnail: string;
-  shortDesc: string;
-  fullDesc: string;
-  stockQty: number;
-  categoryId: string;
-  images: string;
-  oldImages: string;
-  thumb: string;
-}
+import baseSchema from "./BaseSchema";
+import { ILesson } from "../types/lesson.type";
 
 const lessonSchema = new Schema<ILesson>(
   {

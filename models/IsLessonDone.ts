@@ -1,10 +1,6 @@
 import { Schema, model } from "mongoose";
-import baseSchema, { IBaseSchema } from "./BaseSchema";
-export interface IIsLessonDone extends IBaseSchema {
-  userId: Schema.Types.ObjectId;
-  lessonId: Schema.Types.ObjectId;
-  isDone: boolean;
-}
+import baseSchema from "./BaseSchema";
+import { IIsLessonDone } from "../types/lesson.type";
 
 const isLessonDoneSchema = new Schema<IIsLessonDone>(
   {
