@@ -1,11 +1,6 @@
 import { Schema, model } from "mongoose";
-import baseSchema, { IBaseSchema } from "./BaseSchema";
-export interface ISection extends IBaseSchema {
-  courseId: Schema.Types.ObjectId;
-  name: string;
-  access: string;
-  description?: string;
-}
+import baseSchema from "./BaseSchema";
+import { ISection } from "../types/section.type";
 
 const sectionSchema = new Schema<ISection>(
   {

@@ -1,14 +1,6 @@
 import { Schema, model } from "mongoose";
-import baseSchema, { IBaseSchema } from "./BaseSchema";
-import { IUser } from "./User";
-import { ICourse } from "./Course";
-
-export interface ICertificate extends IBaseSchema {
-  certificateName: string;
-  user: IUser;
-  course: ICourse;
-  dateValid?: Date;
-}
+import baseSchema from "./BaseSchema";
+import { ICertificate } from "../types/certificate.type";
 
 const certificateSchema = new Schema<ICertificate>(
   {

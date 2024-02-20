@@ -1,21 +1,6 @@
 import { Schema, model } from "mongoose";
-import baseSchema, { IBaseSchema } from "./BaseSchema";
-export interface IDiscuss extends IBaseSchema {
-  lessonId: Schema.Types.ObjectId;
-  authorId: Schema.Types.ObjectId;
-  content: string;
-  replies: {
-    userId: Schema.Types.ObjectId;
-    contentReply: string;
-    createdAt: Date;
-    updatedAt?: Date;
-  }[];
-  emotions: {
-    userId: Schema.Types.ObjectId;
-    createdAt: Date;
-    updatedAt?: Date;
-  }[];
-}
+import baseSchema from "./BaseSchema";
+import { IDiscuss } from "../types/discuss.type";
 
 const discussSchema = new Schema<IDiscuss>(
   {

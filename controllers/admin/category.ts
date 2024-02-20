@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
-import Category, { ICategory } from "../../models/Category";
+import Category from "../../models/Category";
+import { ICategory } from "../../types/category.type";
 import Course from "../../models/Course";
 import { body, validationResult } from "express-validator";
 import CustomError from "../../utils/error";

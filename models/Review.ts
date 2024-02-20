@@ -1,13 +1,6 @@
 import { Schema, model } from "mongoose";
-import baseSchema, { IBaseSchema } from "./BaseSchema";
-export interface IReview extends IBaseSchema {
-  userId: Schema.Types.ObjectId;
-  courseId: Schema.Types.ObjectId;
-  title: string;
-  content: string;
-  ratingStar: number;
-  orderId: Schema.Types.ObjectId;
-}
+import baseSchema from "./BaseSchema";
+import { IReview } from "../types/review.type";
 
 const reviewSchema = new Schema<IReview>(
   {

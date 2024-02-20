@@ -1,35 +1,6 @@
 import { Schema, model } from "mongoose";
-import { ICourse } from "./Course";
-import { IUser } from "./User";
-import baseSchema, { IBaseSchema } from "./BaseSchema";
-export interface IOrder extends IBaseSchema {
-  vatFee?: number;
-  transaction: ITransaction;
-  note?: string;
-  totalPrice?: number;
-  user: IUser;
-  items: ICourse[];
-  status: string;
-}
-
-export interface IOrderItem {
-  courseId: string;
-  name?: string;
-  finalPrice?: number;
-  thumbnail?: string;
-  reviewed?: boolean;
-}
-
-export interface ITransaction {
-  method: string;
-  amount?: number;
-  bankCode?: string;
-  bankTranNo?: string;
-  cardType?: string;
-  payDate?: Date;
-  orderInfo?: string;
-  transactionNo?: string;
-}
+import baseSchema from "./BaseSchema";
+import { IOrder } from "../types/order.type";
 
 const orderSchema = new Schema<IOrder>(
   {

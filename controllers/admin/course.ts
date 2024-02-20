@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from "express";
-import Course, { ICourse } from "../../models/Course";
+import Course from "../../models/Course";
+import { ICourse } from "../../types/course.type";
 import CustomError from "../../utils/error";
 import CustomErrorMessage from "../../utils/errorMessage";
-
 interface GetCoursesQuery {
   $text?: { $search: string };
   userId?: { $in: string[] };

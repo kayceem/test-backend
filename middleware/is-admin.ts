@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
-import User, { IUser } from "../models/User";
+import User from "../models/User";
+import { IUser } from "../types/user.type";
 import CustomError from "../utils/error";
 import CustomErrorMessage from "../utils/errorMessage";
 
