@@ -9,4 +9,6 @@ router.get("/review/:reviewId", reviewController.getReview);
 
 router.delete('/review/delete/:reviewId', reviewController.deleteReview);
 
+router.post('/review/undelete/:reviewId', reviewController.undeleteReview);
+
 export default router;
