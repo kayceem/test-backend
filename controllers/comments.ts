@@ -1,30 +1,39 @@
-import Comment from "../models/BlogComment";
 import { Request, Response } from "express";
+import BlogComment from "../models/BlogComment"; // Giả sử đường dẫn đến model BlogComment
 
-export const createComment = async (req: Request, res: Response) => {
+export const addComment = async (req: Request, res: Response) => {
   try {
-    const { content, userId, postId, parentCommentId } = req.body;
-    const newComment = new Comment({
+    const { content, userId, blogId, parentCommentId } = req.body;
+
+    const newComment = new BlogComment({
       content,
       userId,
-      postId,
+      blogId,
       parentCommentId: parentCommentId || null,
+      likes: [],
     });
-
     const savedComment = await newComment.save();
+
     res.status(201).json(savedComment);
-  } catch (error: unknown) {
-    res.status(500).json({ error: (error as Error).message });
+  } catch (error) {
+    const errorMessage = (error as Error).message;
+    res.status(500).json({ error: errorMessage });
   }
 };
 
-export const getComments = async (req: Request, res: Response) => {
+export const getCommentsByBlogId = async (req: Request, res: Response) => {
   try {
-    const { postId } = req.params;
-    const comments = await Comment.find({ postId: postId }).populate("userId");
-    res.json(comments);
-  } catch (error: unknown) {
-    res.status(500).json({ error: (error as Error).message });
+    const { blogId } = req.params;
+    const comments = await BlogComment.find({ blogId, parentCommentId: null }) // Fetch only parent comments
+      .populate("userId", "name")
+      .populate({
+        path: "replies",
+        populate: { path: "userId", select: "name avatar" },
+      });
+    res.json({ comments });
+  } catch (error) {
+    const errorMessage = (error as Error).message;
+    res.status(500).json({ error: errorMessage });
   }
 };
 
@@ -33,16 +42,20 @@ export const updateComment = async (req: Request, res: Response) => {
     const { commentId } = req.params;
     const { content } = req.body;
 
-    const updatedComment = await Comment.findByIdAndUpdate(commentId, { content }, { new: true });
+    const updatedComment = await BlogComment.findByIdAndUpdate(
+      commentId,
+      { content },
+      { new: true }
+    );
 
     if (!updatedComment) {
-      res.status(404).json({ error: "Comment not found" });
-      return;
+      return res.status(404).json({ error: "Comment not found" });
     }
 
     res.json(updatedComment);
-  } catch (error: unknown) {
-    res.status(500).json({ error: (error as Error).message });
+  } catch (error) {
+    const errorMessage = (error as Error).message;
+    res.status(500).json({ error: errorMessage });
   }
 };
 
@@ -50,67 +63,74 @@ export const deleteComment = async (req: Request, res: Response) => {
   try {
     const { commentId } = req.params;
 
-    const deletedComment = await Comment.findByIdAndDelete(commentId);
+    const deletedComment = await BlogComment.findByIdAndDelete(commentId);
 
     if (!deletedComment) {
-      res.status(404).json({ error: "Comment not found" });
-      return;
-    }
-
-    res.json({ message: "Comment deleted successfully" });
-  } catch (error: unknown) {
-    res.status(500).json({ error: (error as Error).message });
-  }
-};
-
-export const likeComment = async (req: Request, res: Response) => {
-  try {
-    const { commentId, userId } = req.body;
-    console.log(commentId, userId);
-
-    const comment = await Comment.findById(commentId);
-
-    if (!comment) {
-      res.status(404).json({ error: "Comment not found" });
-      return;
-    }
-
-    const index = comment.likes.indexOf(userId);
-    if (index === -1) {
-      comment.likes.push(userId);
-    } else {
-      comment.likes.splice(index, 1); // Remove user from likes if already liked
-    }
-
-    await comment.save();
-    res.json(comment);
-  } catch (error: unknown) {
-    res.status(500).json({ error: (error as Error).message });
-  }
-};
-
-export const replyComment = async (req: Request, res: Response) => {
-  try {
-    const { content, userId } = req.body;
-    const { commentId } = req.params;
-
-    const comment = await Comment.findById(commentId);
-    if (!comment) {
       return res.status(404).json({ error: "Comment not found" });
     }
 
-    const reply = {
-      content,
-      userId,
-      parentCommentId: commentId,
-    };
-    console.log(reply);
+    res.json({ message: "Comment deleted successfully" });
+  } catch (error) {
+    const errorMessage = (error as Error).message;
+    res.status(500).json({ error: errorMessage });
+  }
+};
 
-    comment.replies.push(reply);
+export const toggleLikeComment = async (req: Request, res: Response) => {
+  const { commentId, userId } = req.body;
+
+  try {
+    const comment = await BlogComment.findById(commentId);
+
+    if (!comment) {
+      return res.status(404).send("Comment not found");
+    }
+
+    const likeIndex = comment.likes.indexOf(userId);
+
+    if (likeIndex === -1) {
+      comment.likes.push(userId);
+    } else {
+      comment.likes.splice(likeIndex, 1);
+    }
 
     const updatedComment = await comment.save();
-    res.status(201).json(updatedComment);
-  } catch (error: unknown) {
+    res.json(updatedComment);
+  } catch (error) {
+    const errorMessage = (error as Error).message;
+    res.status(500).json({ error: errorMessage });
+  }
+};
+
+export const addReplyToComment = async (req: Request, res: Response) => {
+  const { content, userId, blogId, parentCommentId } = req.body;
+
+  try {
+    // Find the parent comment and ensure it exists
+    const parentComment = await BlogComment.findById(parentCommentId);
+    if (!parentComment) {
+      return res.status(404).json({ error: "Parent comment not found." });
+    }
+
+    // Create a new comment as a reply
+    const newReply = new BlogComment({
+      content,
+      userId,
+      blogId,
+      parentCommentId,
+    });
+
+    // Save the new reply
+    const savedReply = await newReply.save();
+
+    parentComment.replies.push(savedReply._id);
+    await parentComment.save();
+
+    // Populate necessary fields for the response
+    await savedReply.populate("userId", "name avatar");
+
+    res.status(201).json(savedReply);
+  } catch (error) {
     res.status(500).json({ error: (error as Error).message });
   }
 };

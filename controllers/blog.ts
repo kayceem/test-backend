@@ -26,7 +26,6 @@ exports.getAllBlog = async (req: Request, res: Response, next: NextFunction) => 
 exports.createBlog = async (req: Request, res: Response, next: NextFunction) => {
   const { title, author, blogImg, technology, tags, readTime, content, userId, category } =
     req.body;
-  console.log(req.body);
   try {
     if (
       !title ||
