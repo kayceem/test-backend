@@ -1,30 +1,8 @@
-import mongoose, { Document, Schema } from "mongoose";
+import { model, Schema } from "mongoose";
+import { IBlogComment } from "types/commentsBlog.type";
+import baseSchema from "./BaseSchema";
 
-interface IReply {
-  content: string;
-  userId: string;
-  parentCommentId: string;
-}
-
-interface IComment extends Document {
-  content: string;
-  userId: string;
-  postId: string;
-  likes: string[];
-  parentCommentId?: mongoose.Types.ObjectId;
-  replies: IReply[];
-}
-
-const replySchema = new Schema<IReply>(
-  {
-    content: String,
-    userId: String,
-    parentCommentId: String,
-  },
-  { _id: false }
-);
-
-const commentSchema = new Schema(
+const blogCommentSchema = new Schema<IBlogComment>(
   {
     content: {
       type: String,
@@ -35,31 +13,38 @@ const commentSchema = new Schema(
       ref: "User",
       required: true,
     },
-    postId: {
+    blogId: {
       type: Schema.Types.ObjectId,
-      ref: "Post", // Thay đổi "Blog" thành "Post" nếu tên model bài viết của bạn là "Post"
+      ref: "Blog",
       required: true,
     },
     parentCommentId: {
       type: Schema.Types.ObjectId,
-      ref: "Comment",
-      default: null, // Mặc định là null để biết đây là bình luận chính, không phải phản hồi
+      ref: "BlogComment",
+      default: null,
     },
-    likes: {
-      type: [Schema.Types.ObjectId],
-      ref: "User",
-      default: [],
+    isDeleted: {
+      type: Boolean,
+      default: false,
     },
-    replies: {
-      type: [replySchema],
-      default: [], // Ensure this is always initialized as an array
-    },
+    likes: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+        default: [],
+      },
+    ],
+    replies: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "BlogComment",
+      },
+    ],
   },
   {
-    timestamps: true, // Sử dụng timestamps để tự động quản lý trường createdAt và updatedAt
+    timestamps: true,
   }
 );
 
-commentSchema.index({ content: "text" });
-
-export default mongoose.model<IComment>("Comment", commentSchema);
+blogCommentSchema.add(baseSchema);
+export default model<IBlogComment>("BlogComment", blogCommentSchema);

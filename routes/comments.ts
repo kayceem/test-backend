@@ -1,21 +1,21 @@
 const express = require("express");
 
 import {
-  createComment,
-  getComments,
+  addComment,
+  getCommentsByBlogId,
   updateComment,
   deleteComment,
-  likeComment,
-  replyComment,
+  toggleLikeComment,
+  addReplyToComment,
 } from "../controllers/comments";
 
 const router = express.Router();
 
 // Route để tạo một bình luận mới
-router.post("/", createComment);
+router.post("/", addComment);
 
 // Route để lấy tất cả bình luận của một bài viết
-router.get("/:postId", getComments);
+router.get("/:blogId", getCommentsByBlogId);
 
 // Route để cập nhật một bình luận
 router.put("/:commentId", updateComment);
@@ -24,9 +24,9 @@ router.put("/:commentId", updateComment);
 router.delete("/:commentId", deleteComment);
 
 // Route để 'like' hoặc 'unlike' một bình luận
-router.patch("/like/:commentId", likeComment);
+router.patch("/like", toggleLikeComment);
 
 // Route để phản hồi bình luận
-router.post("/reply/:commentId", replyComment);
+router.post("/reply", addReplyToComment);
 
 export default router;

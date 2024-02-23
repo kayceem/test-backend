@@ -22,7 +22,7 @@ import Permission from "../models/Permission";
 import { TreeNode, coreHelper } from "../utils/coreHelper";
 import { createOAuthAppAuth } from "@octokit/auth-oauth-app";
 import { Octokit } from "@octokit/rest";
-import {getIO} from '../socket'
+import { getIO } from "../socket";
 const serviceAccountConfig = {
   type: serviceAccount.type,
   projectId: serviceAccount.project_id,
@@ -166,10 +166,10 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     await userDoc.save();
 
     // Add realtime socket
-    const socketIO = getIO()
+    const socketIO = getIO();
     socketIO.emit("login", {
-      message: `User ${userDoc.name} has been login at ${new Date(Date.now() + 60 * 60 * 1000)}`
-    })
+      message: `User ${userDoc.name} has been login at ${new Date(Date.now() + 60 * 60 * 1000)}`,
+    });
 
     res.status(200).json({
       message: "Login successfuly!",
@@ -222,32 +222,32 @@ export const adminLogin = async (req: Request, res: Response, next: NextFunction
     userDoc.loginToken = token;
     userDoc.loginTokenExpiration = new Date(Date.now() + 60 * 60 * 1000);
     await userDoc.save();
-      
-      // Check Permission role
-      const listKeyPermission = [];
-      const userPermission = await Permission.findOne({
-        userId: userDoc._id
+
+    // Check Permission role
+    const listKeyPermission = [];
+    const userPermission = await Permission.findOne({
+      userId: userDoc._id,
+    });
+
+    if (userPermission) {
+      const listPermissionJSON = JSON.parse(userPermission.listPermission) as TreeNode[][];
+      const list = listPermissionJSON.map((item) => item[0]).map((nodeItem) => nodeItem.children);
+      const listPermissionObj = list.flat().flatMap((item) => item.children);
+
+      listPermissionObj.forEach((permissionObj) => {
+        if (permissionObj.checked) {
+          listKeyPermission.push(permissionObj.key);
+        }
       });
+    }
 
-      if(userPermission) {
-        const listPermissionJSON = JSON.parse(userPermission.listPermission) as TreeNode[][];
-        const list = listPermissionJSON.map((item) => item[0]).map((nodeItem) => nodeItem.children)
-        const listPermissionObj = list.flat().flatMap((item) => item.children);
+    const roleEnum = coreHelper.getEnumMultiLevelToArray(enumData.RoleGroup);
 
-        listPermissionObj.forEach((permissionObj) => {
-          if(permissionObj.checked) {
-            listKeyPermission.push(permissionObj.key)
-          }
-        })
-      }
-      
-      const roleEnum = coreHelper.getEnumMultiLevelToArray(enumData.RoleGroup)
-
-      // Convert enumData
-      const resEnumData = {
-        ...enumData,
-        Role: roleEnum,
-      }
+    // Convert enumData
+    const resEnumData = {
+      ...enumData,
+      Role: roleEnum,
+    };
 
     res.status(200).json({
       message: "Login administrator successfuly!",
@@ -255,7 +255,7 @@ export const adminLogin = async (req: Request, res: Response, next: NextFunction
       userId: userDoc._id.toString(),
       enumData: resEnumData,
       role: roleEnum,
-      listPermission: listKeyPermission
+      listPermission: listKeyPermission,
     });
   } catch (error) {
     if (error instanceof CustomError) {
@@ -463,10 +463,32 @@ passport.use(
 
 export const githubLogin = async (req: Request, res: Response, next: NextFunction) => {
   const { code } = req.body;
-  const githubToken = "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";
+
   try {
+    const clientID = "2c54ea01c90e1cbc1e0f";
+    const clientSecret = "e212d5f4cd4e9fd080217b5ce2c4e43fbb3bcf50";
+    const tokenURL = "https://github.com/login/oauth/access_token";
+
+    const response = await fetch(tokenURL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({
+        client_id: clientID,
+        client_secret: clientSecret,
+        code: code,
+      }),
+    });
+
+    const data = await response.json();
+    console.log("Response from GitHub:", data);
+    const githubToken = data.access_token;
+    console.log(githubToken);
+
     // Get user information using the GitHub token
-    const octokit = new Octokit({ auth: `token ${githubToken}` });
+    const octokit = new Octokit({ auth: githubToken });
     const { data: userData } = await octokit.users.getAuthenticated();
     let userDoc = await User.findOne({ email: userData.email, providerId: "github.com" });
     if (!userDoc) {
