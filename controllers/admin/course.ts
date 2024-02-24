@@ -1,8 +1,12 @@
 import { Request, Response, NextFunction } from "express";
 import Course from "../../models/Course";
+import ActionLog from "../../models/ActionLog";
 import { ICourse } from "../../types/course.type";
 import CustomError from "../../utils/error";
 import CustomErrorMessage from "../../utils/errorMessage";
+import { enumData } from "../../config/enumData";
+import mongoose, {Types, ObjectId, ClientSession} from "mongoose";
+import { AuthorAuthRequest } from "middleware/is-auth";
 interface GetCoursesQuery {
   $text?: { $search: string };
   userId?: { $in: string[] };
@@ -138,8 +142,11 @@ export const postCourse = async (req: Request, res: Response, next: NextFunction
     willLearns,
     subTitle,
   } = req.body;
-
+  // Create transaction to make sure data intergrity
+  let session: ClientSession | null = null;
   try {
+    session = await mongoose.startSession();
+    session.startTransaction();
     const course = new Course({
       name,
       thumbnail,
@@ -155,21 +162,191 @@ export const postCourse = async (req: Request, res: Response, next: NextFunction
       subTitle,
     });
 
-    const response = await course.save();
+    const courseRes = await course.save({
+      session: session
+    });
+    const courseId = courseRes._id
+    const type = enumData.ActionLogEnType.Create.code
+    const createdBy = new mongoose.Types.ObjectId((req as any).userId) as any
+    const historyDesc = ` User [${(req as any).username}] has [${enumData.ActionLogEnType.Create.name}] Course`
+    const functionType = "COURSE"
+    const historyItem = new ActionLog({
+      courseId,
+      type,
+      createdBy,
+      functionType,
+      description: historyDesc
+    })
 
+    await historyItem.save({
+      session: session
+    })
+
+    await session.commitTransaction();
+    session.endSession();
     res.json({
       message: "Create course successfully!",
-      course: response,
+      course: courseRes,
     });
+
+    
   } catch (error) {
+    if (session) {
+      await session.abortTransaction();
+      session.endSession();
+    }
+
     if (error instanceof CustomError) {
       return next(error);
     } else {
-      const customError = new CustomErrorMessage("Failed to fetch courses!", 422);
+      const customError = new CustomErrorMessage("Failed to create courses!", 422);
       return next(customError);
     }
   }
 };
+
+export const udpateCourse = async (req: AuthorAuthRequest, res: Response, next: NextFunction) => {
+  const {
+    id,
+    name,
+    thumbnail,
+    access,
+    price,
+    finalPrice,
+    description,
+    level,
+    categoryId,
+    userId,
+    courseSlug,
+    willLearns,
+    subTitle,
+  } = req.body;
+  // Create transaction to make sure data intergrity
+  let session: ClientSession | null = null;
+  try {
+    session = await mongoose.startSession();
+    session.startTransaction();
+    const foundCourse = await Course.findById(id);
+    if (!foundCourse) {
+      const error = new CustomError("Course", "Course not found", 404);
+      throw error;
+    }
+    foundCourse.name = name
+    foundCourse.thumbnail = thumbnail
+    foundCourse.access = access
+    foundCourse.price = price
+    foundCourse.finalPrice = finalPrice
+    foundCourse.description = description
+    foundCourse.level = level
+    foundCourse.categoryId = categoryId
+    foundCourse.userId = userId
+    foundCourse.courseSlug = courseSlug
+    foundCourse.willLearns = willLearns
+    foundCourse.subTitle = subTitle
+
+    const courseRes = await foundCourse.save({
+      session: session
+    });
+    const courseId = courseRes._id
+    const type = enumData.ActionLogEnType.Update.code
+    const createdBy = new mongoose.Types.ObjectId(req.userId) as any
+    const historyDesc = ` User [${(req as any).username}] has [${enumData.ActionLogEnType.Update.name}] Course`
+    const functionType = "COURSE"
+    const historyItem = new ActionLog({
+      courseId,
+      type,
+      createdBy,
+      functionType,
+      description: historyDesc
+    })
+
+    await historyItem.save({
+      session: session
+    })
+
+    await session.commitTransaction();
+    session.endSession();
+    res.json({
+      message: "Update course successfully!",
+      course: courseRes,
+    });
+
+    
+  } catch (error) {
+    if (session) {
+      await session.abortTransaction();
+      session.endSession();
+    }
+
+    if (error instanceof CustomError) {
+      return next(error);
+    } else {
+      const customError = new CustomErrorMessage("Failed to update courses!", 422);
+      return next(customError);
+    }
+  }
+};
+
+export const updateActiveStatus = async (req: AuthorAuthRequest, res: Response, next: NextFunction) => {
+  const {
+    id,
+  } = req.body;
+  // Create transaction to make sure data intergrity
+  let session: ClientSession | null = null;
+  try {
+    session = await mongoose.startSession();
+    session.startTransaction();
+    const foundCourse = await Course.findById(id);
+    if (!foundCourse) {
+      const error = new CustomError("Course", "Course not found", 404);
+      throw error;
+    }
+    foundCourse.isDeleted = !foundCourse.isDeleted
+    foundCourse.updatedAt = new Date()
+    foundCourse.updatedBy = new mongoose.Types.ObjectId(req.userId) as any
+    const courseRes = await foundCourse.save({
+      session: session
+    });
+    const courseId = courseRes._id
+    const type = foundCourse.isDeleted === false ? `${enumData.ActionLogEnType.Activate.code}` : `${enumData.ActionLogEnType.Deactivate.code}`
+    const typeName = foundCourse.isDeleted === false ? `${enumData.ActionLogEnType.Activate.name}` : `${enumData.ActionLogEnType.Deactivate.name}`
+    const createdBy = new mongoose.Types.ObjectId(req.userId) as any
+    const historyDesc = ` User [${(req as any).username}] has [${typeName}] Course`
+    const functionType = "COURSE"
+    const historyItem = new ActionLog({
+      courseId,
+      type,
+      createdBy,
+      functionType,
+      description: historyDesc
+    })
+
+    await historyItem.save({
+      session: session
+    })
+
+    await session.commitTransaction();
+    session.endSession();
+    res.json({
+      message: "Update active status of course successfully!",
+      course: courseRes,
+    });
+
+    
+  } catch (error) {
+    if (session) {
+      await session.abortTransaction();
+      session.endSession();
+    }
+
+    if (error instanceof CustomError) {
+      return next(error);
+    } else {
+      const customError = new CustomErrorMessage("Failed to update active status of courses!", 422);
+      return next(customError);
+    }
+  }
+}
 
 export const deleteCourse = async (req: Request, res: Response, next: NextFunction) => {
   const { courseId } = req.params;

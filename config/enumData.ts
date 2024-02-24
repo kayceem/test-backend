@@ -402,6 +402,18 @@ export const enumData = {
       ThaoTac: { code: 'ThaoTac', name: 'Thao tác', value: false },
     },
   
+    ActionLogEnType: {
+      Create: { code: 'Create', name: 'Created', value: false },
+      Update: { code: 'Update', name: 'Updated', value: false },
+      Activate: { code: 'Activate', name: 'Activated', value: false },
+      Deactivate: { code: 'Deactivate', name: 'Deactivated', value: false },
+      Fire: { code: 'Fire', name: 'Fired', value: false },
+      Accept: { code: 'Accept', name: 'Accepted', value: false },
+      Destroy: { code: 'Destroy', name: 'Destroyed', value: false },
+      Confirm: { code: 'Confirm', name: 'Confirmed', value: false },
+      Reject: { code: 'Reject', name: 'Rejected', value: false },
+    },
+  
     ManagerRole: {
       Manager: { code: 'Manager', name: 'Quản lý' },
       Director: { code: 'Director', name: 'Giám đốc' },

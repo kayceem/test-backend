@@ -10,6 +10,7 @@ interface DecodedToken extends JwtPayload {
 
 export interface AuthorAuthRequest extends Request {
   userId?: string;
+  username?: string;
   courseId?: string;
   decodedToken?: string | JwtPayload;
   token?: string;
@@ -63,6 +64,7 @@ export default async (req: AuthorAuthRequest, res: Response, next: NextFunction)
   }
 
   authorAuthReq.userId = decodedToken.userId;
+  authorAuthReq.username = 'ADMIN'; // TODO LATER
 
   if (req.query.courseId) {
     authorAuthReq.courseId = req.query.courseId as string;

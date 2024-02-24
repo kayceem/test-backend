@@ -17,6 +17,9 @@ const userSchema = new Schema<IUser>(
       default:
         "https://lwfiles.mycourse.app/64b5524f42f5698b2785b91e-public/avatars/thumbs/64c077e0557e37da3707bb92.jpg",
     },
+    username: {
+      type: String,
+    },
     email: {
       type: String,
     },
