@@ -4,13 +4,13 @@ export interface IUser extends IBaseSchema {
   providerId: string;
   name: string;
   avatar: string;
+  username?: string
   email?: string;
   phone?: string;
   address?: string;
   password?: string;
   role?: string;
   payment: string;
-  lastLogin?: Date;
   headline?: string;
   biography?: string;
   website?: string;
@@ -19,10 +19,11 @@ export interface IUser extends IBaseSchema {
   linkedin?: string;
   youtube?: string;
   language: string;
+  resetToken?: string;
+  loginToken?: string;
   showProfile: boolean;
   showCourses: boolean;
-  resetToken?: string;
+  lastLogin?: Date;
   resetTokenExpiration?: Date;
-  loginToken?: string;
   loginTokenExpiration?: Date;
 }
