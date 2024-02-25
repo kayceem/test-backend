@@ -1,6 +1,6 @@
 import { model, Schema } from "mongoose";
-import { IBlogComment } from "types/commentsBlog.type";
 import baseSchema from "./BaseSchema";
+import { IBlogComment } from "../types/commentsBlog.type";
 
 const blogCommentSchema = new Schema<IBlogComment>(
   {

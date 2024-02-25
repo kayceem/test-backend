@@ -1,8 +1,12 @@
-import { Request, Response, NextFunction } from "express";
+import { Request, Response, NextFunction, response } from "express";
 import Question from "../../models/Question";
 import CustomError from "../../utils/error";
 import CustomErrorMessage from "../../utils/errorMessage";
-import { AuthorAuthRequest } from "middleware/is-auth";
+import mongoose, {Types, ObjectId, ClientSession} from "mongoose";
+import { coreHelper } from "../../utils/coreHelper";
+import ActionLog from "../../models/ActionLog";
+import { enumData } from "../../config/enumData";
+import { AuthorAuthRequest } from "../../middleware/is-auth";
 
 export const getQuestions = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -43,21 +47,46 @@ export const getQuestionById = async (req: Request, res: Response, next: NextFun
 };
 
 export const postQuestion = async (req: AuthorAuthRequest, res: Response, next: NextFunction) => {
-  const { sectionId, name, icon, description, type, content, access, videoLength } = req.body;
-
+  const { name, listAnswersOfQuestion, correctAnswer } = req.body;
+  let session: ClientSession | null = null;
+  session = await mongoose.startSession();
+  session.startTransaction();
   try {
     const question = new Question({
       name,
+      code: coreHelper.getCodeDefault('QUESTION', Question),
+      listAnswersOfQuestion: listAnswersOfQuestion,
+      correctAnswer: correctAnswer,
       createdBy: req.userId
     });
 
-    const response = await question.save();
+    const questionRes = await question.save();
+    
+    const historyItem = new ActionLog({
+      courseId: questionRes._id,
+      type: enumData.ActionLogEnType.Create.code,
+      createdBy: new mongoose.Types.ObjectId((req as any).userId) as any,
+      functionType: "QUESTION",
+      description: ` User [${(req as any).username}] has [${enumData.ActionLogEnType.Create.name}] Question`
+    })
+
+    await historyItem.save({
+      session: session
+    })
+
+    await session.commitTransaction();
+    session.endSession();
 
     res.json({
       message: "Create Question successfully!",
       question: response,
     });
   } catch (error) {
+    if (session) {
+      await session.abortTransaction();
+      session.endSession();
+    }
+
     if (error instanceof CustomError) {
       return next(error);
     } else {

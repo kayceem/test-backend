@@ -4,6 +4,9 @@ import { ICourse } from "../types/course.type";
 
 const courseSchema = new Schema<ICourse>(
   {
+    code: {
+      type: String,
+    },
     name: {
       type: String,
       required: true,

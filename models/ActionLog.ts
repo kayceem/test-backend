@@ -1,6 +1,6 @@
 import { Schema, model } from "mongoose";
 import baseSchema from "./BaseSchema";
-import { IActionLog } from "types/actionLog.type";
+import { IActionLog } from "../types/actionLog.type";
 
 const actionLogSchema = new Schema<IActionLog>(
   {
