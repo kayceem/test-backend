@@ -13,6 +13,7 @@ router.get("/question/:questionId", questionController.getQuestionById);
 /** get histories of question */
 router.get("/question/:questionId/histories", questionController.loadHistories);
 
+/** create data for question */
 router.post("/question/create", uploadMiddleware.array("images[]"), questionController.postQuestion);
 
 /** Update a question */
