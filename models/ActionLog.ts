@@ -8,6 +8,10 @@ const actionLogSchema = new Schema<IActionLog>(
       type: Schema.Types.ObjectId,
       ref: "Course",
     },
+    questionId: {
+      type: Schema.Types.ObjectId,
+      ref: "Question",
+    },
     categoryId: {
       type: Schema.Types.ObjectId,
       ref: "Category",
