@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
-import Blog from "../models/Blog";
+import Blog from "../../models/Blog";
 import mongoose from "mongoose";
-import CustomErrorMessage from "../utils/errorMessage";
+import CustomErrorMessage from "../../utils/errorMessage";
 
 exports.getAllBlog = async (req: Request, res: Response, next: NextFunction) => {
   const page = parseInt(req.query.page as string) || 1;

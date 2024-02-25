@@ -1,11 +1,11 @@
-import Note from "../models/Note";
+import Note from "../../models/Note";
 import { Request, Response } from "express";
 
 // Get all note
 export const getAllNote = async (req: Request, res: Response) => {
   try {
     const notes = await Note.find();
-    res.status(200).json(notes);
+    res.status(200).json({ notes });
   } catch (error: unknown) {
     res.status(500).json({ error: (error as Error).message });
   }
@@ -15,7 +15,7 @@ export const getAllNote = async (req: Request, res: Response) => {
 export const getNoteByUserId = async (req: Request, res: Response) => {
   try {
     const notes = await Note.find({ userId: req.params.id });
-    res.status(200).json(notes);
+    res.status(200).json({ notes });
   } catch (error: unknown) {
     res.status(500).json({ error: (error as Error).message });
   }
@@ -46,14 +46,14 @@ export const createNote = async (req: Request, res: Response) => {
 //update note
 export const updateNote = async (req: Request, res: Response) => {
   const { id } = req.params;
-  const { content, videoMinute } = req.body;
+  const { content } = req.body;
 
   try {
     const existingNote = await Note.findById(id);
     if (!existingNote) {
       return res.status(404).json({ message: "No note found with this id!" });
     }
-    const note = await Note.findByIdAndUpdate(id, { content, videoMinute }, { new: true });
+    const note = await Note.findByIdAndUpdate(id, { content }, { new: true });
 
     if (!note) {
       return res.status(404).json({ message: "No note found with this id!" });

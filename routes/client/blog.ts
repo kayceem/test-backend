@@ -1,6 +1,6 @@
 const express = require("express");
 import { Router } from "express";
-const blogController = require("../controllers/blog");
+const blogController = require("../../controllers/client/blog");
 const router = Router();
 
 // GET ALL BLOG

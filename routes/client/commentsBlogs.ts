@@ -7,7 +7,7 @@ import {
   deleteComment,
   toggleLikeComment,
   addReplyToComment,
-} from "../controllers/comments";
+} from "../../controllers/client/commentsBlogs";
 
 const router = express.Router();
 
