@@ -19,7 +19,7 @@ import {
   InterServerEvents,
   ServerToClientEvents,
   SocketData,
-} from "types/socket.type";
+} from "./types/socket.type";
 const app = express();
 
 app.use(cors());

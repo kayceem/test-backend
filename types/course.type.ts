@@ -3,6 +3,7 @@ import { IUser } from "./user.type";
 import { ICategory } from "./category.type";
 
 export interface ICourse extends IBaseSchema {
+  code?: string;
   name: string;
   subTitle?: string;
   thumbnail: string;

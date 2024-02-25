@@ -1,6 +1,5 @@
 import { Schema, model } from "mongoose";
 import baseSchema from "./BaseSchema";
-import { TreeNode } from "utils/coreHelper";
 import { IPermission } from "../types/permission.type";
 
 const permissionSchema = new Schema<IPermission>(

@@ -1,4 +1,5 @@
 // import { customAlphabet } from 'nanoid'
+import moment from 'moment'
 import { millisecondInDay } from '../config/constant'
 export interface TreeNode {
   title: string
@@ -313,6 +314,22 @@ class CoreHelper {
     })
 
     return result
+  }
+
+ async getCodeDefault(prefixCode: string, schemaObj: any) {
+    const code = prefixCode + '_' + moment(new Date()).format('MMYYYY') + '_'
+    const objData = await schemaObj.findOne({
+      code: { $regex: code, $options: 'i' } // Case-insensitive like
+    }).sort({ code: -1 }); // Descending order by 'code'
+    
+    let sortString = '0'
+    if (objData) {
+      sortString = objData.code.substring(code.length, code.length + 4)
+    }
+    const lastSort = parseInt(sortString)
+    sortString = ('000' + (lastSort + 1)).slice(-4)
+
+    return code + sortString
   }
 
 }

@@ -6,14 +6,17 @@ import CustomError from "../../utils/error";
 import CustomErrorMessage from "../../utils/errorMessage";
 import { enumData } from "../../config/enumData";
 import mongoose, {Types, ObjectId, ClientSession} from "mongoose";
-import { AuthorAuthRequest } from "middleware/is-auth";
+import { AuthorAuthRequest } from "../../middleware/is-auth";
+import { coreHelper } from "../../utils/coreHelper";
 interface GetCoursesQuery {
   $text?: { $search: string };
   userId?: { $in: string[] };
+  username?: string;
   categoryId?: string;
+  createdBy?: string;
 }
 
-export const getCourses = async (req: Request, res: Response, next: NextFunction) => {
+export const getCourses = async (req: AuthorAuthRequest, res: Response, next: NextFunction) => {
   const { _q, _page, _limit, _author, _category } = req.query;
 
   const skip: number = ((+_page || 1) - 1) * +_limit;
@@ -32,6 +35,10 @@ export const getCourses = async (req: Request, res: Response, next: NextFunction
 
   if (_category && typeof _category === "string" && _category !== "all") {
     query.categoryId = _category;
+  }
+
+  if(req.username !== "admin") {
+    query.createdBy = req.userId;
   }
 
   try {
@@ -127,7 +134,7 @@ export const getCourse = async (req: Request, res: Response, next: NextFunction)
   }
 };
 
-export const postCourse = async (req: Request, res: Response, next: NextFunction) => {
+export const postCourse = async (req: AuthorAuthRequest, res: Response, next: NextFunction) => {
   const {
     name,
     thumbnail,
@@ -148,6 +155,7 @@ export const postCourse = async (req: Request, res: Response, next: NextFunction
     session = await mongoose.startSession();
     session.startTransaction();
     const course = new Course({
+      code: coreHelper.getCodeDefault("COURSE", Course),
       name,
       thumbnail,
       access,
@@ -160,6 +168,7 @@ export const postCourse = async (req: Request, res: Response, next: NextFunction
       userId,
       willLearns,
       subTitle,
+      createdBy: req.userId
     });
 
     const courseRes = await course.save({
