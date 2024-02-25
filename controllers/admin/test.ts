@@ -2,7 +2,8 @@ import { Request, Response, NextFunction } from "express";
 import Test from "../../models/Test";
 import CustomError from "../../utils/error";
 import CustomErrorMessage from "../../utils/errorMessage";
-import { AuthorAuthRequest } from "middleware/is-auth";
+import { AuthorAuthRequest } from "../../middleware/is-auth";
+
 
 export const getTests = async (req: Request, res: Response, next: NextFunction) => {
   try {
