@@ -5,16 +5,21 @@ import bodyParser from "body-parser";
 import multer from "multer";
 import mongoose from "mongoose";
 import cors from "cors";
-import { Server } from 'socket.io';
+import { Server } from "socket.io";
 import authRouter from "./routes/auth";
 import clientRouter from "./routes/client";
 import adminRouter from "./routes/admin";
-import blogRouter from "./routes/blog";
-import commentsRouter from "./routes/comments";
-import noteRouter from "./routes/note";
+import blogRouter from "./routes/client/blog";
+import commentsRouter from "./routes/client/commentsBlogs";
+import noteRouter from "./routes/client/noteCourse";
 import { MONGODB_URI } from "./config/constant";
 import { FRONTEND_URL } from "./config/frontend-domain";
-import { ClientToServerEvents, InterServerEvents, ServerToClientEvents, SocketData } from "types/socket.type";
+import {
+  ClientToServerEvents,
+  InterServerEvents,
+  ServerToClientEvents,
+  SocketData,
+} from "types/socket.type";
 const app = express();
 
 app.use(cors());
@@ -37,7 +42,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
     "Access-Control-Allow-Headers",
     "Content-Type, Authorization, userId, adminRole, userRole"
   );
-  
+
   next();
 });
 
@@ -76,25 +81,22 @@ mongoose
     const server = app.listen(port, () => {
       console.log(`App listening on port ${port}`);
     });
-    io = new Server<
-    ClientToServerEvents,
-    ServerToClientEvents,
-    InterServerEvents,
-    SocketData
-  >(server, {
-      cors: {
-        origin: `${FRONTEND_URL}`, // Allow your React app's origin
-        methods: ["GET", "POST", "PUT", "PATCH", "OPTIONS", "DELETE"],  // Might need to adjust allowed methods
+    io = new Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>(
+      server,
+      {
+        cors: {
+          origin: `${FRONTEND_URL}`, // Allow your React app's origin
+          methods: ["GET", "POST", "PUT", "PATCH", "OPTIONS", "DELETE"], // Might need to adjust allowed methods
+        },
       }
+    );
+    io.on("connection", (socket) => {
+      console.log("Client connected");
     });
-    io.on('connection', socket => {
-      console.log('Client connected');
-    });
-
   })
   .catch((err) => {
     console.log(err);
   });
 
 export default app;
-export {io}
+export { io };

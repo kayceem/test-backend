@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import BlogComment from "../models/BlogComment"; // Giả sử đường dẫn đến model BlogComment
+import BlogComment from "../../models/BlogComment"; // Giả sử đường dẫn đến model BlogComment
 
 export const addComment = async (req: Request, res: Response) => {
   try {

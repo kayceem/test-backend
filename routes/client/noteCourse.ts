@@ -5,7 +5,7 @@ import {
   updateNote,
   deleteNote,
   getNoteByUserId,
-} from "../controllers/note";
+} from "../../controllers/client/noteCourse";
 
 const router = express.Router();
 
@@ -15,12 +15,12 @@ router.get("/", getAllNote);
 router.get("/:id", getNoteByUserId);
 
 // Create a new note
-router.post("/", createNote);
+router.post("/createNote", createNote);
 
 // Update a note
-router.put("/:id", updateNote);
+router.put("/update/:id", updateNote);
 
 // Delete a note
-router.delete("/:id", deleteNote);
+router.delete("/delete/:id", deleteNote);
 
 export default router;

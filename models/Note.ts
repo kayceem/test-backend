@@ -1,5 +1,6 @@
 // Xây dựng model note api theo số phút
 import mongoose from "mongoose";
+import baseSchema from "./BaseSchema";
 
 const NoteSchema = new mongoose.Schema({
   userId: {
@@ -22,6 +23,8 @@ const NoteSchema = new mongoose.Schema({
   },
 });
 
+NoteSchema.add(baseSchema);
+  
 const Note = mongoose.model("Note", NoteSchema);
 
 export default Note;
