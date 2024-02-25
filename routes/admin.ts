@@ -12,7 +12,7 @@ import reportRouter from "./admin/report";
 import transactionRouter from "./admin/transaction";
 import reviewRouter from "./admin/review";
 import permissionRouter from "./admin/permission";
-
+import questionRouter from "./admin/question";
 
 const router = Router();
 
@@ -36,14 +36,14 @@ router.use("/reviews", reviewRouter);
 
 router.use("/blogs", blogRouter);
 
-
-router.use("/blogs", blogRouter);
-
 router.use("/blogCategory", blogCategory);
 
 router.use("/feedbacks", feedbackRouter);
 
 router.use("/reports", reportRouter);
+
+/** Question route */
+router.use("/questions", questionRouter);
 
 
 export default router;

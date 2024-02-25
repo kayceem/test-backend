@@ -5,7 +5,7 @@ import { ICourse } from "../../types/course.type";
 import CustomError from "../../utils/error";
 import CustomErrorMessage from "../../utils/errorMessage";
 import { enumData } from "../../config/enumData";
-import mongoose, {Types, ObjectId, ClientSession} from "mongoose";
+import mongoose, {Types, ObjectId, ClientSession, Mongoose} from "mongoose";
 import { AuthorAuthRequest } from "../../middleware/is-auth";
 import { coreHelper } from "../../utils/coreHelper";
 interface GetCoursesQuery {
@@ -13,7 +13,7 @@ interface GetCoursesQuery {
   userId?: { $in: string[] };
   username?: string;
   categoryId?: string;
-  createdBy?: string;
+  createdBy?: ObjectId;
 }
 
 export const getCourses = async (req: AuthorAuthRequest, res: Response, next: NextFunction) => {
@@ -37,8 +37,9 @@ export const getCourses = async (req: AuthorAuthRequest, res: Response, next: Ne
     query.categoryId = _category;
   }
 
+  // Filter data by author (who has created that course)
   if(req.username !== "admin") {
-    query.createdBy = req.userId;
+    query.createdBy = new mongoose.Types.ObjectId(req.userId) as any;
   }
 
   try {
@@ -154,8 +155,11 @@ export const postCourse = async (req: AuthorAuthRequest, res: Response, next: Ne
   try {
     session = await mongoose.startSession();
     session.startTransaction();
+
+    const courseCode = await coreHelper.getCodeDefault("COURSE", Course);
+
     const course = new Course({
-      code: coreHelper.getCodeDefault("COURSE", Course),
+      code: courseCode,
       name,
       thumbnail,
       access,
@@ -174,17 +178,13 @@ export const postCourse = async (req: AuthorAuthRequest, res: Response, next: Ne
     const courseRes = await course.save({
       session: session
     });
-    const courseId = courseRes._id
-    const type = enumData.ActionLogEnType.Create.code
-    const createdBy = new mongoose.Types.ObjectId((req as any).userId) as any
-    const historyDesc = ` User [${(req as any).username}] has [${enumData.ActionLogEnType.Create.name}] Course`
-    const functionType = "COURSE"
+
     const historyItem = new ActionLog({
-      courseId,
-      type,
-      createdBy,
-      functionType,
-      description: historyDesc
+      courseId: courseRes._id,
+      type: enumData.ActionLogEnType.Create.code,
+      createdBy: new mongoose.Types.ObjectId((req as any).userId) as any,
+      functionType: "COURSE",
+      description: ` User [${(req as any).username}] has [${enumData.ActionLogEnType.Create.name}] Course`
     })
 
     await historyItem.save({
@@ -316,14 +316,13 @@ export const updateActiveStatus = async (req: AuthorAuthRequest, res: Response, 
     const courseRes = await foundCourse.save({
       session: session
     });
-    const courseId = courseRes._id
     const type = foundCourse.isDeleted === false ? `${enumData.ActionLogEnType.Activate.code}` : `${enumData.ActionLogEnType.Deactivate.code}`
     const typeName = foundCourse.isDeleted === false ? `${enumData.ActionLogEnType.Activate.name}` : `${enumData.ActionLogEnType.Deactivate.name}`
     const createdBy = new mongoose.Types.ObjectId(req.userId) as any
     const historyDesc = ` User [${(req as any).username}] has [${typeName}] Course`
     const functionType = "COURSE"
     const historyItem = new ActionLog({
-      courseId,
+      courseId: courseRes._id,
       type,
       createdBy,
       functionType,
@@ -375,6 +374,30 @@ export const deleteCourse = async (req: Request, res: Response, next: NextFuncti
       return next(error);
     } else {
       const customError = new CustomErrorMessage("Failed to delete courses!", 422);
+      return next(customError);
+    }
+  }
+};
+
+
+export const loadHistories = async (req: Request, res: Response, next: NextFunction) => {
+  const { courseId } = req.params;
+
+  try {
+    const [results, count] = await Promise.all([
+      ActionLog.find({ courseId: courseId }).sort({ createdAt: -1 }),
+      ActionLog.countDocuments({ courseId: courseId })
+    ]);
+    res.status(200).json({
+      message: "Fetch list histories successfully!",
+      results,
+      count
+    });
+  } catch (error) {
+    if (error instanceof CustomError) {
+      return next(error);
+    } else {
+      const customError = new CustomErrorMessage("Failed to fetch question by id!", 422);
       return next(customError);
     }
   }

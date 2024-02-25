@@ -5,5 +5,6 @@ module.exports = {
   testPathIgnorePatterns: [
     "./controllers/admin/",
     "./routes/admin/"
-  ]
+  ],
+  "watchAll": false
 };
