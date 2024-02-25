@@ -442,6 +442,29 @@ export const enumData = {
         type: 'number',
       },
     },
+
+     /** Trạng thái bài test */
+  TestStatus: {
+    NEW: { code: 'NEW', name: 'Mới tạo', color: '#EAB113' },
+    DESTROYED: { code: 'DESTROYED', name: 'Đã huỷ', color: '#ff1a1a' },
+    INVALID: { code: 'INVALID', name: 'Chưa đến hiệu lực', color: '#EAB042' },
+    VALID: { code: 'VALID', name: 'Đang hiệu lực', color: '#005C20' },
+    EXPIRE: { code: 'EXPIRE', name: 'Hết hạn', color: '#F5365C' },
+  },
+
+  /** Trạng thái bài test cho từng thằng nhân viên */
+  TestUserStatus: {
+    NOTTEST: { code: 'NOTTEST', name: 'Chưa thực hiện', color: '#EAB113' },
+    PASS: { code: 'PASS', name: 'Đạt', color: '#ff1a1a' },
+    NOTPASS: { code: 'NOTPASS', name: 'Chưa đạt', color: '#EAB042' },
+  },
+
+  /** Thao tác với bài test */
+  TestAction: {
+    ACCEPT: { code: 'ACCEPT', name: 'Duyệt' },
+    DESTROY: { code: 'DESTROY', name: 'Huỷ' },
+  },
+
   }
   
 
