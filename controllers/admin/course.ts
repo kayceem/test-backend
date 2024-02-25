@@ -184,7 +184,7 @@ export const postCourse = async (req: AuthorAuthRequest, res: Response, next: Ne
       type: enumData.ActionLogEnType.Create.code,
       createdBy: new mongoose.Types.ObjectId((req as any).userId) as any,
       functionType: "COURSE",
-      description: ` User [${(req as any).username}] has [${enumData.ActionLogEnType.Create.name}] Course`
+      description: `User [${(req as any).username}] has [${enumData.ActionLogEnType.Create.name}] Course`
     })
 
     await historyItem.save({

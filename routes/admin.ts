@@ -13,6 +13,7 @@ import transactionRouter from "./admin/transaction";
 import reviewRouter from "./admin/review";
 import permissionRouter from "./admin/permission";
 import questionRouter from "./admin/question";
+import testRouter from "./admin/test";
 
 const router = Router();
 
@@ -45,5 +46,7 @@ router.use("/reports", reportRouter);
 /** Question route */
 router.use("/questions", questionRouter);
 
+/** Test route */
+router.use("/tests", testRouter);
 
 export default router;

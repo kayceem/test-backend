@@ -7,7 +7,7 @@ import { coreHelper } from "../../utils/coreHelper";
 import ActionLog from "../../models/ActionLog";
 import { enumData } from "../../config/enumData";
 import { AuthorAuthRequest } from "../../middleware/is-auth";
-import { CREATE_SUCCESS, ERROR_CREATE_DATA, ERROR_GET_DATA, ERROR_GET_DATA_DETAIL, ERROR_GET_DATA_HISTORIES, ERROR_NOT_FOUND_DATA, ERROR_UPDATE_DATA, GET_DETAIL_SUCCESS, GET_HISOTIES_SUCCESS, GET_SUCCESS, UPDATE_ACTIVE_SUCCESS, UPDATE_SUCCESS } from "../../config/constant";
+import { CREATE_SUCCESS, ERROR_CREATE_DATA, ERROR_GET_DATA, ERROR_GET_DATA_DETAIL, ERROR_GET_DATA_HISTORIES, ERROR_NOT_FOUND_DATA, ERROR_UPDATE_ACTIVE_DATA, ERROR_UPDATE_DATA, GET_DETAIL_SUCCESS, GET_HISOTIES_SUCCESS, GET_SUCCESS, UPDATE_ACTIVE_SUCCESS, UPDATE_SUCCESS } from "../../config/constant";
 
 export const getQuestions = async (req: Request, res: Response, next: NextFunction) => {
 
@@ -41,6 +41,11 @@ export const getQuestionById = async (req: Request, res: Response, next: NextFun
   try {
     const question = await Question.findById(questionId);
 
+    if(!question){
+      const error = new CustomError("Question", ERROR_NOT_FOUND_DATA, 404);
+      throw error;
+    }
+      
     res.status(200).json({
       message: GET_DETAIL_SUCCESS,
       question,
@@ -78,7 +83,7 @@ export const postQuestion = async (req: AuthorAuthRequest, res: Response, next: 
       type: enumData.ActionLogEnType.Create.code,
       createdBy: new mongoose.Types.ObjectId((req as any).userId) as any,
       functionType: "QUESTION",
-      description: ` User [${(req as any).username}] has [${enumData.ActionLogEnType.Create.name}] Question`
+      description: `User [${(req as any).username}] has [${enumData.ActionLogEnType.Create.name}] Question`
     })
 
     await ActionLog.collection.insertOne(historyItem.toObject(), { 
@@ -124,6 +129,8 @@ export const updateQuestion = async (req: AuthorAuthRequest, res: Response, next
     foundQuestion.name = name;
     foundQuestion.listAnswersOfQuestion = listAnswersOfQuestion;
     foundQuestion.correctAnswer = correctAnswer;
+    foundQuestion.updatedAt = new Date()
+    foundQuestion.updatedBy = new mongoose.Types.ObjectId(req.userId) as any
 
     const questionRes = await foundQuestion.save();
     
@@ -132,7 +139,7 @@ export const updateQuestion = async (req: AuthorAuthRequest, res: Response, next
       type: enumData.ActionLogEnType.Update.code,
       createdBy: new mongoose.Types.ObjectId((req as any).userId) as any,
       functionType: "QUESTION",
-      description: ` User [${(req as any).username}] has [${enumData.ActionLogEnType.Update.name}] Question`
+      description: `User [${(req as any).username}] has [${enumData.ActionLogEnType.Update.name}] Question`
     })
 
     await ActionLog.collection.insertOne(historyItem.toObject(), { 
@@ -182,7 +189,7 @@ export const updateActiveStatusQuestion = async (req: AuthorAuthRequest, res: Re
     const type = foundQuestion.isDeleted === false ? `${enumData.ActionLogEnType.Activate.code}` : `${enumData.ActionLogEnType.Deactivate.code}`
     const typeName = foundQuestion.isDeleted === false ? `${enumData.ActionLogEnType.Activate.name}` : `${enumData.ActionLogEnType.Deactivate.name}`
     const createdBy = new mongoose.Types.ObjectId(req.userId) as any
-    const historyDesc = ` User [${(req as any).username}] has [${typeName}] Question`
+    const historyDesc = `User [${(req as any).username}] has [${typeName}] Question`
     const functionType = "QUESTION"
     const historyItem = new ActionLog({
       questionId: questionRes._id,
@@ -211,7 +218,7 @@ export const updateActiveStatusQuestion = async (req: AuthorAuthRequest, res: Re
     if (error instanceof CustomError) {
       return next(error);
     } else {
-      const customError = new CustomErrorMessage("Failed to update active question!", 422);
+      const customError = new CustomErrorMessage(ERROR_UPDATE_ACTIVE_DATA, 422);
       return next(customError);
     }
   }

@@ -12,6 +12,10 @@ const actionLogSchema = new Schema<IActionLog>(
       type: Schema.Types.ObjectId,
       ref: "Question",
     },
+    testId: {
+      type: Schema.Types.ObjectId,
+      ref: "Test",
+    },
     categoryId: {
       type: Schema.Types.ObjectId,
       ref: "Category",
