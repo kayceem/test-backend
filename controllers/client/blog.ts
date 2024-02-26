@@ -2,15 +2,28 @@ import { Request, Response, NextFunction } from "express";
 import Blog from "../../models/Blog";
 import mongoose from "mongoose";
 import CustomErrorMessage from "../../utils/errorMessage";
+import { AuthorAuthRequest } from "../../middleware/is-auth";
 
-exports.getAllBlog = async (req: Request, res: Response, next: NextFunction) => {
+export const getAllBlog = async (req: Request, res: Response, next: NextFunction) => {
   const page = parseInt(req.query.page as string) || 1;
   const limit = parseInt(req.query.limit as string) || 10;
   const skip = (page - 1) * limit;
+  const author = req.query.author as string; // Sử dụng tên trường 'author' nếu là một trường trong schema
+  const categoryId = req.query.categoryId as string; // Đổi _category thành categoryId
 
   try {
-    const blogs = await Blog.find().skip(skip).limit(limit);
-    const total = await Blog.countDocuments();
+    const blogs = await Blog.find({
+      ...(author ? { author: author } : {}),
+      ...(categoryId ? { categoryId: categoryId } : {}),
+      isDeleted: { $ne: true }, // Thêm điều kiện để loại trừ các blog đã bị xóa mềm
+    })
+      .skip(skip)
+      .limit(limit);
+    const total = await Blog.countDocuments({
+      ...(author ? { author: author } : {}),
+      ...(categoryId ? { categoryId: categoryId } : {}),
+      isDeleted: { $ne: true },
+    });
 
     res.status(200).json({
       message: "Get all blogs successfully",
@@ -18,62 +31,57 @@ exports.getAllBlog = async (req: Request, res: Response, next: NextFunction) => 
       totalPages: Math.ceil(total / limit),
       currentPage: page,
     });
-  } catch (error) {
+  } catch (error: any) {
     next(error);
   }
 };
 
-exports.createBlog = async (req: Request, res: Response, next: NextFunction) => {
-  const { title, author, blogImg, technology, tags, readTime, content, userId, category } =
+export const createBlog = async (req: AuthorAuthRequest, res: Response, next: NextFunction) => {
+  const { title, author, blogImg, technology, tags, readTime, content, userId, categoryId } =
     req.body;
-  try {
-    if (
-      !title ||
-      !author ||
-      !blogImg ||
-      !technology ||
-      !tags ||
-      !readTime ||
-      !content ||
-      !userId ||
-      !category
-    ) {
-      const error = new CustomErrorMessage("Missing required fields", 400);
-      error.statusCode = 400;
-      throw error;
-    }
 
-    // Create a new blog post instance
+  if (
+    !title ||
+    !author ||
+    !blogImg ||
+    !technology ||
+    !tags ||
+    !readTime ||
+    !content ||
+    !userId ||
+    !categoryId
+  ) {
+    return next(new CustomErrorMessage("Missing required fields", 400));
+  }
+
+  try {
     const blogPost = new Blog({
       title,
       author,
       blogImg,
       technology,
-      tags,
+      tags: Array.isArray(tags) ? tags : tags.split(",").map((tag) => tag.trim()),
       readTime,
-      datePublished: Date.now(), // Use current date
       content,
-      userId, // Use the corrected variable name
-      category,
+      userId,
+      categoryId,
+      datePublished: new Date(),
+      isDeleted: false,
+      createdBy: req.userId,
     });
 
-    // Save the blog post to the database
     await blogPost.save();
 
     res.status(201).json({
       message: "Blog post created successfully",
       blogPost,
     });
-  } catch (error: any) {
-    // Handle errors
-    if (!error.statusCode) {
-      error.statusCode = 500; // Internal Server Error
-    }
+  } catch (error) {
     next(error);
   }
 };
 
-exports.getBlogById = async (req: Request, res: Response, next: NextFunction) => {
+export const getBlogById = async (req: Request, res: Response, next: NextFunction) => {
   const blogId = req.params.id;
   if (!mongoose.Types.ObjectId.isValid(blogId)) {
     return res.status(400).json({ message: "Invalid blog ID" });
@@ -93,7 +101,7 @@ exports.getBlogById = async (req: Request, res: Response, next: NextFunction) =>
   }
 };
 
-exports.updateBlog = async (req: Request, res: Response, next: NextFunction) => {
+export const updateBlog = async (req: AuthorAuthRequest, res: Response, next: NextFunction) => {
   const { title, author, blogImg, technology, tags, readTime, content, userId, category } =
     req.body;
   const { id } = req.params;
@@ -113,20 +121,19 @@ exports.updateBlog = async (req: Request, res: Response, next: NextFunction) => 
         category,
       },
       { new: true }
-    ); // The { new: true } option returns the updated document
-    // If the blog post was not found, send a 404 error
+    );
     if (!updatedBlog) {
       return res.status(404).json({ message: "Blog post not found" });
     }
-    // Send the updated blog post in the response
+    updatedBlog.updatedAt = new Date();
+    updatedBlog.updatedBy = new mongoose.Types.ObjectId(req.userId) as any;
     res.json(updatedBlog);
   } catch (err) {
-    // If there's an error, pass it to the error handling middleware
     next(err);
   }
 };
 
-exports.deleteBlogById = async (req: Request, res: Response, next: NextFunction) => {
+export const deleteBlogById = async (req: Request, res: Response, next: NextFunction) => {
   const blogId = req.params.id;
   try {
     const blog = await Blog.findById(blogId);
@@ -135,12 +142,24 @@ exports.deleteBlogById = async (req: Request, res: Response, next: NextFunction)
       error.statusCode = 404;
       throw error;
     }
-
     await Blog.findByIdAndRemove(blogId);
     res.status(200).json({
       message: "Delete blog successfully",
     });
   } catch (error) {
     next(error);
+  }
+};
+
+export const softDeleteBlog = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const blog = await Blog.findByIdAndUpdate(id, { isDeleted: true }, { new: true });
+    if (!blog) {
+      return res.status(404).json({ message: "Blog not found" });
+    }
+    res.status(200).json(blog);
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
   }
 };

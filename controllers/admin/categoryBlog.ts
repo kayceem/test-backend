@@ -1,5 +1,8 @@
 import { Request, Response } from "express";
-import BlogCategory, { ICategoryBlog } from "../../models/BlogCategory";
+import BlogCategory from "../../models/BlogCategory";
+import { ICategoryBlog } from "../../types/iCategoryBlog";
+import { AuthorAuthRequest } from "../../middleware/is-auth";
+import mongoose from "mongoose";
 
 export const getAllCategories = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -28,14 +31,14 @@ export const getCategoryById = async (req: Request, res: Response): Promise<void
   }
 };
 
-export const createCategory = async (req: Request, res: Response): Promise<void> => {
+export const createCategory = async (req: AuthorAuthRequest, res: Response): Promise<void> => {
   const { name, description, cateImage } = req.body;
   if (!name || !description) {
     res.status(400).json({ message: "Missing required fields" });
     return;
   }
   try {
-    const newCategory = new BlogCategory({ name, description, cateImage });
+    const newCategory = new BlogCategory({ name, description, cateImage, createdBy: req.userId });
     await newCategory.save();
     res.status(201).json({ blogCategory: newCategory });
   } catch (err) {
@@ -45,7 +48,7 @@ export const createCategory = async (req: Request, res: Response): Promise<void>
   }
 };
 
-export const updateCategory = async (req: Request, res: Response): Promise<void> => {
+export const updateCategory = async (req: AuthorAuthRequest, res: Response): Promise<void> => {
   const { id } = req.params;
   const updateData = req.body;
   try {
@@ -54,6 +57,9 @@ export const updateCategory = async (req: Request, res: Response): Promise<void>
       res.status(404).json({ message: "Category not found" });
       return;
     }
+    updatedCategory.updatedAt = new Date();
+    updatedCategory.updatedBy = new mongoose.Types.ObjectId(req.userId) as any; 
+
     res.json({ blogCategory: updatedCategory });
   } catch (err) {
     res

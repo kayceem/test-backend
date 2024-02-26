@@ -4,6 +4,8 @@ import bcrypt from "bcryptjs";
 import { getCoursesOrderByUserId } from "../../utils/helper";
 import CustomError from "../../utils/error";
 import CustomErrorMessage from "../../utils/errorMessage";
+import { AuthorAuthRequest } from "../../middleware/is-auth";
+import mongoose from "mongoose";
 
 interface getUsersQuery {
   $text?: {
@@ -56,24 +58,20 @@ export const getUsers = async (req: Request, res: Response, next: NextFunction) 
 };
 
 export const getUsersSelectBox = async (req: Request, res: Response, next: NextFunction) => {
- 
   try {
-
-    const users = await User.find({
-    }).select("_id name");
+    const users = await User.find({}).select("_id name");
 
     const result = users.map((user) => {
       return {
         value: user._id,
-        label: user.name
-      }
-    })
+        label: user.name,
+      };
+    });
 
     res.status(200).json({
       message: "Fetch users sucessfully!",
       users: result,
     });
-    
   } catch (error) {
     if (error instanceof CustomError) {
       return next(error);
@@ -104,7 +102,7 @@ export const getUser = async (req: Request, res: Response, next: NextFunction) =
   }
 };
 
-export const postUser = async (req: Request, res: Response, next: NextFunction) => {
+export const postUser = async (req: AuthorAuthRequest, res: Response, next: NextFunction) => {
   const { name, email, phone, address, password, role, avatar } = req.body;
 
   let avatarUrl;
@@ -133,6 +131,7 @@ export const postUser = async (req: Request, res: Response, next: NextFunction) 
       avatar: avatarUrl,
       role,
       password: hashedPassword,
+      createdBy: req.userId,
     });
 
     const result = await newUser.save();
@@ -151,7 +150,7 @@ export const postUser = async (req: Request, res: Response, next: NextFunction) 
   }
 };
 
-export const updateUser = async (req: Request, res: Response, next: NextFunction) => {
+export const updateUser = async (req: AuthorAuthRequest, res: Response, next: NextFunction) => {
   const { name, email, phone, role, avatar } = req.body;
   const { userId } = req.params;
 
@@ -171,6 +170,10 @@ export const updateUser = async (req: Request, res: Response, next: NextFunction
     updatedUser.phone = phone;
     updatedUser.role = role;
     updatedUser.avatar = avatar;
+
+    updatedUser.updatedAt = new Date();
+    updatedUser.updatedBy = new mongoose.Types.ObjectId(req.userId) as any;
+
     const response = await updatedUser.save();
 
     res.status(200).json({
