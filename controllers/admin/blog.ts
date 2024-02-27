@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import Blog from "../../models/Blog";
 import mongoose from "mongoose";
 import CustomErrorMessage from "../../utils/errorMessage";
+import { AuthorAuthRequest } from "../../middleware/is-auth";
 
 export const getAllBlog = async (req: Request, res: Response, next: NextFunction) => {
   const page = parseInt(req.query.page as string) || 1;
@@ -35,7 +36,7 @@ export const getAllBlog = async (req: Request, res: Response, next: NextFunction
   }
 };
 
-export const createBlog = async (req: Request, res: Response, next: NextFunction) => {
+export const createBlog = async (req: AuthorAuthRequest, res: Response, next: NextFunction) => {
   const { title, author, blogImg, technology, tags, readTime, content, userId, categoryId } =
     req.body;
 
@@ -66,6 +67,7 @@ export const createBlog = async (req: Request, res: Response, next: NextFunction
       categoryId,
       datePublished: new Date(),
       isDeleted: false,
+      createdBy: req.userId,
     });
 
     await blogPost.save();
@@ -99,7 +101,7 @@ export const getBlogById = async (req: Request, res: Response, next: NextFunctio
   }
 };
 
-export const updateBlog = async (req: Request, res: Response, next: NextFunction) => {
+export const updateBlog = async (req: AuthorAuthRequest, res: Response, next: NextFunction) => {
   const { title, author, blogImg, technology, tags, readTime, content, userId, category } =
     req.body;
   const { id } = req.params;
@@ -119,15 +121,14 @@ export const updateBlog = async (req: Request, res: Response, next: NextFunction
         category,
       },
       { new: true }
-    ); // The { new: true } option returns the updated document
-    // If the blog post was not found, send a 404 error
+    );
     if (!updatedBlog) {
       return res.status(404).json({ message: "Blog post not found" });
     }
-    // Send the updated blog post in the response
+    updatedBlog.updatedAt = new Date();
+    updatedBlog.updatedBy = new mongoose.Types.ObjectId(req.userId) as any;
     res.json(updatedBlog);
   } catch (err) {
-    // If there's an error, pass it to the error handling middleware
     next(err);
   }
 };

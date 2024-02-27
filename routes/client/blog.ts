@@ -1,21 +1,22 @@
 const express = require("express");
 import { Router } from "express";
-const blogController = require("../../controllers/client/blog");
+import * as blogController from "../../controllers/client/blog";
 const router = Router();
 
-// GET ALL BLOG
 router.get("/", blogController.getAllBlog);
 
 // GET a blog by id
 router.get("/:id", blogController.getBlogById);
 
 // POST a new blog
-router.post("/", blogController.createBlog);
+router.post("/create", blogController.createBlog);
 
-// PUT a blog by id
-router.put("/create-blog/:id", blogController.updateBlog);
+// UPDATE a blog by id
+router.put("/update/:id", blogController.updateBlog);
 
 // DELETE a blog by id
-router.delete("/:id", blogController.deleteBlogById);
+router.delete("/delete/:id", blogController.deleteBlogById);
+
+router.put("/:id/soft-delete", blogController.softDeleteBlog);
 
 export default router;

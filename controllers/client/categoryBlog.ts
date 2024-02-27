@@ -1,6 +1,7 @@
 // controllers/categoryController.ts
-import BlogCategory, { ICategoryBlog } from "../../models/BlogCategory";
 import { Request, Response } from "express";
+import BlogCategory from "../../models/BlogCategory";
+import { ICategoryBlog } from "../../types/iCategoryBlog";
 
 export const getAllCategories = async (req: Request, res: Response): Promise<void> => {
   try {
