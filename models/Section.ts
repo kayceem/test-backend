@@ -15,7 +15,7 @@ const sectionSchema = new Schema<ISection>(
       index: true,
     },
     access: {
-      type: String, // DRAFT, SOON, FREE, PAID, PUBLIC, PRIVATE
+      type: String, // DRAFT, SOON, FREE, PAID, PUBLIC, PRIVATE (SHOULD CREATE ENUM DATA FOR THIS!)
       required: true,
     },
     description: {

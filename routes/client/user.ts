@@ -6,6 +6,8 @@ const router = Router();
 
 router.get("/authors", userController.getAuthors);
 
+router.get("/authors/select", userController.getAuthorsSelect);
+
 router.get("/user/:userId", userController.getUser);
 
 router.put("/user/:userId", upload.single("avatar"), userController.updateUser);

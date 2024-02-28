@@ -8,6 +8,7 @@ import { BACKEND_URL } from "../../config/backend-domain";
 import { getProgressOfCourse, getCoursesOrderByUserId } from "../../utils/helper";
 import CustomError from "../../utils/error";
 import CustomErrorMessage from "../../utils/errorMessage";
+import { IDataSelect } from "../../types/dataSelect.type";
 
 interface PublicProfileResponse {
   _id: any;
@@ -75,6 +76,36 @@ export const getAuthors = async (req: Request, res: Response, next: NextFunction
   } catch (error) {
     console.log();
     
+
+    if (error instanceof CustomError) {
+      return next(error);
+    } else {
+      const customError = new CustomErrorMessage("Failed to fetch authors!", 422);
+      return next(customError);
+    }
+  }
+};
+
+export const getAuthorsSelect = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const courses: ICourse[] = await Course.find().populate("createdBy", "_id name");
+    const authors: IDataSelect[] = courses.map((course) => {
+      return {
+        label: course?.createdBy?.name,
+        value: course?.createdBy?._id.toString()
+      }
+    });
+    const dictAuthor = new Map<string, any>();
+    authors.forEach((item) => {
+      if (item.value !== undefined) {
+        dictAuthor.set(item.value, item)
+      }
+    })
+
+    const result = [...dictAuthor.values()]
+
+    res.status(200).json(result);
+  } catch (error) {
 
     if (error instanceof CustomError) {
       return next(error);

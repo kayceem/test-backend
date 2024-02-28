@@ -19,6 +19,7 @@ export interface ICourse extends IBaseSchema {
   requirements?: string[];
   willLearns?: string[];
   tags?: string[];
+  createdBy: any
 }
 
 export interface ICourseDetail {

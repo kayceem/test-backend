@@ -465,6 +465,21 @@ export const enumData = {
     DESTROY: { code: 'DESTROY', name: 'Huỷ' },
   },
 
+  /** Các cấp độ của khoá học */
+  CourseLevel: {
+    ALL: { code: 'ALL', name: 'All Level', value: "" },
+    BEGINNER: { code: 'BEGINNER', name: 'Beginner', value: "" },
+    INTERMEDIATE: { code: 'INTERMEDIATE', name: 'Intermediate', value: "" },
+    ADVANCED: { code: 'ADVANCED', name: 'Advanced', value: "" },
+  },
+
+  /** Thao tác với bài test */
+  UserStatus: {
+    NEW: { code: 'NEW', name: 'New' },
+    ACTIVE: { code: 'ACTIVE', name: 'Active' },
+    INACTIVE: { code: 'INACTIVE', name: 'In Active' },
+  },
+  
   }
   
 
