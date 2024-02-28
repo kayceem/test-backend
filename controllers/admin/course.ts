@@ -38,9 +38,9 @@ export const getCourses = async (req: AuthorAuthRequest, res: Response, next: Ne
   }
 
   // Filter data by author (who has created that course)
-  if(req.username !== "admin") {
-    query.createdBy = new mongoose.Types.ObjectId(req.userId) as any;
-  }
+  // if(req.username !== "admin") {
+  //   query.createdBy = new mongoose.Types.ObjectId(req.userId) as any;
+  // }
 
   try {
     const promiseCourses = Course.find(query, {

@@ -464,6 +464,14 @@ export const enumData = {
     ACCEPT: { code: 'ACCEPT', name: 'Duyệt' },
     DESTROY: { code: 'DESTROY', name: 'Huỷ' },
   },
+  
+  /** Các cấp độ của khoá học */
+  CourseLevel: {
+    ALL: { code: 'ALL', name: 'All Level', value: "" },
+    BEGINNER: { code: 'BEGINNER', name: 'Beginner', value: "" },
+    INTERMEDIATE: { code: 'INTERMEDIATE', name: 'Intermediate', value: "" },
+    ADVANCED: { code: 'ADVANCED', name: 'Advanced', value: "" },
+  },
 
   }
   
