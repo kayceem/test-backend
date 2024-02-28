@@ -267,6 +267,42 @@ export const adminLogin = async (req: Request, res: Response, next: NextFunction
   }
 };
 
+export const adminSignupRequest = async (req: Request, res: Response, next: NextFunction) => {
+  const { email, name } = req.body;
+
+  try {
+    const userDoc: IUser | null = await User.findOne({ email, providerId: "local" });
+
+    if (userDoc) {
+      const error = new CustomError("Email", "Email already register at website", 401);
+      throw error;
+    }
+    const username = await coreHelper.getCodeDefault("author", User);
+    const hashedPassword = await bcrypt.hash('123456', 12);
+    const newUser = new User({
+      email: email,
+      name: name,
+      username: username,
+      password: hashedPassword,
+      status: enumData.UserStatus.NEW.code,
+    })
+
+    await newUser.save()
+    
+    res.status(200).json({
+      message: "Signup request administrator successfuly! Wait a minutes and ready for email reply with account!",
+
+    });
+  } catch (error) {
+    if (error instanceof CustomError) {
+      return next(error);
+    } else {
+      const customError = new CustomErrorMessage("Internal Server Error", 500);
+      return next(customError);
+    }
+  }
+};
+
 export const logout = async (req: UserAuthRequest, res: Response, next: NextFunction) => {
   try {
     const tokenToRevoke = req.token;
