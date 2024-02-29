@@ -1,30 +1,33 @@
-// Xây dựng model note api theo số phút
-import mongoose from "mongoose";
-import baseSchema from "./BaseSchema";
+import mongoose, { Schema } from "mongoose";
+import baseSchema from "./BaseSchema"; // Giả định baseSchema đã được định nghĩa đúng
+import { INoteCourse } from "../types/noteCourse.type";
 
-const NoteSchema = new mongoose.Schema({
-  userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    required: true,
+const noteSchema = new Schema<INoteCourse>(
+  {
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    lessonId: {
+      type: Schema.Types.ObjectId,
+      ref: "Lesson",
+      required: true,
+    },
+    content: {
+      type: String,
+      required: true,
+    },
+    videoMinute: {
+      type: Number,
+      required: true,
+    },
   },
-  lessonId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Lesson",
-    required: true,
-  },
-  content: {
-    type: String,
-    required: true,
-  },
-  videoMinute: {
-    type: Number,
-    required: true,
-  },
-});
+  { timestamps: true }
+); 
 
-NoteSchema.add(baseSchema);
-  
-const Note = mongoose.model("Note", NoteSchema);
+noteSchema.add(baseSchema);
+
+const Note = mongoose.model<INoteCourse>("Note", noteSchema);
 
 export default Note;

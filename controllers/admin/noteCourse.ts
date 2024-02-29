@@ -89,11 +89,11 @@ export const deleteNote = async (req: Request, res: Response) => {
 export const getNoteById = async (req: Request, res: Response) => {
   const { noteId } = req.params;
   try {
-    const note = await Note.findById(noteId); // Tìm note bằng noteId
-    if (!note) {
+    const notes = await Note.findById(noteId); // Tìm note bằng noteId
+    if (!notes) {
       return res.status(404).json({ message: "Note not found!" });
     }
-    res.status(200).json(note);
+    res.status(200).json({ notes });
   } catch (error: unknown) {
     res.status(500).json({ error: (error as Error).message });
   }
