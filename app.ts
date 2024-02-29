@@ -9,9 +9,7 @@ import { Server } from "socket.io";
 import authRouter from "./routes/auth";
 import clientRouter from "./routes/client";
 import adminRouter from "./routes/admin";
-import blogRouter from "./routes/client/blog";
-import commentsRouter from "./routes/client/commentsBlogs";
-import noteRouter from "./routes/client/noteCourse";
+
 import { MONGODB_URI } from "./config/constant";
 import { FRONTEND_URL } from "./config/frontend-domain";
 import {
@@ -50,9 +48,7 @@ app.use("/auth", authRouter);
 app.use("/admin", adminRouter);
 app.use(clientRouter);
 
-app.use("/blog", blogRouter);
-app.use("/comments", commentsRouter);
-app.use("/note", noteRouter);
+
 
 interface AppError extends Error {
   statusCode?: number;

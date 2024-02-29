@@ -13,7 +13,9 @@ import wishlistRouter from "./client/wishlist";
 import blogCategory from "./client/blogCategory";
 import feedbackRouter from "./client/feedback";
 import getIO from "../socket";
-
+import blogRouter from "../routes/client/blog";
+import commentsRouter from "../routes/client/commentsBlogs";
+import noteRouter from "../routes/client/noteCourse";
 
 const router = Router();
 
@@ -50,10 +52,14 @@ router.use("/payments", paymentRouter);
 
 router.use("/wishlists", wishlistRouter);
 
-
 router.use("/blogCategory", blogCategory);
 
 router.use("/feedbacks", feedbackRouter);
 
+router.use("/blog", blogRouter);
+
+router.use("/comments", commentsRouter);
+
+router.use("/note", noteRouter);
 
 export default router;
