@@ -11,6 +11,7 @@ import feedbackRouter from "./admin/feedback";
 import reportRouter from "./admin/report";
 import transactionRouter from "./admin/transaction";
 import reviewRouter from "./admin/review";
+import couponTypeRouter from "./admin/couponType";
 import permissionRouter from "./admin/permission";
 import questionRouter from "./admin/question";
 import testRouter from "./admin/test";
@@ -43,6 +44,8 @@ router.use("/blogCategory", blogCategory);
 router.use("/feedbacks", feedbackRouter);
 
 router.use("/reports", reportRouter);
+
+router.use("/coupon-types", couponTypeRouter);
 
 /** Question route */
 router.use("/questions", questionRouter);

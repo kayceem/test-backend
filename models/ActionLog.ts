@@ -12,6 +12,14 @@ const actionLogSchema = new Schema<IActionLog>(
       type: Schema.Types.ObjectId,
       ref: "Question",
     },
+    couponTypeId: {
+      type: Schema.Types.ObjectId,
+      ref: "CouponType",
+    },
+    couponId: {
+      type: Schema.Types.ObjectId,
+      ref: "Coupon",
+    },
     testId: {
       type: Schema.Types.ObjectId,
       ref: "Test",
@@ -26,7 +34,7 @@ const actionLogSchema = new Schema<IActionLog>(
     },
     type: {
       type: String,
-      required: true
+      required: true,
     },
     createdByName: {
       type: String,
