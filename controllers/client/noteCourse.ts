@@ -24,10 +24,8 @@ export const getNoteByUserId = async (req: Request, res: Response) => {
 };
 
 // CreateNote
-export const createNoteForLesson = async (req: AuthorAuthRequest, res: Response) => {
-  const { lessonId } = req.params;
-  const { userId, content, videoMinute } = req.body;
-
+export const createNote = async (req: AuthorAuthRequest, res: Response) => {
+  const { userId, lessonId, content, videoMinute } = req.body;
   try {
     const newNote = new Note({
       userId,
@@ -40,7 +38,7 @@ export const createNoteForLesson = async (req: AuthorAuthRequest, res: Response)
     const savedNote = await newNote.save();
 
     res.status(201).json({
-      message: "Note created successfully for the lesson!",
+      message: "Note created successfully!",
       note: savedNote,
     });
   } catch (error: unknown) {
@@ -91,24 +89,11 @@ export const deleteNote = async (req: Request, res: Response) => {
 export const getNoteById = async (req: Request, res: Response) => {
   const { noteId } = req.params;
   try {
-    const note = await Note.findById(noteId);
+    const note = await Note.findById(noteId); // Tìm note bằng noteId
     if (!note) {
       return res.status(404).json({ message: "Note not found!" });
     }
     res.status(200).json(note);
-  } catch (error: unknown) {
-    res.status(500).json({ error: (error as Error).message });
-  }
-};
-
-export const getNotesByLessonId = async (req: Request, res: Response) => {
-  const { lessonId } = req.params;
-  try {
-    const notes = await Note.find({ lessonId: lessonId });
-    if (notes.length === 0) {
-      return res.status(404).json({ message: "No notes found for this lesson" });
-    }
-    res.status(200).json({ notes });
   } catch (error: unknown) {
     res.status(500).json({ error: (error as Error).message });
   }

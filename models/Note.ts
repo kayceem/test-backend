@@ -1,5 +1,5 @@
 import mongoose, { Schema } from "mongoose";
-import baseSchema from "./BaseSchema";
+import baseSchema from "./BaseSchema"; // Giả định baseSchema đã được định nghĩa đúng
 import { INoteCourse } from "../types/noteCourse.type";
 
 const noteSchema = new Schema<INoteCourse>(
@@ -24,7 +24,7 @@ const noteSchema = new Schema<INoteCourse>(
     },
   },
   { timestamps: true }
-);
+); 
 
 noteSchema.add(baseSchema);
 

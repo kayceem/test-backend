@@ -1,12 +1,12 @@
-import { Request, Response } from "express";
 import mongoose from "mongoose";
 import { AuthorAuthRequest } from "../../middleware/is-auth";
 import Note from "../../models/Note";
+import { Request, Response } from "express";
 
 // Get all note
 export const getAllNote = async (req: Request, res: Response) => {
   try {
-    const notes = await Note.find().populate("userId", "name avatar").populate("lessonId", "name");
+    const notes = await Note.find();
     res.status(200).json({ notes });
   } catch (error: unknown) {
     res.status(500).json({ error: (error as Error).message });
@@ -16,7 +16,7 @@ export const getAllNote = async (req: Request, res: Response) => {
 //Get Note by id user
 export const getNoteByUserId = async (req: Request, res: Response) => {
   try {
-    const notes = await Note.find({ userId: req.params.id }).populate("userId", "name avatar"); // Populate user details
+    const notes = await Note.find({ userId: req.params.id });
     res.status(200).json({ notes });
   } catch (error: unknown) {
     res.status(500).json({ error: (error as Error).message });
@@ -24,30 +24,24 @@ export const getNoteByUserId = async (req: Request, res: Response) => {
 };
 
 // CreateNote
-export const createNoteForLesson = async (req: AuthorAuthRequest, res: Response) => {
-  const { adminId, lessonId, content, videoMinute } = req.body;
-
-  if (!adminId) {
-    return res.status(400).json({ error: "adminId is missing from the request." });
-  }
-
+export const createNote = async (req: AuthorAuthRequest, res: Response) => {
+  const { userId, lessonId, content, videoMinute } = req.body;
   try {
     const newNote = new Note({
-      userId: adminId,
+      userId,
       lessonId,
       content,
       videoMinute,
-      createdBy: adminId,
+      createdBy: req.userId,
     });
 
     const savedNote = await newNote.save();
 
     res.status(201).json({
-      message: "Note created successfully for the lesson!",
+      message: "Note created successfully!",
       note: savedNote,
     });
-  } catch (error) {
-    console.error(error);
+  } catch (error: unknown) {
     res.status(500).json({ error: (error as Error).message });
   }
 };
@@ -95,22 +89,9 @@ export const deleteNote = async (req: Request, res: Response) => {
 export const getNoteById = async (req: Request, res: Response) => {
   const { noteId } = req.params;
   try {
-    const note = await Note.findById(noteId);
-    if (!note) {
+    const notes = await Note.findById(noteId); // Tìm note bằng noteId
+    if (!notes) {
       return res.status(404).json({ message: "Note not found!" });
-    }
-    res.status(200).json(note);
-  } catch (error: unknown) {
-    res.status(500).json({ error: (error as Error).message });
-  }
-};
-
-export const getNotesByLessonId = async (req: Request, res: Response) => {
-  const { lessonId } = req.params;
-  try {
-    const notes = await Note.find({ lessonId: lessonId }).populate("userId", "name avatar"); // Populate user details
-    if (notes.length === 0) {
-      return res.status(404).json({ message: "No notes found for this lesson" });
     }
     res.status(200).json({ notes });
   } catch (error: unknown) {
