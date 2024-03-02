@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
-import CouponType from "../../models/CouponType";
+import Coupon from "../../models/Coupon";
+import CouponCourse from "../../models/CouponCourse";
 import CustomError from "../../utils/error";
 import CustomErrorMessage from "../../utils/errorMessage";
 import mongoose, { ClientSession } from "mongoose";
@@ -23,7 +24,7 @@ import {
   UPDATE_SUCCESS,
 } from "../../config/constant";
 
-export const getCouponTypes = async (req: Request, res: Response, next: NextFunction) => {
+export const getCoupons = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const searchTerm = (req.query._q as string) || "";
     const page = parseInt(req.query._page as string) || 1;
@@ -35,12 +36,13 @@ export const getCouponTypes = async (req: Request, res: Response, next: NextFunc
     let query = {
       ...(statusFilter === "active" ? { isDeleted: false } : {}),
       ...(statusFilter === "inactive" ? { isDeleted: true } : {}),
-      ...(searchTerm ? { name: { $regex: searchTerm, $options: "i" } } : {}),
+      ...(searchTerm ? { description: { $regex: searchTerm, $options: "i" } } : {}),
     };
 
-    const total = await CouponType.countDocuments(query);
+    const total = await Coupon.countDocuments(query);
 
-    const couponTypes = await CouponType.find(query)
+    const coupons = await Coupon.find(query)
+      .populate("couponTypeId", "name")
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
@@ -51,7 +53,7 @@ export const getCouponTypes = async (req: Request, res: Response, next: NextFunc
       page,
       pages: Math.ceil(total / limit),
       limit,
-      couponTypes,
+      coupons,
     });
   } catch (error) {
     if (error instanceof CustomError) {
@@ -63,40 +65,29 @@ export const getCouponTypes = async (req: Request, res: Response, next: NextFunc
   }
 };
 
-export const getAllActiveCouponTypes = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const couponTypes = await CouponType.find({ isDeleted: false }).sort({ createdAt: -1 });
-
-    res.status(200).json({
-      message: GET_SUCCESS,
-      couponTypes,
-    });
-  } catch (error) {
-    if (error instanceof CustomError) {
-      return next(error);
-    } else {
-      const customError = new CustomErrorMessage(ERROR_GET_DATA, 422);
-      return next(customError);
-    }
-  }
-};
-
-export const getCouponTypeById = async (req: Request, res: Response, next: NextFunction) => {
-  const { couponTypeId } = req.params;
+export const getCouponById = async (req: Request, res: Response, next: NextFunction) => {
+  const { couponId } = req.params;
 
   try {
-    const couponType = await CouponType.findOne({ _id: couponTypeId })
+    const coupon = await Coupon.findOne({ _id: couponId })
       .populate("createdBy", "name")
-      .populate("updatedBy", "name");
+      .populate("updatedBy", "name")
+      .populate("couponTypeId", "name");
 
-    if (!couponType) {
-      const error = new CustomError("CouponType", ERROR_NOT_FOUND_DATA, 404);
+    if (!coupon) {
+      const error = new CustomError("Coupon", ERROR_NOT_FOUND_DATA, 404);
       throw error;
     }
 
+    const couponCourses = await CouponCourse.find({
+      couponId: coupon._id,
+      isDeleted: false,
+    }).populate("courseId", "name thumbnail");
+
     res.status(200).json({
       message: GET_DETAIL_SUCCESS,
-      couponType,
+      coupon,
+      couponCourses,
     });
   } catch (error) {
     if (error instanceof CustomError) {
@@ -108,31 +99,46 @@ export const getCouponTypeById = async (req: Request, res: Response, next: NextF
   }
 };
 
-export const postCouponType = async (req: AuthorAuthRequest, res: Response, next: NextFunction) => {
-  const { name, description } = req.body;
+export const postCoupon = async (req: AuthorAuthRequest, res: Response, next: NextFunction) => {
+  const { description, discountAmount, couponTypeId, dateStart, dateEnd, courseIds } = req.body;
   let session: ClientSession | null = null;
 
   session = await mongoose.startSession();
   session.startTransaction();
 
   try {
-    const couponTypeCode = await coreHelper.getCodeDefault("COUPON_TYPE", CouponType);
+    const couponCode = await coreHelper.getCodeDefault("COUPON", Coupon);
 
-    const couponType = new CouponType({
-      name,
+    const coupon = new Coupon({
+      code: couponCode,
       description,
-      code: couponTypeCode,
+      discountAmount,
+      couponTypeId,
+      dateStart,
+      dateEnd,
       createdBy: req.userId,
     });
 
-    const couponTypeRes = await couponType.save();
+    const couponRes = await coupon.save();
+
+    const couponCoursePromises = courseIds.map(async (courseId: string) => {
+      const code = await coreHelper.getCodeDefault("COUPON_COURSE", CouponCourse);
+      const couponCourse = new CouponCourse({
+        code,
+        couponId: couponRes._id,
+        courseId,
+      });
+      return couponCourse.save();
+    });
+
+    await Promise.all(couponCoursePromises);
 
     const historyItem = new ActionLog({
-      couponTypeId: couponTypeRes._id,
+      couponId: couponRes._id,
       type: enumData.ActionLogEnType.Create.code,
       createdBy: new mongoose.Types.ObjectId(req.userId),
-      functionType: "COUPON_TYPE",
-      description: `User [${req.username}] has [${enumData.ActionLogEnType.Create.name}] Coupon Type`,
+      functionType: "COUPON",
+      description: `User [${req.username}] has [${enumData.ActionLogEnType.Create.name}] Coupon`,
     });
 
     await ActionLog.collection.insertOne(historyItem.toObject(), { session });
@@ -158,38 +164,80 @@ export const postCouponType = async (req: AuthorAuthRequest, res: Response, next
   }
 };
 
-export const updateCouponType = async (
-  req: AuthorAuthRequest,
-  res: Response,
-  next: NextFunction
-) => {
-  const { name, description, _id } = req.body;
+export const updateCoupon = async (req: AuthorAuthRequest, res: Response, next: NextFunction) => {
+  const { code, description, discountAmount, couponTypeId, dateStart, dateEnd, _id, courseIds } =
+    req.body;
   let session: ClientSession | null = null;
 
   session = await mongoose.startSession();
   session.startTransaction();
 
   try {
-    const foundCouponType = await CouponType.findById(_id);
+    const foundCoupon = await Coupon.findById(_id);
 
-    if (!foundCouponType) {
-      const error = new CustomError("CouponType", ERROR_NOT_FOUND_DATA, 404);
+    if (!foundCoupon) {
+      const error = new CustomError("Coupon", ERROR_NOT_FOUND_DATA, 404);
       throw error;
     }
 
-    foundCouponType.name = name;
-    foundCouponType.description = description;
-    foundCouponType.updatedAt = new Date();
-    foundCouponType.updatedBy = new mongoose.Types.ObjectId(req.userId) as any;
+    foundCoupon.code = code;
+    foundCoupon.description = description;
+    foundCoupon.discountAmount = discountAmount;
+    foundCoupon.couponTypeId = couponTypeId;
+    foundCoupon.dateStart = dateStart;
+    foundCoupon.dateEnd = dateEnd;
+    foundCoupon.updatedAt = new Date();
+    foundCoupon.updatedBy = new mongoose.Types.ObjectId(req.userId) as any;
 
-    const couponTypeRes = await foundCouponType.save();
+    const couponRes = await foundCoupon.save();
+
+    const existingCouponCourses = await CouponCourse.find({
+      couponId: couponRes._id,
+    });
+
+    const activeExistingCouponCourses = existingCouponCourses.filter(
+      (couponCourse) => !couponCourse.isDeleted
+    );
+
+    const activeExistingCourseIds = activeExistingCouponCourses.map((couponCourse) =>
+      couponCourse.courseId.toString()
+    );
+
+    const isCourseListChanged =
+      courseIds.some((courseId) => !activeExistingCourseIds.includes(courseId)) ||
+      activeExistingCourseIds.some((courseId) => !courseIds.includes(courseId));
+
+    if (isCourseListChanged) {
+      for (const couponCourse of existingCouponCourses) {
+        if (!courseIds.includes(couponCourse.courseId.toString())) {
+          couponCourse.isDeleted = true;
+          await couponCourse.save({ session });
+        } else if (couponCourse.isDeleted) {
+          couponCourse.isDeleted = false;
+          await couponCourse.save({ session });
+        }
+      }
+
+      const existingCourseIds = existingCouponCourses.map((course) => course.courseId.toString());
+      const coursesToAdd = courseIds.filter((courseId) => !existingCourseIds.includes(courseId));
+
+      for (const courseId of coursesToAdd) {
+        const code = await coreHelper.getCodeDefault("COUPON_COURSE", CouponCourse);
+        const couponCourse = new CouponCourse({
+          code,
+          couponId: couponRes._id,
+          courseId,
+        });
+        await couponCourse.save({ session });
+      }
+    }
 
     const historyItem = new ActionLog({
-      couponTypeId: couponTypeRes._id,
+      couponId: couponRes._id,
       type: enumData.ActionLogEnType.Update.code,
       createdBy: new mongoose.Types.ObjectId(req.userId) as any,
-      functionType: "COUPON_TYPE",
-      description: `User [${req.username}] has [${enumData.ActionLogEnType.Update.name}] Coupon Type`,
+      functionType: "COUPON",
+      description: `User [${req.username}] has [${enumData.ActionLogEnType.Update.name}] Coupon`,
     });
 
     await ActionLog.collection.insertOne(historyItem.toObject(), { session });
@@ -215,45 +263,45 @@ export const updateCouponType = async (
   }
 };
 
-export const updateActiveStatusCouponType = async (
+export const updateActiveStatusCoupon = async (
   req: AuthorAuthRequest,
   res: Response,
   next: NextFunction
 ) => {
-  const { couponTypeId } = req.body;
+  const { couponId } = req.body;
 
   let session: ClientSession | null = null;
   session = await mongoose.startSession();
   session.startTransaction();
 
   try {
-    const foundCouponType = await CouponType.findById(couponTypeId);
+    const foundCoupon = await Coupon.findById(couponId);
 
-    if (!foundCouponType) {
-      const error = new CustomError("CouponType", ERROR_NOT_FOUND_DATA, 404);
+    if (!foundCoupon) {
+      const error = new CustomError("Coupon", ERROR_NOT_FOUND_DATA, 404);
       throw error;
     }
 
-    foundCouponType.isDeleted = !foundCouponType.isDeleted;
-    foundCouponType.updatedAt = new Date();
-    foundCouponType.updatedBy = new mongoose.Types.ObjectId(req.userId) as any;
+    foundCoupon.isDeleted = !foundCoupon.isDeleted;
+    foundCoupon.updatedAt = new Date();
+    foundCoupon.updatedBy = new mongoose.Types.ObjectId(req.userId) as any;
 
-    const couponTypeRes = await foundCouponType.save();
+    const couponRes = await foundCoupon.save();
 
     const type =
-      foundCouponType.isDeleted === false
+      foundCoupon.isDeleted === false
         ? `${enumData.ActionLogEnType.Activate.code}`
         : `${enumData.ActionLogEnType.Deactivate.code}`;
     const typeName =
-      foundCouponType.isDeleted === false
+      foundCoupon.isDeleted === false
         ? `${enumData.ActionLogEnType.Activate.name}`
         : `${enumData.ActionLogEnType.Deactivate.name}`;
     const createdBy = new mongoose.Types.ObjectId(req.userId) as any;
-    const historyDesc = `User [${req.username}] has [${typeName}] CouponType`;
-    const functionType = "COUPON_TYPE";
+    const historyDesc = `User [${req.username}] has [${typeName}] Coupon`;
+    const functionType = "COUPON";
 
     const historyItem = new ActionLog({
-      couponTypeId: couponTypeRes._id,
+      couponId: couponRes._id,
       type,
       createdBy,
       functionType,
@@ -285,12 +333,8 @@ export const updateActiveStatusCouponType = async (
   }
 };
 
-export const loadHistoriesForCouponType = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  const { couponTypeId } = req.params;
+export const loadHistoriesForCoupon = async (req: Request, res: Response, next: NextFunction) => {
+  const { couponId } = req.params;
 
   try {
     const page = parseInt(req.query._page as string) || 1;
@@ -298,11 +342,8 @@ export const loadHistoriesForCouponType = async (
     const skip = (page - 1) * limit;
 
     const [results, count] = await Promise.all([
-      ActionLog.find({ couponTypeId: couponTypeId })
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit),
-      ActionLog.countDocuments({ couponTypeId: couponTypeId }),
+      ActionLog.find({ couponId: couponId }).sort({ createdAt: -1 }).skip(skip).limit(limit),
+      ActionLog.countDocuments({ couponId: couponId }),
     ]);
 
     res.status(200).json({

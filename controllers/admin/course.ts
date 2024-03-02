@@ -5,9 +5,24 @@ import { ICourse } from "../../types/course.type";
 import CustomError from "../../utils/error";
 import CustomErrorMessage from "../../utils/errorMessage";
 import { enumData } from "../../config/enumData";
-import mongoose, {Types, ObjectId, ClientSession, Mongoose} from "mongoose";
+import mongoose, { Types, ObjectId, ClientSession, Mongoose } from "mongoose";
 import { AuthorAuthRequest } from "../../middleware/is-auth";
 import { coreHelper } from "../../utils/coreHelper";
+import {
+  CREATE_SUCCESS,
+  ERROR_CREATE_DATA,
+  ERROR_GET_DATA,
+  ERROR_GET_DATA_DETAIL,
+  ERROR_GET_DATA_HISTORIES,
+  ERROR_NOT_FOUND_DATA,
+  ERROR_UPDATE_ACTIVE_DATA,
+  ERROR_UPDATE_DATA,
+  GET_DETAIL_SUCCESS,
+  GET_HISOTIES_SUCCESS,
+  GET_SUCCESS,
+  UPDATE_ACTIVE_SUCCESS,
+  UPDATE_SUCCESS,
+} from "../../config/constant";
 interface GetCoursesQuery {
   $text?: { $search: string };
   userId?: { $in: string[] };
@@ -75,6 +90,24 @@ export const getCourses = async (req: AuthorAuthRequest, res: Response, next: Ne
       return next(error);
     } else {
       const customError = new CustomErrorMessage("Failed to fetch courses!", 422);
+      return next(customError);
+    }
+  }
+};
+
+export const getAllActiveCourses = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const courses = await Course.find({ isDeleted: false }).sort({ createdAt: -1 });
+
+    res.status(200).json({
+      message: GET_SUCCESS,
+      courses,
+    });
+  } catch (error) {
+    if (error instanceof CustomError) {
+      return next(error);
+    } else {
+      const customError = new CustomErrorMessage(ERROR_GET_DATA, 422);
       return next(customError);
     }
   }
@@ -172,11 +205,11 @@ export const postCourse = async (req: AuthorAuthRequest, res: Response, next: Ne
       userId,
       willLearns,
       subTitle,
-      createdBy: req.userId
+      createdBy: req.userId,
     });
 
     const courseRes = await course.save({
-      session: session
+      session: session,
     });
 
     const historyItem = new ActionLog({
@@ -184,12 +217,14 @@ export const postCourse = async (req: AuthorAuthRequest, res: Response, next: Ne
       type: enumData.ActionLogEnType.Create.code,
       createdBy: new mongoose.Types.ObjectId((req as any).userId) as any,
       functionType: "COURSE",
-      description: `User [${(req as any).username}] has [${enumData.ActionLogEnType.Create.name}] Course`
-    })
+      description: `User [${(req as any).username}] has [${
+        enumData.ActionLogEnType.Create.name
+      }] Course`,
+    });
 
     await historyItem.save({
-      session: session
-    })
+      session: session,
+    });
 
     await session.commitTransaction();
     session.endSession();
@@ -197,8 +232,6 @@ export const postCourse = async (req: AuthorAuthRequest, res: Response, next: Ne
       message: "Create course successfully!",
       course: courseRes,
     });
-
-    
   } catch (error) {
     if (session) {
       await session.abortTransaction();
@@ -240,38 +273,40 @@ export const udpateCourse = async (req: AuthorAuthRequest, res: Response, next: 
       const error = new CustomError("Course", "Course not found", 404);
       throw error;
     }
-    foundCourse.name = name
-    foundCourse.thumbnail = thumbnail
-    foundCourse.access = access
-    foundCourse.price = price
-    foundCourse.finalPrice = finalPrice
-    foundCourse.description = description
-    foundCourse.level = level
-    foundCourse.categoryId = categoryId
-    foundCourse.userId = userId
-    foundCourse.courseSlug = courseSlug
-    foundCourse.willLearns = willLearns
-    foundCourse.subTitle = subTitle
+    foundCourse.name = name;
+    foundCourse.thumbnail = thumbnail;
+    foundCourse.access = access;
+    foundCourse.price = price;
+    foundCourse.finalPrice = finalPrice;
+    foundCourse.description = description;
+    foundCourse.level = level;
+    foundCourse.categoryId = categoryId;
+    foundCourse.userId = userId;
+    foundCourse.courseSlug = courseSlug;
+    foundCourse.willLearns = willLearns;
+    foundCourse.subTitle = subTitle;
 
     const courseRes = await foundCourse.save({
-      session: session
+      session: session,
     });
-    const courseId = courseRes._id
-    const type = enumData.ActionLogEnType.Update.code
-    const createdBy = new mongoose.Types.ObjectId(req.userId) as any
-    const historyDesc = ` User [${(req as any).username}] has [${enumData.ActionLogEnType.Update.name}] Course`
-    const functionType = "COURSE"
+    const courseId = courseRes._id;
+    const type = enumData.ActionLogEnType.Update.code;
+    const createdBy = new mongoose.Types.ObjectId(req.userId) as any;
+    const historyDesc = ` User [${(req as any).username}] has [${
+      enumData.ActionLogEnType.Update.name
+    }] Course`;
+    const functionType = "COURSE";
     const historyItem = new ActionLog({
       courseId,
       type,
       createdBy,
       functionType,
-      description: historyDesc
-    })
+      description: historyDesc,
+    });
 
     await historyItem.save({
-      session: session
-    })
+      session: session,
+    });
 
     await session.commitTransaction();
     session.endSession();
@@ -279,8 +314,6 @@ export const udpateCourse = async (req: AuthorAuthRequest, res: Response, next: 
       message: "Update course successfully!",
       course: courseRes,
     });
-
-    
   } catch (error) {
     if (session) {
       await session.abortTransaction();
@@ -296,10 +329,12 @@ export const udpateCourse = async (req: AuthorAuthRequest, res: Response, next: 
   }
 };
 
-export const updateActiveStatus = async (req: AuthorAuthRequest, res: Response, next: NextFunction) => {
-  const {
-    id,
-  } = req.body;
+export const updateActiveStatus = async (
+  req: AuthorAuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  const { id } = req.body;
   // Create transaction to make sure data intergrity
   let session: ClientSession | null = null;
   try {
@@ -310,28 +345,34 @@ export const updateActiveStatus = async (req: AuthorAuthRequest, res: Response, 
       const error = new CustomError("Course", "Course not found", 404);
       throw error;
     }
-    foundCourse.isDeleted = !foundCourse.isDeleted
-    foundCourse.updatedAt = new Date()
-    foundCourse.updatedBy = new mongoose.Types.ObjectId(req.userId) as any
+    foundCourse.isDeleted = !foundCourse.isDeleted;
+    foundCourse.updatedAt = new Date();
+    foundCourse.updatedBy = new mongoose.Types.ObjectId(req.userId) as any;
     const courseRes = await foundCourse.save({
-      session: session
+      session: session,
     });
-    const type = foundCourse.isDeleted === false ? `${enumData.ActionLogEnType.Activate.code}` : `${enumData.ActionLogEnType.Deactivate.code}`
-    const typeName = foundCourse.isDeleted === false ? `${enumData.ActionLogEnType.Activate.name}` : `${enumData.ActionLogEnType.Deactivate.name}`
-    const createdBy = new mongoose.Types.ObjectId(req.userId) as any
-    const historyDesc = ` User [${(req as any).username}] has [${typeName}] Course`
-    const functionType = "COURSE"
+    const type =
+      foundCourse.isDeleted === false
+        ? `${enumData.ActionLogEnType.Activate.code}`
+        : `${enumData.ActionLogEnType.Deactivate.code}`;
+    const typeName =
+      foundCourse.isDeleted === false
+        ? `${enumData.ActionLogEnType.Activate.name}`
+        : `${enumData.ActionLogEnType.Deactivate.name}`;
+    const createdBy = new mongoose.Types.ObjectId(req.userId) as any;
+    const historyDesc = ` User [${(req as any).username}] has [${typeName}] Course`;
+    const functionType = "COURSE";
     const historyItem = new ActionLog({
       courseId: courseRes._id,
       type,
       createdBy,
       functionType,
-      description: historyDesc
-    })
+      description: historyDesc,
+    });
 
     await historyItem.save({
-      session: session
-    })
+      session: session,
+    });
 
     await session.commitTransaction();
     session.endSession();
@@ -339,8 +380,6 @@ export const updateActiveStatus = async (req: AuthorAuthRequest, res: Response, 
       message: "Update active status of course successfully!",
       course: courseRes,
     });
-
-    
   } catch (error) {
     if (session) {
       await session.abortTransaction();
@@ -354,7 +393,7 @@ export const updateActiveStatus = async (req: AuthorAuthRequest, res: Response, 
       return next(customError);
     }
   }
-}
+};
 
 export const deleteCourse = async (req: Request, res: Response, next: NextFunction) => {
   const { courseId } = req.params;
@@ -379,19 +418,18 @@ export const deleteCourse = async (req: Request, res: Response, next: NextFuncti
   }
 };
 
-
 export const loadHistories = async (req: Request, res: Response, next: NextFunction) => {
   const { courseId } = req.params;
 
   try {
     const [results, count] = await Promise.all([
       ActionLog.find({ courseId: courseId }).sort({ createdAt: -1 }),
-      ActionLog.countDocuments({ courseId: courseId })
+      ActionLog.countDocuments({ courseId: courseId }),
     ]);
     res.status(200).json({
       message: "Fetch list histories successfully!",
       results,
-      count
+      count,
     });
   } catch (error) {
     if (error instanceof CustomError) {
