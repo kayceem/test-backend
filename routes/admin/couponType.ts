@@ -6,6 +6,8 @@ const router = Router();
 
 router.get("/", isAuth, couponTypeController.getCouponTypes);
 
+router.get("/all-active", isAuth, couponTypeController.getAllActiveCouponTypes);
+
 router.get("/coupon-type/:couponTypeId", isAuth, couponTypeController.getCouponTypeById);
 
 router.get(

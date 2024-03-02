@@ -8,6 +8,8 @@ const router = Router();
 
 router.get("/", isAuth, courseController.getCourses);
 
+router.get("/all-active", isAuth, courseController.getAllActiveCourses);
+
 router.get("/course/:courseId", isAuth, courseController.getCourse);
 
 router.post(
