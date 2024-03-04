@@ -278,20 +278,20 @@ export const adminSignupRequest = async (req: Request, res: Response, next: Next
       throw error;
     }
     const username = await coreHelper.getCodeDefault("author", User);
-    const hashedPassword = await bcrypt.hash('123456', 12);
+    const hashedPassword = await bcrypt.hash("123456", 12);
     const newUser = new User({
       email: email,
       name: name,
       username: username,
       password: hashedPassword,
       status: enumData.UserStatus.NEW.code,
-    })
+    });
 
-    await newUser.save()
-    
+    await newUser.save();
+
     res.status(200).json({
-      message: "Signup request administrator successfuly! Wait a minutes and ready for email reply with account!",
-
+      message:
+        "Signup request administrator successfuly! Wait a minutes and ready for email reply with account!",
     });
   } catch (error) {
     if (error instanceof CustomError) {
@@ -343,7 +343,6 @@ export const adminLogout = async (req: AuthorAuthRequest, res: Response, next: N
 
 export const postReset = async (req: Request, res: Response, next: NextFunction) => {
   const { email, resetPassUrl }: { email: string; resetPassUrl?: string } = req.body;
-
   crypto.randomBytes(32, async (err, buffer) => {
     if (err) {
       const error = new CustomErrorMessage("Error generating password reset", 503);
@@ -372,7 +371,7 @@ export const postReset = async (req: Request, res: Response, next: NextFunction)
 
       const hrefLink = resetPassUrl
         ? `${resetPassUrl}?token=${token}`
-        : `${BACKEND_URL}/site/reset-password.html?token=${token}`;
+        : `${"http://localhost:8000"}/site/reset-password?token=${token}`;
 
       await sendmail({
         from: "nhatsang0101@gmail.com",
