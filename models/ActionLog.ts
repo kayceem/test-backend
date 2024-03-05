@@ -28,6 +28,10 @@ const actionLogSchema = new Schema<IActionLog>(
       type: Schema.Types.ObjectId,
       ref: "Category",
     },
+    blogCategoryTypeId: {
+      type: Schema.Types.ObjectId,
+      ref: "BlogCategory",
+    },
     description: {
       type: String, // DRAFT, SOON, FREE, PAID, PUBLIC, PRIVATE
       required: true,

@@ -66,7 +66,6 @@ export const getCouponTypes = async (req: Request, res: Response, next: NextFunc
 export const getAllActiveCouponTypes = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const couponTypes = await CouponType.find({ isDeleted: false }).sort({ createdAt: -1 });
-
     res.status(200).json({
       message: GET_SUCCESS,
       couponTypes,
