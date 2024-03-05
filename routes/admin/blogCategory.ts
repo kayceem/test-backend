@@ -1,19 +1,36 @@
-import {
-  createCategory,
-  deleteCategoryById,
-  getAllCategories,
-  getCategoryById,
-  updateCategory,
-} from "../../controllers/client/categoryBlog";
+import * as categoryBlogController from "../../controllers/admin/categoryBlog";
 import express, { Router } from "express";
+import isAuth from "../../middleware/is-auth";
 
-const router: Router = express.Router();
+const router = express.Router();
 
-// Routes for Categories
-router.get("/", getAllCategories);
-router.get("/:id", getCategoryById);
-router.post("/", createCategory);
-router.put("/update/:id", updateCategory);
-router.delete("/delete/:id", deleteCategoryById);
+// Get all category blogs
+router.get("/category-blogs", categoryBlogController.getCategoryBlog);
+
+// Get all active categories
+router.get("/getAll", categoryBlogController.getAllCategories);
+
+// Get category by ID
+router.get("/:id", categoryBlogController.getCategoryById);
+
+// Load histories for a category
+router.get(
+  "/histories/:blogCategoryTypeId",
+  isAuth,
+  categoryBlogController.loadHistoriesForCategoryBlog
+);
+
+// Create a new category
+router.post("/create", isAuth, categoryBlogController.createCategory);
+
+// Update a category
+router.put("/update/:id", isAuth, categoryBlogController.updateCategory);
+
+// Update active status of a category
+router.patch(
+  "/update-active-status",
+  isAuth,
+  categoryBlogController.updateActiveCategoryBlogStatus
+);
 
 export default router;
