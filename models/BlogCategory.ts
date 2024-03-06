@@ -1,13 +1,16 @@
-import mongoose, { Document, Schema, model, ObjectId } from "mongoose";
+import { Schema, model } from "mongoose";
 import { ICategoryBlog } from "../types/iCategoryBlog";
 import baseSchema from "./BaseSchema";
 
 const blogCategorySchema = new Schema<ICategoryBlog>(
   {
+    code: {
+      type: String,
+      required: true,
+    },
     name: {
       type: String,
       required: true,
-      unique: true,
     },
     description: {
       type: String,
@@ -15,11 +18,12 @@ const blogCategorySchema = new Schema<ICategoryBlog>(
     },
     cateImage: {
       type: String,
+      required: true,
     },
     blogs: [
       {
         type: Schema.Types.ObjectId,
-        ref: "Blog", // Tham chiếu đến Model Blog
+        ref: "Blog",
       },
     ],
   },
@@ -30,6 +34,6 @@ const blogCategorySchema = new Schema<ICategoryBlog>(
 
 blogCategorySchema.add(baseSchema);
 
-blogCategorySchema.index({ name: "text", description: "text" });
+const BlogCategory = model<ICategoryBlog>("BlogCategory", blogCategorySchema);
 
-export default model<ICategoryBlog>("BlogCategory", blogCategorySchema);
+export default BlogCategory;

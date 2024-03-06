@@ -5,7 +5,25 @@ import { getCoursesOrderByUserId } from "../../utils/helper";
 import CustomError from "../../utils/error";
 import CustomErrorMessage from "../../utils/errorMessage";
 import { AuthorAuthRequest } from "../../middleware/is-auth";
-import mongoose from "mongoose";
+import { enumData } from "../../config/enumData";
+import {
+  CREATE_SUCCESS,
+  ERROR_CREATE_DATA,
+  ERROR_GET_DATA,
+  ERROR_GET_DATA_DETAIL,
+  ERROR_GET_DATA_HISTORIES,
+  ERROR_NOT_FOUND_DATA,
+  ERROR_UPDATE_ACTIVE_DATA,
+  ERROR_UPDATE_DATA,
+  GET_DETAIL_SUCCESS,
+  GET_HISOTIES_SUCCESS,
+  GET_SUCCESS,
+  UPDATE_ACTIVE_SUCCESS,
+  UPDATE_SUCCESS,
+} from "../../config/constant";
+import mongoose, { ClientSession } from "mongoose";
+import { coreHelper } from "../../utils/coreHelper";
+import ActionLog from "../../models/ActionLog";
 
 interface getUsersQuery {
   $text?: {
@@ -40,6 +58,7 @@ export const getUsers = async (req: Request, res: Response, next: NextFunction) 
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
         lastLogin: user.lastLogin,
+        isDeleted: user.isDeleted,
       };
     });
 
@@ -239,22 +258,47 @@ export const updateUser = async (req: AuthorAuthRequest, res: Response, next: Ne
   }
 };
 
-export const deleteUser = async (req: Request, res: Response, next: NextFunction) => {
-  const { userId } = req.params;
+export const updateActiveStatusUser = async (
+  req: AuthorAuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  const { userId } = req.body;
+
+  let session: ClientSession | null = null;
+  session = await mongoose.startSession();
+  session.startTransaction();
 
   try {
-    const response = await User.deleteOne({
-      _id: userId,
-    });
-    res.status(200).json({
-      message: "user deleted successfully!",
-      userId: userId,
+    const foundUser = await User.findById(userId);
+
+    if (!foundUser) {
+      const error = new CustomError("User", ERROR_NOT_FOUND_DATA, 404);
+      throw error;
+    }
+
+    foundUser.isDeleted = !foundUser.isDeleted;
+    foundUser.updatedAt = new Date();
+    foundUser.updatedBy = new mongoose.Types.ObjectId(req.userId) as any;
+
+    await foundUser.save();
+
+    await session.commitTransaction();
+    session.endSession();
+
+    res.json({
+      message: UPDATE_ACTIVE_SUCCESS,
     });
   } catch (error) {
+    if (session) {
+      await session.abortTransaction();
+      session.endSession();
+    }
+
     if (error instanceof CustomError) {
       return next(error);
     } else {
-      const customError = new CustomErrorMessage("Failed to deleted user!", 422);
+      const customError = new CustomErrorMessage(ERROR_UPDATE_ACTIVE_DATA, 422);
       return next(customError);
     }
   }

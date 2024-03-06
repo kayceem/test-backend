@@ -20,12 +20,7 @@ router.post(
   userController.postUser
 );
 
-router.post(
-  "/user/approve",
-  isAuth,
-  isAdmin,
-  userController.approveUser
-);
+router.post("/user/approve", isAuth, isAdmin, userController.approveUser);
 
 router.put(
   "/user/update/:userId",
@@ -35,6 +30,6 @@ router.put(
   userController.updateUser
 );
 
-router.delete("/user/delete/:userId", isAuth, isAdmin, userController.deleteUser);
+router.patch("/user/update-active-status", isAuth, userController.updateActiveStatusUser);
 
 export default router;
