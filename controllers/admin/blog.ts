@@ -1,81 +1,125 @@
 import { Request, Response, NextFunction } from "express";
 import Blog from "../../models/Blog";
-import mongoose from "mongoose";
+import mongoose, { ClientSession } from "mongoose";
 import CustomErrorMessage from "../../utils/errorMessage";
 import { AuthorAuthRequest } from "../../middleware/is-auth";
 
-export const getAllBlog = async (req: Request, res: Response, next: NextFunction) => {
-  const page = parseInt(req.query.page as string) || 1;
-  const limit = parseInt(req.query.limit as string) || 10;
-  const skip = (page - 1) * limit;
-  const author = req.query.author as string; // Sử dụng tên trường 'author' nếu là một trường trong schema
-  const categoryId = req.query.categoryId as string; // Đổi _category thành categoryId
+import {
+  CREATE_SUCCESS,
+  ERROR_GET_DATA,
+  ERROR_GET_DATA_HISTORIES,
+  ERROR_NOT_FOUND_DATA,
+  ERROR_UPDATE_ACTIVE_DATA,
+  GET_HISOTIES_SUCCESS,
+  GET_SUCCESS,
+  UPDATE_ACTIVE_SUCCESS,
+  UPDATE_SUCCESS,
+} from "../../config/constant";
+import ActionLog from "../../models/ActionLog";
+import CustomError from "../../utils/error";
+import { enumData } from "../../config/enumData";
+import { coreHelper } from "../../utils/coreHelper";
 
+export const getBlogPrams = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const blogs = await Blog.find({
-      ...(author ? { author: author } : {}),
-      ...(categoryId ? { categoryId: categoryId } : {}),
-      isDeleted: { $ne: true }, // Thêm điều kiện để loại trừ các blog đã bị xóa mềm
-    })
-      .skip(skip)
-      .limit(limit);
-    const total = await Blog.countDocuments({
-      ...(author ? { author: author } : {}),
-      ...(categoryId ? { categoryId: categoryId } : {}),
-      isDeleted: { $ne: true },
-    });
+    const searchTerm = (req.query._q as string) || "";
+    const page = parseInt(req.query._page as string) || 1;
+    const limit = parseInt(req.query._limit as string) || 10;
+    const skip = (page - 1) * limit;
+
+    const statusFilter = (req.query._status as string) || "all";
+
+    let query = {
+      ...(statusFilter === "active" ? { isDeleted: false } : {}),
+      ...(statusFilter === "inactive" ? { isDeleted: true } : {}),
+      ...(searchTerm ? { name: { $regex: searchTerm, $options: "i" } } : {}),
+    };
+
+    const total = await Blog.countDocuments(query);
+
+    const blogs = await Blog.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit);
 
     res.status(200).json({
-      message: "Get all blogs successfully",
-      blogs: blogs,
-      totalPages: Math.ceil(total / limit),
-      currentPage: page,
+      message: GET_SUCCESS,
+      total,
+      page,
+      pages: Math.ceil(total / limit),
+      limit,
+      blogs,
     });
-  } catch (error: any) {
-    next(error);
+  } catch (error) {
+    if (error instanceof CustomError) {
+      return next(error);
+    } else {
+      const customError = new CustomErrorMessage(ERROR_GET_DATA, 422);
+      return next(customError);
+    }
+  }
+};
+
+export const getAllBlog = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const blogs = await Blog.find({ isDeleted: false }).sort({ createdAt: -1 });
+    res.status(200).json({
+      message: GET_SUCCESS,
+      blogs,
+    });
+  } catch (err) {
+    res
+      .status(500)
+      .json({ message: err instanceof Error ? err.message : "An unknown error occurred" });
   }
 };
 
 export const createBlog = async (req: AuthorAuthRequest, res: Response, next: NextFunction) => {
-  const { title, author, blogImg, technology, tags, readTime, content, userId, categoryId } =
-    req.body;
+  const {
+    title,
+    content,
+    categoryId,
+    tags = "",
+    blogImg,
+    author,
+    readTime,
+    userId,
+    technology,
+  } = req.body;
 
-  if (
-    !title ||
-    !author ||
-    !blogImg ||
-    !technology ||
-    !tags ||
-    !readTime ||
-    !content ||
-    !userId ||
-    !categoryId
-  ) {
-    return next(new CustomErrorMessage("Missing required fields", 400));
-  }
+  let session: ClientSession | null = null;
+  session = await mongoose.startSession();
+  session.startTransaction();
 
   try {
-    const blogPost = new Blog({
+    const BlogCode = await coreHelper.getCodeDefault("BLOG", Blog);
+
+    const blog = new Blog({
+      code: BlogCode,
       title,
-      author,
-      blogImg,
-      technology,
-      tags: Array.isArray(tags) ? tags : tags.split(",").map((tag) => tag.trim()),
-      readTime,
       content,
-      userId,
       categoryId,
-      datePublished: new Date(),
-      isDeleted: false,
+      tags: tags.split(",").map((tag) => tag.trim()), // Chuyển đổi chuỗi tags thành mảng
+      blogImg,
+      author,
+      technology,
+      readTime,
+      userId,
       createdBy: req.userId,
+      createdAt: new Date(),
+      isDeleted: false,
     });
 
-    await blogPost.save();
+    const savedBlog = await blog.save();
 
-    res.status(201).json({
-      message: "Blog post created successfully",
-      blogPost,
+    const historyItem = new ActionLog({
+      referenceId: savedBlog._id,
+      type: enumData.ActionLogEnType.Create.code,
+      createdBy: req.userId,
+      functionType: "Blog",
+      description: `Blog [${savedBlog.title}] has been created by user [${req.userId}].`,
     });
+
+    await historyItem.save();
+
+    res.status(201).json({ message: CREATE_SUCCESS, blog: savedBlog });
   } catch (error) {
     next(error);
   }
@@ -83,13 +127,18 @@ export const createBlog = async (req: AuthorAuthRequest, res: Response, next: Ne
 
 export const getBlogById = async (req: Request, res: Response, next: NextFunction) => {
   const blogId = req.params.id;
+
   if (!mongoose.Types.ObjectId.isValid(blogId)) {
     return res.status(400).json({ message: "Invalid blog ID" });
   }
+
   try {
-    const blog = await Blog.findById(blogId);
+    const blog = await Blog.findOne({ _id: blogId })
+      .populate("createdBy", "name")
+      .populate("updatedBy", "name");
+
     if (!blog) {
-      const error = new CustomErrorMessage("Could not find blog", 422);
+      const error = new CustomError("Blog", ERROR_NOT_FOUND_DATA, 404);
       throw error;
     }
     res.status(200).json({
@@ -102,34 +151,175 @@ export const getBlogById = async (req: Request, res: Response, next: NextFunctio
 };
 
 export const updateBlog = async (req: AuthorAuthRequest, res: Response, next: NextFunction) => {
-  const { title, author, blogImg, technology, tags, readTime, content, userId, category } =
-    req.body;
-  const { id } = req.params;
+  const { title, content, categoryId, tags, blogImg, author } = req.body;
+  const blogId = req.params.id;
+
+  let session: ClientSession | null = null;
+  session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
-    // Find the blog post by id and update it
-    const updatedBlog = await Blog.findByIdAndUpdate(
-      id,
-      {
-        title,
-        author,
-        blogImg,
-        technology,
-        tags,
-        readTime,
-        content,
-        userId,
-        category,
-      },
-      { new: true }
-    );
-    if (!updatedBlog) {
-      return res.status(404).json({ message: "Blog post not found" });
+    const blog = await Blog.findById(blogId);
+
+    if (!blog) {
+      const error = new CustomError("Blog", ERROR_NOT_FOUND_DATA, 404);
+      throw error;
     }
-    updatedBlog.updatedAt = new Date();
-    updatedBlog.updatedBy = new mongoose.Types.ObjectId(req.userId) as any;
-    res.json(updatedBlog);
-  } catch (err) {
-    next(err);
+
+    blog.title = title;
+    blog.content = content;
+    blog.categoryId = categoryId;
+    blog.tags = Array.isArray(tags) ? tags : tags.split(",").map((tag) => tag.trim());
+    blog.blogImg = blogImg;
+    blog.author = author;
+    blog.updatedBy = new mongoose.Types.ObjectId(req.userId) as any;
+    blog.updatedAt = new Date();
+
+    const blogTypeRes = await blog.save();
+
+    await blogTypeRes.save();
+
+    const historyItem = new ActionLog({
+      referenceId: blog._id,
+      type: enumData.ActionLogEnType.Update.code,
+      createdBy: req.userId,
+      functionType: "Blog",
+      description: `Blog [${blog.title}] has been updated by user [${req.userId}].`,
+    });
+
+    await historyItem.save();
+
+    res.status(200).json({ message: UPDATE_SUCCESS, blog });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateActiveBlogStatus = async (
+  req: AuthorAuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  const { blogId } = req.body;
+
+  let session: ClientSession | null = null;
+  session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const blog = await Blog.findById(blogId);
+
+    if (!blog) {
+      res.status(404).json({ message: "Blog not found" });
+      return;
+    }
+
+    blog.isDeleted = !blog.isDeleted;
+    blog.updatedAt = new Date();
+    blog.updatedBy = new mongoose.Types.ObjectId(req.userId) as any;
+    const BlogRes = await blog.save();
+
+    const type =
+      BlogRes.isDeleted === false
+        ? `${enumData.ActionLogEnType.Activate.code}`
+        : `${enumData.ActionLogEnType.Deactivate.code}`;
+    const typeName =
+      BlogRes.isDeleted === false
+        ? `${enumData.ActionLogEnType.Activate.name}`
+        : `${enumData.ActionLogEnType.Deactivate.name}`;
+    const createdBy = new mongoose.Types.ObjectId(req.userId) as any;
+    const historyDesc = `User [${req.username}] has [${typeName}] blog`;
+    const functionType = "Blog";
+
+    const historyItem = new ActionLog({
+      blogId: BlogRes._id,
+      type,
+      createdBy,
+      functionType,
+      description: historyDesc,
+    });
+
+    await ActionLog.collection.insertOne(historyItem.toObject(), {
+      session: session,
+    });
+
+    await session.commitTransaction();
+    session.endSession();
+
+    res.json({
+      message: UPDATE_ACTIVE_SUCCESS,
+    });
+  } catch (error) {
+    if (session) {
+      await session.abortTransaction();
+      session.endSession();
+    }
+
+    if (error instanceof CustomError) {
+      return next(error);
+    } else {
+      const customError = new CustomErrorMessage(ERROR_UPDATE_ACTIVE_DATA, 422);
+      return next(customError);
+    }
+  }
+};
+
+export const softDeleteBlog = async (req: AuthorAuthRequest, res: Response, next: NextFunction) => {
+  const blogId = req.params.id;
+  try {
+    const blog = await Blog.findById(blogId);
+
+    if (!blog) {
+      throw new CustomErrorMessage(ERROR_NOT_FOUND_DATA, 404);
+    }
+
+    blog.isDeleted = true;
+    await blog.save();
+
+    const historyItem = new ActionLog({
+      referenceId: blog._id,
+      type: enumData.ActionLogEnType.Deactivate.code,
+      createdBy: req.userId,
+      functionType: "Blog",
+      description: `Blog [${blog.title}] has been soft deleted by user [${req.userId}].`,
+    });
+
+    await historyItem.save();
+
+    res.status(200).json({ message: "Blog soft deleted successfully" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const loadHistoriesForBlog = async (req: Request, res: Response, next: NextFunction) => {
+  const { blogId } = req.params;
+
+  try {
+    const page = parseInt(req.query._page as string) || 1;
+    const limit = parseInt(req.query._limit as string) || 10;
+    const skip = (page - 1) * limit;
+
+    const [results, count] = await Promise.all([
+      ActionLog.find({ blogId: blogId }).sort({ createdAt: -1 }).skip(skip).limit(limit),
+      ActionLog.countDocuments({ blogId: blogId }),
+    ]);
+
+    res.status(200).json({
+      message: GET_HISOTIES_SUCCESS,
+      results: results,
+      count,
+      page,
+      pages: Math.ceil(count / limit),
+      limit,
+    });
+  } catch (error) {
+    if (error instanceof CustomError) {
+      return next(error);
+    } else {
+      const customError = new CustomErrorMessage(ERROR_GET_DATA_HISTORIES, 422);
+      return next(customError);
+    }
   }
 };
 
@@ -148,18 +338,5 @@ export const deleteBlogById = async (req: Request, res: Response, next: NextFunc
     });
   } catch (error) {
     next(error);
-  }
-};
-
-export const softDeleteBlog = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { id } = req.params;
-    const blog = await Blog.findByIdAndUpdate(id, { isDeleted: true }, { new: true });
-    if (!blog) {
-      return res.status(404).json({ message: "Blog not found" });
-    }
-    res.status(200).json(blog);
-  } catch (error: any) {
-    res.status(500).json({ message: error.message });
   }
 };
