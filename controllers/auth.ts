@@ -223,6 +223,12 @@ export const adminLogin = async (req: Request, res: Response, next: NextFunction
     userDoc.loginTokenExpiration = new Date(Date.now() + 60 * 60 * 1000);
     await userDoc.save();
 
+    // Add realtime socket
+    // getIO().emit('auth', {
+    //   action: 'signupRequest',
+    //   message: "ahihih"
+    // });
+
     // Check Permission role
     const listKeyPermission = [];
     const userPermission = await Permission.findOne({
@@ -287,8 +293,11 @@ export const adminSignupRequest = async (req: Request, res: Response, next: Next
       status: enumData.UserStatus.NEW.code,
     })
 
-    await newUser.save()
-    
+    const createdUser = await newUser.save()
+    getIO().emit('auth', {
+      action: 'signupRequest',
+      user: createdUser
+    });
     res.status(200).json({
       message: "Signup request administrator successfuly! Wait a minutes and ready for email reply with account!",
 
