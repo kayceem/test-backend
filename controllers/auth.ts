@@ -187,19 +187,26 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
 };
 
 export const adminLogin = async (req: Request, res: Response, next: NextFunction) => {
-  const { email, password } = req.body;
+  const { email, password, username } = req.body;
 
+
+  
   try {
-    const userDoc: IUser | null = await User.findOne({ email, providerId: "local" });
+    let userDoc: IUser | null = null;
+    if(email) {
+      userDoc = await User.findOne({ email, providerId: "local", status: enumData.UserStatus.ACTIVE.code });
+    }else if(username) {
+      userDoc = await User.findOne({ username, providerId: "local", status: enumData.UserStatus.ACTIVE.code });
+    }
 
     if (!userDoc) {
-      const error = new CustomError("Email", "Could not find user by email!", 401);
+      const error = new CustomError("Email", "Could not find user by email or username!", 401);
       throw error;
     }
 
     const { role } = userDoc;
 
-    if (role !== "ADMIN" && role !== "INSTRUCTOR" && role !== "TEACHER") {
+    if (role !== "ADMIN" && role !== "INSTRUCTOR" && role !== "TEACHER" && role !== "AUTHOR") {
       const error = new CustomErrorMessage(
         "Could not authenticate because this account not admin role!",
         422
@@ -222,6 +229,12 @@ export const adminLogin = async (req: Request, res: Response, next: NextFunction
     userDoc.loginToken = token;
     userDoc.loginTokenExpiration = new Date(Date.now() + 60 * 60 * 1000);
     await userDoc.save();
+
+    // Add realtime socket
+    // getIO().emit('auth', {
+    //   action: 'signupRequest',
+    //   message: "ahihih"
+    // });
 
     // Check Permission role
     const listKeyPermission = [];
@@ -256,6 +269,7 @@ export const adminLogin = async (req: Request, res: Response, next: NextFunction
       enumData: resEnumData,
       role: roleEnum,
       listPermission: listKeyPermission,
+      adminRole: userDoc.role
     });
   } catch (error) {
     if (error instanceof CustomError) {
@@ -268,10 +282,21 @@ export const adminLogin = async (req: Request, res: Response, next: NextFunction
 };
 
 export const adminSignupRequest = async (req: Request, res: Response, next: NextFunction) => {
-  const { email, name } = req.body;
+  const { email, name, phone } = req.body;
 
   try {
-    const userDoc: IUser | null = await User.findOne({ email, providerId: "local" });
+    const userDoc: IUser | null = await User.findOne({ email, providerId: "local", $or: [
+      {
+        role: enumData.UserType.Admin.code,
+      },
+      {
+        role: enumData.UserType.Author.code,
+      },
+      {
+        role: enumData.UserType.Employee.code,
+      },
+
+    ] });
 
     if (userDoc) {
       const error = new CustomError("Email", "Email already register at website", 401);
@@ -283,12 +308,19 @@ export const adminSignupRequest = async (req: Request, res: Response, next: Next
       email: email,
       name: name,
       username: username,
+      phone: phone,
       password: hashedPassword,
+      role: enumData.UserType.Author.code,
       status: enumData.UserStatus.NEW.code,
+      providerId: enumData.LoginType.Local.value,
     });
 
-    await newUser.save();
 
+    const createdUser = await newUser.save()
+    getIO().emit('auth', {
+      action: 'signupRequest',
+      user: createdUser
+    });
     res.status(200).json({
       message:
         "Signup request administrator successfuly! Wait a minutes and ready for email reply with account!",

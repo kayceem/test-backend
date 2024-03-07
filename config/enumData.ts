@@ -1,8 +1,18 @@
 export const enumData = {
   /** Loại user */
   UserType: {
-    Employee: { code: "Employee", name: "Nhân viên", description: "" },
-    Admin: { code: "Admin", name: "Admin", description: "" },
+    Employee: { code: "Employee", name: "Nhân viên", description: "" , value: ""},
+    Admin: { code: "Admin", name: "Admin", description: "" , value: ""},
+    Author: { code: "Author", name: "Author", description: "" , value: ""},
+    User: { code: "User", name: "User", description: "" , value: ""},
+    Student: { code: "Student", name: "Student", description: "" , value: ""},
+  },
+  /** Loại đăng nhập */
+  LoginType: {
+    Local: { code: "Local", name: "Đăng nhập bằng username và password", description: "" , value: "local"},
+    Google: { code: "Google", name: "Đăng nhập bằng google", description: "" , value: "google"},
+    Facebook: { code: "Facebook", name: "Đăng nhập bằng facebook", description: "" , value: "facebook"},
+    Github: { code: "Github", name: "Đăng nhập bằng github", description: "" , value: "github"},
   },
 
   /** Loại kỳ thanh toán */
@@ -472,10 +482,10 @@ export const enumData = {
     ADVANCED: { code: "ADVANCED", name: "Advanced", value: "" },
   },
 
-  /** Thao tác với bài test */
+  /** Trạng thái của người dùng */
   UserStatus: {
-    NEW: { code: "NEW", name: "New" },
-    ACTIVE: { code: "ACTIVE", name: "Active" },
-    INACTIVE: { code: "INACTIVE", name: "In Active" },
+    NEW: { code: "NEW", name: "New", color: "#348aed" },
+    ACTIVE: { code: "ACTIVE", name: "Active", color: "#5af542" },
+    INACTIVE: { code: "INACTIVE", name: "In Active", color: "#ed4734" },
   },
 };

@@ -24,6 +24,8 @@ import {
 import mongoose, { ClientSession } from "mongoose";
 import { coreHelper } from "../../utils/coreHelper";
 import ActionLog from "../../models/ActionLog";
+import sendmail from "../../utils/sendmail";
+import { template } from "../../config/template";
 
 interface getUsersQuery {
   $text?: {
@@ -41,7 +43,7 @@ export const getUsers = async (req: Request, res: Response, next: NextFunction) 
       query.$text = { $search: _q };
     }
 
-    const users = await User.find(query);
+    const users = await User.find(query).sort({ createdAt: -1 });
 
     const result = users.map(async (user) => {
       const courses = await getCoursesOrderByUserId(user._id);
@@ -59,6 +61,9 @@ export const getUsers = async (req: Request, res: Response, next: NextFunction) 
         updatedAt: user.updatedAt,
         lastLogin: user.lastLogin,
         isDeleted: user.isDeleted,
+        statusName: enumData.UserStatus[user.status]?.name,
+        statusColor: enumData.UserStatus[user.status]?.color,
+        status: user.status,
       };
     });
 
@@ -171,45 +176,62 @@ export const postUser = async (req: AuthorAuthRequest, res: Response, next: Next
 
 /** Approve and send email (with username and password for new author) */
 export const approveUser = async (req: AuthorAuthRequest, res: Response, next: NextFunction) => {
-  const { name, email, phone, address, password, role, avatar } = req.body;
-
-  let avatarUrl;
-
-  if (!avatar) {
-    avatarUrl =
-      "https://lwfiles.mycourse.app/64b5524f42f5698b2785b91e-public/avatars/thumbs/64c077e0557e37da3707bb92.jpg";
-  } else {
-    avatarUrl = avatar;
-  }
+  const { userId } = req.body;
+  let session: ClientSession | null = null;
+  session = await mongoose.startSession();
+  session.startTransaction();
 
   try {
-    const existingUser = await User.findOne({ email });
+    const foundUser = await User.findOne({ _id: userId });
 
-    if (existingUser) {
-      const error = new CustomError("Email", "Email is already registered", 422);
-      return next(error);
+    if (!foundUser) {
+        throw new Error(`User ${userId} not found`);
     }
+    foundUser.status = enumData.UserStatus.ACTIVE.code;
 
-    const hashedPassword = await bcrypt.hash(password, 12);
+    const result = await foundUser.save();
+    const createdBy = new mongoose.Types.ObjectId(req.userId) as any
+    const historyDesc = `User [${(req as any).username}] has [APPROVED] User`
+    const functionType = "USER"
+    const historyItem = new ActionLog({
+      questionId: result._id,
+      type: functionType,
+      createdBy,
+      functionType,
+      description: historyDesc
+    })
 
-    const newUser = new User({
-      email,
-      name,
-      phone,
-      avatar: avatarUrl,
-      role,
-      password: hashedPassword,
-      createdBy: req.userId,
+    await ActionLog.collection.insertOne(historyItem.toObject(), { 
+      session: session 
+  });
+
+  const bodyHtml = template.EmailTemplate.SendUserNameAndPasswordForAuthor.default
+  .replace('{0}', foundUser.name) // Replace {0} with the user's name
+  .replace('{1}', foundUser.username) // Replace {1} with the user's username
+  .replace('{2}', '123456'); // Replace {2} with the generated or default password
+
+    await session.commitTransaction();
+    session.endSession();
+
+    await sendmail({
+      from: template.EmailTemplate.SendUserNameAndPasswordForAuthor.from,
+      to: foundUser.email,
+      subject: template.EmailTemplate.SendUserNameAndPasswordForAuthor.name,
+      html: bodyHtml,
     });
-
-    const result = await newUser.save();
 
     res.status(201).json({
       message: "User created successfully!",
       userId: result._id,
     });
   } catch (error) {
-    if (error instanceof CustomError) {
+
+    if (session) {
+      await session.abortTransaction();
+      session.endSession();
+    }
+
+      if (error instanceof CustomError) {
       return next(error);
     } else {
       const customError = new CustomErrorMessage("Failed to created user!", 422);

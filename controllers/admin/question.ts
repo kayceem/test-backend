@@ -12,7 +12,8 @@ import { CREATE_SUCCESS, ERROR_CREATE_DATA, ERROR_GET_DATA, ERROR_GET_DATA_DETAI
 export const getQuestions = async (req: Request, res: Response, next: NextFunction) => {
 
   const queryCondition = {
-    isDeleted: false
+    isDeleted: false,
+    // createdBy: (req as any).userId
   }
 
   try {
@@ -223,7 +224,6 @@ export const updateActiveStatusQuestion = async (req: AuthorAuthRequest, res: Re
     }
   }
 };
-
 
 export const loadHistories = async (req: Request, res: Response, next: NextFunction) => {
   const { questionId } = req.params;

@@ -20,7 +20,7 @@ router.post(
   userController.postUser
 );
 
-router.post("/user/approve", isAuth, isAdmin, userController.approveUser);
+router.patch("/user/approve", isAuth, isAdmin, userController.approveUser);
 
 router.put(
   "/user/update/:userId",
