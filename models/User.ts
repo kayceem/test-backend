@@ -48,21 +48,24 @@ const userSchema = new Schema<IUser>(
     biography: {
       type: String,
     },
-    website: {
-      type: String,
-    },
-    twitter: {
-      type: String,
-    },
-    facebook: {
-      type: String,
-    },
-    linkedin: {
-      type: String,
-    },
-    youtube: {
-      type: String,
-    },
+    socials: 
+      {
+        website: {
+          type: String,
+        },
+        twitter: {
+          type: String,
+        },
+        facebook: {
+          type: String,
+        },
+        linkedin: {
+          type: String,
+        },
+        youtube: {
+          type: String,
+        },
+      },
     language: {
       type: String,
       default: "en",
@@ -74,6 +77,9 @@ const userSchema = new Schema<IUser>(
     showCourses: {
       type: Boolean,
       default: true,
+    },
+    status: {
+      type: String,
     },
     resetToken: String,
     resetTokenExpiration: Date,

@@ -1,5 +1,5 @@
 import { IBaseSchema } from "./base.type";
-
+type SocialMediaKey ='website'| 'facebook' | 'twitter' | 'instagram' | 'linkedin' | 'youtube'; 
 export interface IUser extends IBaseSchema {
   providerId: string;
   name: string;
@@ -13,16 +13,13 @@ export interface IUser extends IBaseSchema {
   payment: string;
   headline?: string;
   biography?: string;
-  website?: string;
-  twitter?: string;
-  facebook?: string;
-  linkedin?: string;
-  youtube?: string;
+  socials: {[key in SocialMediaKey]: string};
   language: string;
   resetToken?: string;
   loginToken?: string;
   showProfile: boolean;
   showCourses: boolean;
+  status?: string; 
   lastLogin?: Date;
   resetTokenExpiration?: Date;
   loginTokenExpiration?: Date;
