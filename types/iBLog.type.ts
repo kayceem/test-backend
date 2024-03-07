@@ -2,6 +2,7 @@ import { Schema } from "mongoose";
 import { IBaseSchema } from "./base.type";
 
 export interface IBlog extends IBaseSchema {
+  code: string;
   title: string;
   author: string;
   blogImg: string;

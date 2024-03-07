@@ -4,6 +4,10 @@ import baseSchema from "./BaseSchema";
 
 const blogSchema = new Schema<IBlog>(
   {
+    code: {
+      type: String,
+      required: true,
+    },
     title: {
       type: String,
       required: true,
