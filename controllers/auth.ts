@@ -189,8 +189,6 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
 export const adminLogin = async (req: Request, res: Response, next: NextFunction) => {
   const { email, password, username } = req.body;
 
-
-  
   try {
     let userDoc: IUser | null = null;
     if(email) {
@@ -206,7 +204,7 @@ export const adminLogin = async (req: Request, res: Response, next: NextFunction
 
     const { role } = userDoc;
 
-    if (role !== "ADMIN" && role !== "INSTRUCTOR" && role !== "TEACHER" && role !== "AUTHOR") {
+    if (role !== enumData.UserType.Admin.code && role !== enumData.UserType.Admin.code) {
       const error = new CustomErrorMessage(
         "Could not authenticate because this account not admin role!",
         422
