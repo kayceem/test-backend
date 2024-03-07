@@ -1,23 +1,27 @@
 const express = require("express");
 import { Router } from "express";
 import * as blogController from "../../controllers/admin/blog";
+import isAuth from "../../middleware/is-auth";
 const router = Router();
 
 // GET ALL BLOGS
 router.get("/", blogController.getAllBlog);
 
+router.get("/blogParams", blogController.getBlogPrams);
+
 // GET a blog by id
-router.get("/:id", blogController.getBlogById);
+router.get("/:id", isAuth, blogController.getBlogById);
 
-// POST a new blog
-router.post("/create", blogController.createBlog);
+router.get("/histories/:blogId", isAuth, blogController.loadHistoriesForBlog);
 
-// UPDATE a blog by id
-router.put("/update/:id", blogController.updateBlog);
-
-// DELETE a blog by id
 router.delete("/delete/:id", blogController.deleteBlogById);
 
-router.put("/:id/soft-delete", blogController.softDeleteBlog);
+// POST a new blog
+router.post("/create", isAuth, blogController.createBlog);
+
+// UPDATE a blog by id
+router.put("/update/:id", isAuth, blogController.updateBlog);
+
+router.patch("/update-active-status", isAuth, blogController.updateActiveBlogStatus);
 
 export default router;
