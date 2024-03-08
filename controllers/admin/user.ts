@@ -32,13 +32,18 @@ interface getUsersQuery {
   $text?: {
     $search: string;
   };
+  createdBy?: string;
 }
 
-export const getUsers = async (req: Request, res: Response, next: NextFunction) => {
+export const getUsers = async (req: AuthorAuthRequest, res: Response, next: NextFunction) => {
   const { _q } = req.query;
 
   try {
     const query: getUsersQuery = {};
+
+    if(req.role && req.role === enumData.UserType.Author.code) {
+       query.createdBy = new mongoose.Types.ObjectId(req.userId) as any;
+    }
 
     if (_q && typeof _q === "string") {
       query.$text = { $search: _q };

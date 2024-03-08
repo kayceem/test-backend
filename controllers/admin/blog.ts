@@ -20,7 +20,7 @@ import CustomError from "../../utils/error";
 import { enumData } from "../../config/enumData";
 import { coreHelper } from "../../utils/coreHelper";
 
-export const getBlogPrams = async (req: Request, res: Response, next: NextFunction) => {
+export const getBlogPrams = async (req: AuthorAuthRequest, res: Response, next: NextFunction) => {
   try {
     const searchTerm = (req.query._q as string) || "";
     const page = parseInt(req.query._page as string) || 1;
@@ -28,13 +28,16 @@ export const getBlogPrams = async (req: Request, res: Response, next: NextFuncti
     const skip = (page - 1) * limit;
 
     const statusFilter = (req.query._status as string) || "all";
-
-    let query = {
+    
+    let query: any = {
       ...(statusFilter === "active" ? { isDeleted: false } : {}),
       ...(statusFilter === "inactive" ? { isDeleted: true } : {}),
       ...(searchTerm ? { name: { $regex: searchTerm, $options: "i" } } : {}),
     };
-
+    const currentUserRole = req.role;
+    if(currentUserRole && currentUserRole === enumData.UserType.Author.code) {
+      query.createdBy = new mongoose.Types.ObjectId(req.userId) as any;
+   }
     const total = await Blog.countDocuments(query);
 
     const blogs = await Blog.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit);

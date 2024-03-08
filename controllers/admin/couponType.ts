@@ -23,7 +23,7 @@ import {
   UPDATE_SUCCESS,
 } from "../../config/constant";
 
-export const getCouponTypes = async (req: Request, res: Response, next: NextFunction) => {
+export const getCouponTypes = async (req: AuthorAuthRequest, res: Response, next: NextFunction) => {
   try {
     const searchTerm = (req.query._q as string) || "";
     const page = parseInt(req.query._page as string) || 1;
@@ -32,11 +32,16 @@ export const getCouponTypes = async (req: Request, res: Response, next: NextFunc
 
     const statusFilter = (req.query._status as string) || "all";
 
-    let query = {
+    let query: any = {
       ...(statusFilter === "active" ? { isDeleted: false } : {}),
       ...(statusFilter === "inactive" ? { isDeleted: true } : {}),
       ...(searchTerm ? { name: { $regex: searchTerm, $options: "i" } } : {}),
     };
+
+    const currentUserRole = req.role;
+    if(currentUserRole && currentUserRole === enumData.UserType.Author.code) {
+      query.createdBy = new mongoose.Types.ObjectId(req.userId) as any;
+   }
 
     const total = await CouponType.countDocuments(query);
 

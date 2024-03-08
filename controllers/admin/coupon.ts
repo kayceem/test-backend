@@ -24,7 +24,7 @@ import {
   UPDATE_SUCCESS,
 } from "../../config/constant";
 
-export const getCoupons = async (req: Request, res: Response, next: NextFunction) => {
+export const getCoupons = async (req: AuthorAuthRequest, res: Response, next: NextFunction) => {
   try {
     const searchTerm = (req.query._q as string) || "";
     const page = parseInt(req.query._page as string) || 1;
@@ -33,11 +33,15 @@ export const getCoupons = async (req: Request, res: Response, next: NextFunction
 
     const statusFilter = (req.query._status as string) || "all";
 
-    let query = {
+    let query: any = {
       ...(statusFilter === "active" ? { isDeleted: false } : {}),
       ...(statusFilter === "inactive" ? { isDeleted: true } : {}),
       ...(searchTerm ? { description: { $regex: searchTerm, $options: "i" } } : {}),
     };
+    const currentUserRole = req.role;
+    if(currentUserRole && currentUserRole === enumData.UserType.Author.code) {
+      query.createdBy = new mongoose.Types.ObjectId(req.userId) as any;
+   }
 
     const total = await Coupon.countDocuments(query);
 
