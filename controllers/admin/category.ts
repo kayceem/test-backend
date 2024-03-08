@@ -5,17 +5,24 @@ import Course from "../../models/Course";
 import { body, validationResult } from "express-validator";
 import CustomError from "../../utils/error";
 import CustomErrorMessage from "../../utils/errorMessage";
+import { AuthorAuthRequest } from "../../middleware/is-auth";
+import mongoose from "mongoose";
+import { enumData } from "../../config/enumData";
 
 interface GetCategoriesQuery {
   $text?: { $search: string };
   name?: string;
+  createdBy?: string;
 }
 
-export const getCategories = async (req: Request, res: Response, next: NextFunction) => {
+export const getCategories = async (req: AuthorAuthRequest, res: Response, next: NextFunction) => {
   const { _q, _cateName } = req.query;
 
   const query: GetCategoriesQuery = {};
-
+  const currentUserRole = req.role;
+    if(currentUserRole && currentUserRole === enumData.UserType.Author.code) {
+      query.createdBy = new mongoose.Types.ObjectId(req.userId) as any;
+   }
   if (_q && typeof _q === "string") {
     query.$text = { $search: _q };
   }
@@ -66,6 +73,9 @@ export const getCategories = async (req: Request, res: Response, next: NextFunct
 
 export const getAllCategories = async (req: Request, res: Response, next: NextFunction) => {
   try {
+
+    
+
     const categories = await Category.find();
     res.status(200).json({
       message: "Fetch all categories sucessfully!",

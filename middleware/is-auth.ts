@@ -3,6 +3,7 @@ import jwt, { JwtPayload } from "jsonwebtoken";
 import CustomError from "../utils/error";
 import CustomErrorMessage from "../utils/errorMessage";
 import RevokedToken from "../models/RevokedToken";
+import User from "../models/User";
 
 interface DecodedToken extends JwtPayload {
   userId: string;
@@ -14,6 +15,7 @@ export interface AuthorAuthRequest extends Request {
   courseId?: string;
   decodedToken?: string | JwtPayload;
   token?: string;
+  role?: string;
 }
 
 export default async (req: AuthorAuthRequest, res: Response, next: NextFunction) => {
@@ -64,8 +66,13 @@ export default async (req: AuthorAuthRequest, res: Response, next: NextFunction)
   }
 
   authorAuthReq.userId = decodedToken.userId;
-  authorAuthReq.username = 'ADMIN'; // TODO LATER
-
+  const foundUser = await User.findById(authorAuthReq.userId);
+  if(!foundUser) {
+    const error = new CustomError("User Not Found", "Not authenticated.", 401);
+    return next(error);
+  }
+  authorAuthReq.username = foundUser.username; // TODO LATER
+  authorAuthReq.role = foundUser.role;
   if (req.query.courseId) {
     authorAuthReq.courseId = req.query.courseId as string;
   }

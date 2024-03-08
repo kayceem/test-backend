@@ -4,6 +4,7 @@ import User from "../models/User";
 import Course from "../models/Course";
 import CustomError from "../utils/error";
 import CustomErrorMessage from "../utils/errorMessage";
+import { enumData } from "../config/enumData";
 
 export interface OwnerAuthRequest extends Request {
   userId?: string;
@@ -17,7 +18,7 @@ export default async (req: OwnerAuthRequest, res: Response, next: NextFunction) 
   try {
     const user = await User.findById(req.userId);
 
-    const isAdmin = user.role === "ADMIN";
+    const isAdmin = user.role === enumData.UserType.Admin.code;
 
     const currentCourse = await Course.findById(courseId);
 

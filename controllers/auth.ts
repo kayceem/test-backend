@@ -204,9 +204,9 @@ export const adminLogin = async (req: Request, res: Response, next: NextFunction
 
     const { role } = userDoc;
 
-    if (role !== enumData.UserType.Admin.code && role !== enumData.UserType.Admin.code) {
+    if (role !== enumData.UserType.Admin.code && role !== enumData.UserType.Author.code) {
       const error = new CustomErrorMessage(
-        "Could not authenticate because this account not admin role!",
+        "Could not authenticate because this account not admin or author role!",
         422
       );
       throw error;
