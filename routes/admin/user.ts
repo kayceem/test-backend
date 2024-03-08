@@ -32,4 +32,6 @@ router.put(
 
 router.patch("/user/update-active-status", isAuth, userController.updateActiveStatusUser);
 
+router.get("/user/histories/:userId", isAuth, userController.loadHistoriesUser);
+
 export default router;

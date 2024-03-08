@@ -4,6 +4,9 @@ import { IUser } from "../types/user.type";
 
 const userSchema = new Schema<IUser>(
   {
+    code: {
+      type: String,
+    },
     providerId: {
       type: "string",
       default: "local",
