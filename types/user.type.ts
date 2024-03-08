@@ -1,10 +1,11 @@
 import { IBaseSchema } from "./base.type";
 type SocialMediaKey ='website'| 'facebook' | 'twitter' | 'instagram' | 'linkedin' | 'youtube'; 
 export interface IUser extends IBaseSchema {
+  code: string;
   providerId: string;
   name: string;
   avatar: string;
-  username?: string
+  username?: string;
   email?: string;
   phone?: string;
   address?: string;
