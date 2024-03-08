@@ -4,6 +4,10 @@ import { IActionLog } from "../types/actionLog.type";
 
 const actionLogSchema = new Schema<IActionLog>(
   {
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+    },
     courseId: {
       type: Schema.Types.ObjectId,
       ref: "Course",

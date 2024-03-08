@@ -191,10 +191,18 @@ export const adminLogin = async (req: Request, res: Response, next: NextFunction
 
   try {
     let userDoc: IUser | null = null;
-    if(email) {
-      userDoc = await User.findOne({ email, providerId: "local", status: enumData.UserStatus.ACTIVE.code });
-    }else if(username) {
-      userDoc = await User.findOne({ username, providerId: "local", status: enumData.UserStatus.ACTIVE.code });
+    if (email) {
+      userDoc = await User.findOne({
+        email,
+        providerId: "local",
+        status: enumData.UserStatus.ACTIVE.code,
+      });
+    } else if (username) {
+      userDoc = await User.findOne({
+        username,
+        providerId: "local",
+        status: enumData.UserStatus.ACTIVE.code,
+      });
     }
 
     if (!userDoc) {
@@ -267,7 +275,7 @@ export const adminLogin = async (req: Request, res: Response, next: NextFunction
       enumData: resEnumData,
       role: roleEnum,
       listPermission: listKeyPermission,
-      adminRole: userDoc.role
+      adminRole: userDoc.role,
     });
   } catch (error) {
     if (error instanceof CustomError) {
@@ -283,18 +291,21 @@ export const adminSignupRequest = async (req: Request, res: Response, next: Next
   const { email, name, phone } = req.body;
 
   try {
-    const userDoc: IUser | null = await User.findOne({ email, providerId: "local", $or: [
-      {
-        role: enumData.UserType.Admin.code,
-      },
-      {
-        role: enumData.UserType.Author.code,
-      },
-      {
-        role: enumData.UserType.Employee.code,
-      },
-
-    ] });
+    const userDoc: IUser | null = await User.findOne({
+      email,
+      providerId: "local",
+      $or: [
+        {
+          role: enumData.UserType.Admin.code,
+        },
+        {
+          role: enumData.UserType.Author.code,
+        },
+        {
+          role: enumData.UserType.Employee.code,
+        },
+      ],
+    });
 
     if (userDoc) {
       const error = new CustomError("Email", "Email already register at website", 401);
@@ -313,11 +324,10 @@ export const adminSignupRequest = async (req: Request, res: Response, next: Next
       providerId: enumData.LoginType.Local.value,
     });
 
-
-    const createdUser = await newUser.save()
-    getIO().emit('auth', {
-      action: 'signupRequest',
-      user: createdUser
+    const createdUser = await newUser.save();
+    getIO().emit("auth", {
+      action: "signupRequest",
+      user: createdUser,
     });
     res.status(200).json({
       message:
