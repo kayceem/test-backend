@@ -8,9 +8,9 @@ const router = Router();
 
 router.get("/", isAuth, categoryController.getCategories);
 
-router.get("/get-all", categoryController.getAllCategories);
+router.get("/get-all", isAuth,categoryController.getAllCategories);
 
-router.get("/category/:categoryId", categoryController.getCategory);
+router.get("/category/:categoryId",isAuth, categoryController.getCategory);
 
 router.post(
   "/category/create",

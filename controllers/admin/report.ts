@@ -291,6 +291,7 @@ export const getNewUserSignupsList = async (req: Request, res: Response, next: N
 
 export const getReportsUserProgress = async (req: Request, res: Response, next: NextFunction) => {
   try {
+    // TODO: SHOULD SEARCH FOR USER HAVE ROLE (USER - STUDENT!)
     const users = await User.find();
 
     const result: UserReportItem[] = [];
@@ -351,6 +352,7 @@ export const getReportsUserProgress = async (req: Request, res: Response, next: 
 
 export const getReportsCourseInsights = async (req: Request, res: Response, next: NextFunction) => {
   try {
+    // SHOULD BE OPIMIZE PERFORMANCE FOR WEBSITE ABOUT REPORT!
     const courses = await Course.find();
 
     const results: CourseReportItem[] = [];

@@ -1,5 +1,6 @@
 import { Router } from "express";
 import * as reportController from "../../controllers/admin/report";
+import isAuth from "../../middleware/is-auth";
 
 const router = Router();
 
