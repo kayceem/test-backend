@@ -6,8 +6,9 @@ import { body, validationResult } from "express-validator";
 import CustomError from "../../utils/error";
 import CustomErrorMessage from "../../utils/errorMessage";
 import { AuthorAuthRequest } from "../../middleware/is-auth";
-import mongoose from "mongoose";
+import mongoose, { ClientSession } from "mongoose";
 import { enumData } from "../../config/enumData";
+import ActionLog from "../../models/ActionLog";
 
 interface GetCategoriesQuery {
   $text?: { $search: string };
@@ -74,8 +75,6 @@ export const getCategories = async (req: AuthorAuthRequest, res: Response, next:
 export const getAllCategories = async (req: Request, res: Response, next: NextFunction) => {
   try {
 
-    
-
     const categories = await Category.find();
     res.status(200).json({
       message: "Fetch all categories sucessfully!",
@@ -111,7 +110,11 @@ export const getCategory = async (req: Request, res: Response, next: NextFunctio
   }
 };
 
-export const postCategory = async (req: Request, res: Response, next: NextFunction) => {
+export const postCategory = async (req: AuthorAuthRequest, res: Response, next: NextFunction) => {
+ 
+  let session: ClientSession | null = null;
+  session = await mongoose.startSession();
+  session.startTransaction();
   try {
     const { name, description } = req.body;
 
@@ -136,14 +139,21 @@ export const postCategory = async (req: Request, res: Response, next: NextFuncti
     }
 
     const imageUrl = req.file ? req.file.path.replace("\\", "/") : "images/user-avatar.jpg";
-    const category = new Category({ name, cateImage: imageUrl, description });
-    const response = await category.save();
+    const category = new Category({ name, cateImage: imageUrl, description, createdBy: req.userId });
+    const categoryCreated = await category.save();
+
+    await session.commitTransaction();
+    session.endSession();
 
     res.status(201).json({
       message: "Create category successfully!",
-      category: response,
     });
   } catch (error) {
+    if (session) {
+      await session.abortTransaction();
+      session.endSession();
+    }
+
     if (error instanceof CustomError) {
       return next(error);
     } else {

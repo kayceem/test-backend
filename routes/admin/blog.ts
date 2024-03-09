@@ -5,16 +5,16 @@ import isAuth from "../../middleware/is-auth";
 const router = Router();
 
 // GET ALL BLOGS
-router.get("/", blogController.getAllBlog);
+router.get("/",isAuth, blogController.getAllBlog);
 
-router.get("/blogParams", blogController.getBlogPrams);
+router.get("/blogParams", isAuth, blogController.getBlogPrams);
 
 // GET a blog by id
 router.get("/:id", isAuth, blogController.getBlogById);
 
 router.get("/histories/:blogId", isAuth, blogController.loadHistoriesForBlog);
 
-router.delete("/delete/:id", blogController.deleteBlogById);
+router.delete("/delete/:id",isAuth, blogController.deleteBlogById);
 
 // POST a new blog
 router.post("/create", isAuth, blogController.createBlog);

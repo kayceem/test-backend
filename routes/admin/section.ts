@@ -1,15 +1,16 @@
 import { Router } from "express";
 import uploadMiddleware from "../../middleware/upload";
 import * as sectionController from "../../controllers/admin/section";
+import isAuth from "../../middleware/is-auth";
 
 const router = Router();
 
-router.get("/", sectionController.getSections);
+router.get("/", isAuth, sectionController.getSections);
 
-router.get("/course/:courseId", sectionController.getSectionsByCourseId);
+router.get("/course/:courseId", isAuth, sectionController.getSectionsByCourseId);
 
-router.get("/section/:sectionId", sectionController.getSection);
+router.get("/section/:sectionId", isAuth, sectionController.getSection);
 
-router.post("/section/create", uploadMiddleware.array("images[]"), sectionController.postSection);
+router.post("/section/create", uploadMiddleware.array("images[]"), isAuth, sectionController.postSection);
 
 export default router;

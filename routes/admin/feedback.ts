@@ -1,12 +1,12 @@
 import { Router } from "express";
 import * as feedbackController from "../../controllers/admin/feedback";
-
+import isAuth from "../../middleware/is-auth";
 const router = Router();
 
-router.get("/", feedbackController.getFeedbacks);
+router.get("/", isAuth, feedbackController.getFeedbacks);
 
-router.get("/feedback/:feedbackId", feedbackController.getFeedback);
+router.get("/feedback/:feedbackId", isAuth, feedbackController.getFeedback);
 
-router.delete('/feedback/delete/:feedbackId', feedbackController.deleteFeedback);
+router.delete('/feedback/delete/:feedbackId', isAuth, feedbackController.deleteFeedback);
 
 export default router;

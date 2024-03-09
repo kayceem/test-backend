@@ -278,6 +278,8 @@ export const adminLogin = async (req: Request, res: Response, next: NextFunction
       adminRole: userDoc.role,
     });
   } catch (error) {
+    console.log("error: ", error)
+
     if (error instanceof CustomError) {
       return next(error);
     } else {
@@ -311,7 +313,15 @@ export const adminSignupRequest = async (req: Request, res: Response, next: Next
       const error = new CustomError("Email", "Email already register at website", 401);
       throw error;
     }
-    const username = await coreHelper.getCodeDefault("author", User);
+    const countNumberOfUser = await User.countDocuments({});
+    const currentYear = new Date().getFullYear();
+    let username = `author_${currentYear}_${countNumberOfUser}`;
+    let foundUserName = await User.findOne({ username });
+    while(foundUserName) {
+      username = await coreHelper.getCodeDefault("author", User);
+      foundUserName = await User.findOne({ username });
+    }
+
     const hashedPassword = await bcrypt.hash("123456", 12);
     const newUser = new User({
       email: email,

@@ -62,7 +62,7 @@ export const getCourses = async (req: AuthorAuthRequest, res: Response, next: Ne
       ...(query.$text && { score: { $meta: "textScore" } }),
     })
       .populate("categoryId", "_id name")
-      .populate("userId", "_id name avatar");
+      .populate("userId", "_id name avatar").sort({createdAt: -1});
 
     let courses: ICourse[];
 

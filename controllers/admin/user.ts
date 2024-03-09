@@ -167,6 +167,7 @@ export const postUser = async (req: AuthorAuthRequest, res: Response, next: Next
       role,
       password: hashedPassword,
       createdBy: req.userId,
+      status: enumData.UserStatus.NEW.code
     });
 
     const result = await newUser.save();
@@ -235,16 +236,17 @@ export const approveUser = async (req: AuthorAuthRequest, res: Response, next: N
       .replace("{0}", foundUser.name) // Replace {0} with the user's name
       .replace("{1}", foundUser.username) // Replace {1} with the user's username
       .replace("{2}", "123456"); // Replace {2} with the generated or default password
-
+    await sendEmail({
+        from: template.EmailTemplate.SendUserNameAndPasswordForAuthor.from,
+        to: foundUser.email,
+        subject: template.EmailTemplate.SendUserNameAndPasswordForAuthor.name,
+        html: bodyHtml,
+      });
+      
     await session.commitTransaction();
     session.endSession();
 
-    await sendEmail({
-      from: template.EmailTemplate.SendUserNameAndPasswordForAuthor.from,
-      to: foundUser.email,
-      subject: template.EmailTemplate.SendUserNameAndPasswordForAuthor.name,
-      html: bodyHtml,
-    });
+ 
     res.status(201).json({
       message: "User created successfully!",
       userId: result._id,

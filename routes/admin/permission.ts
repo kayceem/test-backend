@@ -4,7 +4,7 @@ import isAuth from "../../middleware/is-auth";
 
 const router = Router();
 
-router.get("/", permissionController.getPermissions);
+router.get("/", isAuth, permissionController.getPermissions);
 
 // router.get("/course/:courseId", isAuth, permissionController.getCourse);
 

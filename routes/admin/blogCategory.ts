@@ -5,13 +5,13 @@ import isAuth from "../../middleware/is-auth";
 const router = express.Router();
 
 // Get all category blogs
-router.get("/category-blogs", categoryBlogController.getCategoryBlog);
+router.get("/category-blogs",isAuth, categoryBlogController.getCategoryBlog);
 
 // Get all active categories
-router.get("/getAll", categoryBlogController.getAllCategories);
+router.get("/getAll",isAuth, categoryBlogController.getAllCategories);
 
 // Get category by ID
-router.get("/:id", categoryBlogController.getCategoryById);
+router.get("/:id",isAuth, categoryBlogController.getCategoryById);
 
 // Load histories for a category
 router.get(
