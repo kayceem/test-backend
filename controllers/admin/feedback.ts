@@ -17,7 +17,7 @@ export const getFeedbacks = async (req: Request, res: Response, next: NextFuncti
 
     const total = await Feedback.countDocuments(query);
 
-    const feedbacks = await Feedback.find(query).skip(skip).limit(limit);
+    const feedbacks = await Feedback.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit);
 
     res.status(200).json({
       message: "Fetch feedbacks successfully!",
