@@ -1,7 +1,10 @@
 import { Request, Response } from "express";
-import mongoose from "mongoose";
+import mongoose, { ClientSession } from "mongoose";
 import { AuthorAuthRequest } from "../../middleware/is-auth";
 import Note from "../../models/Note";
+import { coreHelper } from "../../utils/coreHelper";
+import { enumData } from "../../config/enumData";
+import ActionLog from "../../models/ActionLog";
 
 // Get all note
 export const getAllNote = async (req: Request, res: Response) => {
@@ -27,19 +30,38 @@ export const getNoteByUserId = async (req: Request, res: Response) => {
 export const createNoteForLesson = async (req: AuthorAuthRequest, res: Response) => {
   const { adminId, lessonId, content, videoMinute } = req.body;
 
+  let session: ClientSession | null = null;
+  session = await mongoose.startSession();
+  session.startTransaction();
+
   if (!adminId) {
     return res.status(400).json({ error: "adminId is missing from the request." });
   }
 
   try {
+    const noteCourseCode = await coreHelper.getCodeDefault("NOTE", Note);
+
     const newNote = new Note({
       userId: adminId,
       lessonId,
       content,
       videoMinute,
+      code: noteCourseCode,
       createdBy: adminId,
     });
 
+    const historyItem = new ActionLog({
+      referenceId: newNote._id,
+      type: enumData.ActionLogEnType.Create.code,
+      createdBy: new mongoose.Types.ObjectId(req.userId),
+      functionType: "NOTE",
+      description: `NOTE [${name}] has [${enumData.ActionLogEnType.Create.name}] action by user [${req.userId}]`,
+    });
+
+    await ActionLog.collection.insertOne(historyItem.toObject(), { session });
+    await session.commitTransaction();
+    session.endSession();
+    
     const savedNote = await newNote.save();
 
     res.status(201).json({
