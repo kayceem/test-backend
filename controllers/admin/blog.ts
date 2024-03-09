@@ -92,10 +92,10 @@ export const createBlog = async (req: AuthorAuthRequest, res: Response, next: Ne
   session.startTransaction();
 
   try {
-    const BlogCode = await coreHelper.getCodeDefault("BLOG", Blog);
+    const blogCode = await coreHelper.getCodeDefault("BLOG", Blog);
 
     const blog = new Blog({
-      code: BlogCode,
+      code: blogCode,
       title,
       content,
       categoryId,
