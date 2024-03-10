@@ -19,6 +19,6 @@ router.post(
   courseController.postCourse
 );
 
-router.delete("/course/delete/:courseId", isAuth, isOwnerOfCourse, courseController.deleteCourse);
+router.patch("/course/update-active-status", isAuth, courseController.updateActiveStatusCourse);
 
 export default router;
