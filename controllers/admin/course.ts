@@ -62,7 +62,8 @@ export const getCourses = async (req: AuthorAuthRequest, res: Response, next: Ne
       ...(query.$text && { score: { $meta: "textScore" } }),
     })
       .populate("categoryId", "_id name")
-      .populate("userId", "_id name avatar").sort({createdAt: -1});
+      .populate("userId", "_id name avatar")
+      .sort({ createdAt: -1 });
 
     let courses: ICourse[];
 
@@ -329,28 +330,31 @@ export const udpateCourse = async (req: AuthorAuthRequest, res: Response, next: 
   }
 };
 
-export const updateActiveStatus = async (
+export const updateActiveStatusCourse = async (
   req: AuthorAuthRequest,
   res: Response,
   next: NextFunction
 ) => {
-  const { id } = req.body;
-  // Create transaction to make sure data intergrity
+  const { courseId } = req.body;
+
   let session: ClientSession | null = null;
+  session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
-    session = await mongoose.startSession();
-    session.startTransaction();
-    const foundCourse = await Course.findById(id);
+    const foundCourse = await Course.findById(courseId);
+
     if (!foundCourse) {
-      const error = new CustomError("Course", "Course not found", 404);
+      const error = new CustomError("Course", ERROR_NOT_FOUND_DATA, 404);
       throw error;
     }
+
     foundCourse.isDeleted = !foundCourse.isDeleted;
     foundCourse.updatedAt = new Date();
     foundCourse.updatedBy = new mongoose.Types.ObjectId(req.userId) as any;
-    const courseRes = await foundCourse.save({
-      session: session,
-    });
+
+    const courseRes = await foundCourse.save();
+
     const type =
       foundCourse.isDeleted === false
         ? `${enumData.ActionLogEnType.Activate.code}`
@@ -360,8 +364,9 @@ export const updateActiveStatus = async (
         ? `${enumData.ActionLogEnType.Activate.name}`
         : `${enumData.ActionLogEnType.Deactivate.name}`;
     const createdBy = new mongoose.Types.ObjectId(req.userId) as any;
-    const historyDesc = ` User [${(req as any).username}] has [${typeName}] Course`;
+    const historyDesc = `User [${req.username}] has [${typeName}]  Course`;
     const functionType = "COURSE";
+
     const historyItem = new ActionLog({
       courseId: courseRes._id,
       type,
@@ -370,15 +375,15 @@ export const updateActiveStatus = async (
       description: historyDesc,
     });
 
-    await historyItem.save({
+    await ActionLog.collection.insertOne(historyItem.toObject(), {
       session: session,
     });
 
     await session.commitTransaction();
     session.endSession();
+
     res.json({
-      message: "Update active status of course successfully!",
-      course: courseRes,
+      message: UPDATE_ACTIVE_SUCCESS,
     });
   } catch (error) {
     if (session) {
@@ -389,30 +394,7 @@ export const updateActiveStatus = async (
     if (error instanceof CustomError) {
       return next(error);
     } else {
-      const customError = new CustomErrorMessage("Failed to update active status of courses!", 422);
-      return next(customError);
-    }
-  }
-};
-
-export const deleteCourse = async (req: Request, res: Response, next: NextFunction) => {
-  const { courseId } = req.params;
-
-  try {
-    const response = await Course.deleteOne({
-      _id: courseId,
-    });
-
-    res.json({
-      message: "Delete course successfully!",
-      courseId: courseId,
-      result: response,
-    });
-  } catch (error) {
-    if (error instanceof CustomError) {
-      return next(error);
-    } else {
-      const customError = new CustomErrorMessage("Failed to delete courses!", 422);
+      const customError = new CustomErrorMessage(ERROR_UPDATE_ACTIVE_DATA, 422);
       return next(customError);
     }
   }
