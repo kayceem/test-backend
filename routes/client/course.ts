@@ -24,6 +24,4 @@ router.get("/course/enrolled/:courseId", courseController.getCourseEnrolledByUse
 
 router.get("/course/detail/:courseId", courseController.getCourseDetail);
 
-router.post("/course/reviews/:courseId", courseController.postReview);
-
 export default router;

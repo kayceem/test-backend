@@ -4,6 +4,10 @@ import { IReview } from "../types/review.type";
 
 const reviewSchema = new Schema<IReview>(
   {
+    code: {
+      type: String,
+      required: true,
+    },
     userId: {
       type: Schema.Types.ObjectId,
       ref: "User",

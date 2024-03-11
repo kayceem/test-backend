@@ -11,6 +11,7 @@ import uploadRouter from "./client/upload";
 import paymentRouter from "./client/payment";
 import wishlistRouter from "./client/wishlist";
 import blogCategory from "./client/blogCategory";
+import reviewRouter from "./client/review";
 import feedbackRouter from "./client/feedback";
 import getIO from "../socket";
 import blogRouter from "../routes/client/blog";
@@ -55,6 +56,8 @@ router.use("/wishlists", wishlistRouter);
 router.use("/blogCategory", blogCategory);
 
 router.use("/feedbacks", feedbackRouter);
+
+router.use("/reviews", reviewRouter);
 
 router.use("/blog", blogRouter);
 
