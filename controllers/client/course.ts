@@ -5,7 +5,6 @@ import Course from "../../models/Course";
 import { ICourse } from "../../types/course.type";
 import Section from "../../models/Section";
 import { ISection } from "../../types/section.type";
-import Review from "../../models/Review";
 import Lesson from "../../models/Lesson";
 import { ILesson } from "../../types/lesson.type";
 import IsLessonDone from "../../models/IsLessonDone";
@@ -382,40 +381,6 @@ export const getCoursesOrderedByUser = async (req: Request, res: Response, next:
       return next(error);
     } else {
       const customError = new CustomErrorMessage("Failed to fetch course!", 422);
-      return next(customError);
-    }
-  }
-};
-
-export const postReview = async (req: Request, res: Response, next: NextFunction) => {
-  const { courseId, title, content, ratingStar, orderId, userId } = req.body;
-
-  try {
-    const newReview = new Review({
-      courseId,
-      title,
-      content,
-      ratingStar,
-      orderId,
-      userId,
-    });
-
-    const result = await newReview.save();
-
-    await Order.updateOne(
-      { _id: orderId, "items._id": courseId },
-      { $set: { "items.$.reviewed": true } }
-    );
-
-    res.status(201).json({
-      message: "Review created successfully!",
-      review: result,
-    });
-  } catch (error) {
-    if (error instanceof CustomError) {
-      return next(error);
-    } else {
-      const customError = new CustomErrorMessage("Failed to created review!", 422);
       return next(customError);
     }
   }
