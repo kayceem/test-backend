@@ -2,11 +2,12 @@ const express = require("express");
 
 import {
   addComment,
-  getCommentsByBlogId,
-  updateComment,
-  deleteComment,
-  toggleLikeComment,
   addReplyToComment,
+  deleteComment,
+  getAllCommentsFromMultipleBlogs,
+  getCommentsByBlogId,
+  toggleLikeComment,
+  updateComment,
 } from "../../controllers/client/commentsBlogs";
 
 const router = express.Router();
@@ -28,5 +29,6 @@ router.patch("/like", toggleLikeComment);
 
 // Route để phản hồi bình luận
 router.post("/reply", addReplyToComment);
+
 
 export default router;

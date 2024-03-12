@@ -44,6 +44,10 @@ const actionLogSchema = new Schema<IActionLog>(
       type: Schema.Types.ObjectId,
       ref: "Blog",
     },
+    commentId: {
+      type: Schema.Types.ObjectId,
+      ref: "BlogComment",
+    },
     description: {
       type: String, // DRAFT, SOON, FREE, PAID, PUBLIC, PRIVATE
       required: true,

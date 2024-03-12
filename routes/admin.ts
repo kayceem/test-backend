@@ -17,6 +17,7 @@ import permissionRouter from "./admin/permission";
 import questionRouter from "./admin/question";
 import testRouter from "./admin/test";
 import notesRouter from "./admin/noteCourse";
+import commentsRouter from "./admin/commentsBlogs";
 
 const router = Router();
 
@@ -55,6 +56,7 @@ router.use("/questions", questionRouter);
 
 router.use("/note", notesRouter);
 
+router.use("/comments", commentsRouter);
 /** Test route */
 router.use("/tests", testRouter);
 
