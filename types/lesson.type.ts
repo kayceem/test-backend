@@ -3,6 +3,7 @@ import { IBaseSchema } from "./base.type";
 
 export interface ILesson extends IBaseSchema {
   sectionId: Schema.Types.ObjectId;
+  courseId?: Schema.Types.ObjectId;
   name: string;
   icon?: string;
   description: string;

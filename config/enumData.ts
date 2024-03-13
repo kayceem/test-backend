@@ -430,26 +430,12 @@ export const enumData = {
   },
 
   SettingString: {
-    BHXH: {
-      code: "BHXH",
-      name: "Bảo hiểm xã hội (%)",
-      value: 8,
-      type: "number",
-    },
-    BHYT: {
-      code: "BHYT",
-      name: "Bảo hiểm y tế (%)",
-      value: 1.5,
-      isDeleted: false,
-      type: "number",
-    },
-    BHTN: {
-      code: "BHTN",
-      name: "Bảo hiểm thất nghiệp (%)",
-      value: 1,
-      isDeleted: false,
-      type: "number",
-    },
+    REVENUE_RATING_AUTHOR: {
+      code: 'REVENUE_RATING_AUTHOR',
+      name: "Rating for author revenue per order!",
+      value: 0.4,
+      type: "number"
+    }
   },
 
   /** Trạng thái bài test */

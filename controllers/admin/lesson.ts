@@ -64,7 +64,8 @@ export const getLesson = async (req: Request, res: Response, next: NextFunction)
 };
 
 export const postLesson = async (req: Request, res: Response, next: NextFunction) => {
-  const { sectionId, name, icon, description, type, content, access, videoLength } = req.body;
+  // Bổ sung truyền xuống có thêm courseId
+  const { sectionId, name, icon, description, type, content, access, videoLength, courseId } = req.body;
 
   try {
     const lesson = new Lesson({
@@ -76,6 +77,7 @@ export const postLesson = async (req: Request, res: Response, next: NextFunction
       access,
       type,
       videoLength,
+      courseId: courseId
     });
 
     const response = await lesson.save();
