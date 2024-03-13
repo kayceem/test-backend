@@ -9,6 +9,10 @@ const lessonSchema = new Schema<ILesson>(
       required: true,
       ref: "Section",
     },
+    courseId: {
+      type: Schema.Types.ObjectId,
+      ref: "Course",
+    },
     name: {
       type: String,
       required: true,

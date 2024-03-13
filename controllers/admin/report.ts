@@ -5,17 +5,25 @@ import User from "../../models/User";
 import Order from "../../models/Order";
 import CustomError from "../../utils/error";
 import CustomErrorMessage from "../../utils/errorMessage";
-import { getProgressOfCourse, getCourseDetailInfo } from "../../utils/helper";
+import { getProgressOfCourse, getCourseDetailInfo, getProgressOfCourseV2 } from "../../utils/helper";
+import { AuthorAuthRequest } from "../../middleware/is-auth";
+import { enumData } from "../../config/enumData";
+import mongoose from "mongoose";
+import IsLessonDone from "../../models/IsLessonDone";
+import Section from "../../models/Section";
+import Lesson from "../../models/Lesson";
+import { ISection } from "../../types/section.type";
+import { IIsLessonDone, ILesson } from "../../types/lesson.type";
+import moment from "moment";
 
 interface UserReportItem {
   _id: string;
   name: string;
   role: string;
-  registered: Date;
-  lastLogin: Date | null;
-  lastEnrollment: Date | null;
+  registered: Date | string | null;
+  lastLogin: Date | string | null;
+  lastEnrollment: Date | string | null;
   studyTime: number;
-  totalTimeOnPlatform: number;
   allCourses: number;
   completedCourses: number;
   inCompletedCourses: number;
@@ -291,45 +299,172 @@ export const getNewUserSignupsList = async (req: Request, res: Response, next: N
 
 export const getReportsUserProgress = async (req: Request, res: Response, next: NextFunction) => {
   try {
+    // Query
+    const orderQuery: any = {};
+    const userQuery: any = {
+      // createdBy: req.query.authorId
+    };
     // TODO: SHOULD SEARCH FOR USER HAVE ROLE (USER - STUDENT!)
-    const users = await User.find();
-
+    const users = await User.find({
+      role: 'USER', // TODO LATER!
+    });
     const result: UserReportItem[] = [];
 
-    for (const user of users) {
-      const lastEnrollment = await Order.find({ "user._id": user._id })
-        .sort({ createdAt: -1 })
-        .limit(1);
+    const dictCoursesOfUser: Record<string, any> = {}
+    const dictOrdersOfUser: Record<string, any> = {}
+    const dictLessonsDoneOfUser: Record<string, any> = {}
+    const dictSectionOfCourse: Record<string, any> = {}
+    const dictLessonsOfCourse: Record<string, any> = {}
+    const dictLessonsOfSection: Record<string, any> = {}
+    // dict lessons of course
 
-      const orders = await Order.find({ "user._id": user._id });
-
-      const userCourses = orders.reduce((courses, order) => {
-        return courses.concat(order.items);
-      }, []);
-
-      let studyTime = 0;
-      const completedCourses = [];
-      for (const course of userCourses) {
-        const { progress, totalVideosLengthDone } = await getProgressOfCourse(course._id, user._id);
-        studyTime += totalVideosLengthDone;
-        if (progress === 1) {
-          completedCourses.push(course);
+    const lessonDoneRes = await IsLessonDone.find().populate('lessonId');
+    const courseRes = await Course.find();
+    const sectionsRes = await Section.find();
+    const lessonsRes = await Lesson.find();
+    const ordersRes = await Order.find(orderQuery);
+    const orderDetails = ordersRes.flatMap((order) => {
+      return order.items.map((item: any) => ({
+        orderId: order._id, 
+        userId: order.user._id,
+        userEmail: order.user.email,
+        // ... other relevant order fields if needed
+    
+        courseId: item._id,
+        courseName: item.name,
+        courseThumbnail: item.thumbnail,
+        coursePrice: item.finalPrice,
+        reviewed: item.reviewed,
+      }));
+    });
+    // create dict courses of user
+    orderDetails.forEach((item) => {
+      if (item.userId) {
+        if (dictCoursesOfUser[item.userId]) {
+          dictCoursesOfUser[item.userId].push(item)
+        } else {
+          dictCoursesOfUser[item.userId] = [item]
         }
       }
+    })
+    // create dict orders of user
+    ordersRes.forEach((item) => {
+      if(item.user) {
+        const currentKey = item.user._id.toString();
+        if (dictOrdersOfUser[currentKey]) {
+          dictOrdersOfUser[currentKey].push(item)
+        } else {
+          dictOrdersOfUser[currentKey] = [item]
+        }
+      }
+    })
+    // create dict lessons of section
+    lessonsRes.forEach((item) => {
+      const currentKey = item.sectionId.toString()
+      if(dictLessonsOfSection[currentKey]) {
+        dictLessonsOfSection[currentKey].push(item)
+      } else {
+        dictLessonsOfSection[currentKey] = [item]
+      }
+    })
 
+    // Group lesson done by userId (create dict lessons of of user and lesson)
+    lessonDoneRes.forEach((item: any) => {
+      if(item._doc) {
+        const currentKey = item.userId.toString() + item.lessonId?._id?.toString();
+        const currentValue = {
+          ...item._doc,
+          lesson: item._doc?.lessonId
+        }
+        dictLessonsDoneOfUser[currentKey] = currentValue
+      }
+    })
+
+    // Group section by course id (dict sections of course)
+    sectionsRes.forEach((item) => {
+      if (item.courseId) {
+        if (dictSectionOfCourse[item.courseId.toString()]) {
+          dictSectionOfCourse[item.courseId.toString()].push(item)
+        } else {
+          dictSectionOfCourse[item.courseId.toString()] = [item]
+        }
+      }
+    })
+
+     // Group lesson by course id
+     courseRes.forEach((courseItem) => {
+
+      const listSectionOfCourse = dictSectionOfCourse[courseItem._id.toString()] as ISection[] ?? [];
+      listSectionOfCourse.forEach((sectionItem) => {
+          const listLessonOfSection = dictLessonsOfSection[sectionItem._id.toString()] ?? [];
+          listLessonOfSection.forEach((lessonItem) => {
+              if (dictLessonsOfCourse[courseItem._id.toString()]) {
+                dictLessonsOfCourse[courseItem._id.toString()].push(lessonItem)
+              } else {
+                dictLessonsOfCourse[courseItem._id.toString()] = [lessonItem]
+              }
+          })
+
+      })
+        
+    })
+     
+
+    for (const user of users) {
+      // current key
+      const currentUserId = user?._id.toString()
+      // List orders
+      const listOrdersOfCurrentUser = dictOrdersOfUser[currentUserId] ?? [];
+      const lastEnrollment = listOrdersOfCurrentUser.sort((a, b) => {
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      })[0]?.createdAt ?? null;
+      let studyTime = 0;
+      const completedCourses = [];
+
+      // List courses
+      const listCourseOfCurrentUser = dictCoursesOfUser[currentUserId] ?? [];
+      for (const course of listCourseOfCurrentUser) {
+        // const listSectionOfCurrentCourse = dictSectionOfCourse[course?.courseId.toString()] ?? [];
+        
+        const listLessonOfCurrentCourse = dictLessonsOfCourse[course?.courseId.toString()] ?? [];
+        const listLessonDone = []
+        for (const lessonItem of listLessonOfCurrentCourse) {
+          if(dictLessonsDoneOfUser[currentUserId + lessonItem._id.toString()]) {
+            const lessonDone = dictLessonsDoneOfUser[currentUserId + lessonItem._id.toString()];
+            if(lessonDone) {
+              studyTime += lessonDone?.lesson?.videoLength ?? 0;
+              listLessonDone.push(lessonDone);
+            }
+          }
+        }
+
+        let currentUserProgress = 0; 
+        if(listLessonOfCurrentCourse.length > 0) {
+          currentUserProgress = listLessonDone.length / listLessonOfCurrentCourse.length
+        }
+        
+        // const { progress, totalVideosLengthDone } = await getProgressOfCourseV2(listSectionOfCurrentCourse, lessonsRes, lessonDoneRes, currentUserId);
+        // studyTime += totalVideosLengthDone || 0;
+        if (currentUserProgress === 1) {
+          completedCourses.push(course);
+        }
+        
+      }
+      const totalCourseOfCurrentUser = listCourseOfCurrentUser.length
+      const numberOfCompletedCourse = completedCourses.length
+      const numberOfInCompletedCourse = totalCourseOfCurrentUser - numberOfCompletedCourse
       const userReportItem: UserReportItem = {
         _id: user._id,
         name: user.name,
         role: user.role,
-        registered: user.createdAt,
-        lastLogin: user.lastLogin,
-        lastEnrollment: lastEnrollment[0]?.createdAt || null,
-        studyTime: studyTime,
-        totalTimeOnPlatform: 80000,
-        allCourses: userCourses.length,
-        completedCourses: completedCourses.length,
-        inCompletedCourses: userCourses.length - completedCourses.length,
-        certificates: completedCourses.length,
+        registered: moment(user.createdAt).format("DD/MM/YYYY"),
+        lastLogin: moment(user.lastLogin).format("DD/MM/YYYY"),
+        lastEnrollment: lastEnrollment && moment(lastEnrollment).format("DD/MM/YYYY"), // TODO: LATER
+        studyTime: studyTime, // TODO: LATER
+        allCourses: totalCourseOfCurrentUser,
+        completedCourses: numberOfCompletedCourse,
+        inCompletedCourses: numberOfInCompletedCourse,
+        certificates: numberOfCompletedCourse,
         avgScore: 0,
       };
 
@@ -353,6 +488,9 @@ export const getReportsUserProgress = async (req: Request, res: Response, next: 
 export const getReportsCourseInsights = async (req: Request, res: Response, next: NextFunction) => {
   try {
     // SHOULD BE OPIMIZE PERFORMANCE FOR WEBSITE ABOUT REPORT!
+    const courseQuery: any = {
+      // createdBy: req.query.authorId,
+    }
     const courses = await Course.find();
 
     const results: CourseReportItem[] = [];
@@ -395,6 +533,94 @@ export const getReportsCourseInsights = async (req: Request, res: Response, next
       return next(error);
     } else {
       const customError = new CustomErrorMessage("Failed to fetch reports of course insights", 422);
+      return next(customError);
+    }
+  }
+};
+
+export const getCoursesReportByAuthor = async (req: AuthorAuthRequest, res: Response, next: NextFunction) => {
+  const dateStart = new Date(req.query.dateStart as string); // Replace with your start date
+  const dateEnd = new Date(req.query.dateEnd as string);   // Replace with your end date
+  
+  // Ensure dates start at the beginning and end of the day for accuracy
+  dateStart.setHours(0, 0, 0, 0);
+  dateEnd.setHours(23, 59, 59, 999); 
+
+  try {
+    const courseQuery: any = {};
+    const orderQuery: any = {};
+    // Filter by Author!
+    if(req.role && req.role === enumData.UserType.Author.code) {
+       courseQuery.createdBy = new mongoose.Types.ObjectId(req.userId) as any;
+    } 
+    // Filter by from date start to date end
+    if(req.body.dateStart && req.body.dateEnd) {
+      orderQuery.createdAt = {
+        $gte: dateStart,
+        $lte: dateEnd
+      }
+    }
+
+    const ordersRes = await Order.find(orderQuery);
+    const orderDetails = ordersRes.flatMap((order) => {
+      return order.items.map((item: any) => ({
+        orderId: order._id, 
+        userId: order.user._id,
+        userEmail: order.user.email,
+        // ... other relevant order fields if needed
+    
+        courseId: item._id,
+        courseName: item.name,
+        courseThumbnail: item.thumbnail,
+        coursePrice: item.finalPrice,
+        reviewed: item.reviewed,
+      }));
+    });
+
+    const dictCourse: Record<string, any> = {}
+
+    orderDetails.forEach((item) => {
+      if (item.courseId) {
+        if (dictCourse[item.courseId]) {
+          dictCourse[item.courseId].push(item)
+        } else {
+          dictCourse[item.courseId] = [item]
+        }
+      }
+    })
+
+    // SHOULD BE OPIMIZE PERFORMANCE FOR WEBSITE ABOUT REPORT!
+    const courses: any = await Course.find(courseQuery);
+    
+    
+    const results: any = courses.map((courseItem) => {
+      const learners = dictCourse[courseItem._id.toString()]?.length ?? 0;
+      let totalEarnings: number = dictCourse[courseItem._id.toString()]?.reduce((total: number, item: any) => {
+        return total + item?.coursePrice ?? 0
+      }, 0) ?? 0
+
+      if(req.role && req.role === enumData.UserType.Author.code) {
+        totalEarnings = totalEarnings * enumData.SettingString.REVENUE_RATING_AUTHOR.value
+      }
+
+      return {
+        courseName: courseItem.name,
+        createdAt: courseItem.createdAt,
+        status: courseItem.status,
+        learners: learners,
+        totalEarnings: totalEarnings.toFixed(2)
+      };
+    });
+
+    res.status(200).json({
+      message: "Successfully to get courses report by author!",
+      reports: results,
+    });
+  } catch (error) {
+    if (error instanceof CustomError) {
+      return next(error);
+    } else {
+      const customError = new CustomErrorMessage("Failed to get courses report by author!", 422);
       return next(customError);
     }
   }

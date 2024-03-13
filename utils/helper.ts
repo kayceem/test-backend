@@ -180,19 +180,37 @@ export const getProgressOfCourse = async (courseId: string, userId: string) => {
   let numOfLessonDone: number = 0;
   let totalVideosLengthDone: number = 0;
   let lessonsOfCourse: ILesson[] = [];
+  const dictSection: Record<string, any> = {};
+  const dictLessonDone: Record<string, any> = {};
+  const lessonRes = await Lesson.find();
+  const isLessonDoneRes = await IsLessonDone.find();
+  
+  for (const lesson of lessonRes) {
+      if (!dictSection[lesson.sectionId.toString()]) {
+        dictSection[lesson.sectionId.toString()] = [lesson];
+      } else {
+        dictSection[lesson.sectionId.toString()].push(lesson);
+      }
+  }
+
+  for (const lessonDoneItem of isLessonDoneRes) {
+    const currentKey = lessonDoneItem.userId.toString() + lessonDoneItem.lessonId.toString();
+    dictLessonDone[currentKey] = lessonDoneItem;
+}
 
   for (const section of sectionsOfCourse) {
-    const lessons: ILesson[] = await Lesson.find({
-      sectionId: section._id,
-    });
+    const lessons: ILesson[] = dictSection[section._id.toString()];
     lessonsOfCourse.push(...lessons);
   }
 
+
+
   for (const lesson of lessonsOfCourse) {
-    const isDone: IIsLessonDone | null = await IsLessonDone.findOne({
-      userId,
-      lessonId: lesson._id,
-    });
+    // const isDone: IIsLessonDone | null = await IsLessonDone.findOne({
+    //   userId,
+    //   lessonId: lesson._id,
+    // });
+    const isDone: IIsLessonDone | null = dictLessonDone[userId.toString() + lesson._id.toString()]
 
     if (isDone) {
       numOfLessonDone += 1;
@@ -203,6 +221,55 @@ export const getProgressOfCourse = async (courseId: string, userId: string) => {
   const numOfLessons: number = lessonsOfCourse.length;
 
   let progress: number = numOfLessons === 0 ? 0 : numOfLessonDone / numOfLessons;
+
+  return {
+    progress,
+    totalVideosLengthDone,
+  };
+};
+
+export const getProgressOfCourseV2 = async (sectionsOfCourse: ISection[],lessonRes: ILesson[], isLessonDoneRes: IIsLessonDone[], userId: string) => {
+
+  let numOfLessonDone: number = 0;
+  let totalVideosLengthDone: number = 0;
+  let lessonsOfCourse: ILesson[] = [];
+  const dictSection: Record<string, any> = {};
+  const dictLessonDone: Record<string, any> = {};
+  // const isLessonDoneRes = await IsLessonDone.find();
+  
+  for (const lesson of lessonRes) {
+      if (!dictSection[lesson.sectionId.toString()]) {
+        dictSection[lesson.sectionId.toString()] = [lesson];
+      } else {
+        dictSection[lesson.sectionId.toString()].push(lesson);
+      }
+  }
+
+  for (const lessonDoneItem of isLessonDoneRes) {
+    const currentKey = lessonDoneItem.userId.toString() + lessonDoneItem.lessonId.toString();
+    dictLessonDone[currentKey] = lessonDoneItem;
+}
+
+  for (const section of sectionsOfCourse) {
+    // BUG HERE WHEN LOOP 2 TIMES
+    const lessons: ILesson[] = dictSection[section._id.toString()];
+    if(lessons) {
+      lessonsOfCourse.push(...lessons);
+    }
+  }
+
+  for (const lesson of lessonsOfCourse) {
+    const isDone: IIsLessonDone | null = dictLessonDone[userId.toString() + lesson._id.toString()]
+
+    if (isDone) {
+      numOfLessonDone += 1;
+      totalVideosLengthDone += lesson?.videoLength ?? 0;
+    }
+  }
+
+  const numOfLessons: number = lessonsOfCourse.length;
+
+  let progress: number = numOfLessons === 0 ? 0 : (numOfLessonDone / numOfLessons);
 
   return {
     progress,
