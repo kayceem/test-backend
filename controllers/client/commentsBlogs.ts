@@ -1,6 +1,22 @@
 import { Request, Response } from "express";
 import BlogComment from "../../models/BlogComment"; // Giả sử đường dẫn đến model BlogComment
 
+export const getAllCommentsFromMultipleBlogs = async (req: Request, res: Response) => {
+  try {
+    const comments = await BlogComment.find()
+      .populate("userId", "name")
+      .populate({
+        path: "replies",
+        populate: { path: "userId", select: "name avatar" },
+      });
+
+    res.json({ comments });
+  } catch (error) {
+    const errorMessage = (error as Error).message;
+    res.status(500).json({ error: errorMessage });
+  }
+};
+
 export const addComment = async (req: Request, res: Response) => {
   try {
     const { content, userId, blogId, parentCommentId } = req.body;
