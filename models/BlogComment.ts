@@ -4,6 +4,10 @@ import { IBlogComment } from "../types/commentsBlog.type";
 
 const blogCommentSchema = new Schema<IBlogComment>(
   {
+    code: {
+      type: String,
+      required: true,
+    },
     content: {
       type: String,
       required: true,
@@ -22,10 +26,6 @@ const blogCommentSchema = new Schema<IBlogComment>(
       type: Schema.Types.ObjectId,
       ref: "BlogComment",
       default: null,
-    },
-    isDeleted: {
-      type: Boolean,
-      default: false,
     },
     likes: [
       {
@@ -47,4 +47,7 @@ const blogCommentSchema = new Schema<IBlogComment>(
 );
 
 blogCommentSchema.add(baseSchema);
-export default model<IBlogComment>("BlogComment", blogCommentSchema);
+
+const BlogComment = model<IBlogComment>("BlogComment", blogCommentSchema);
+
+export default BlogComment;
