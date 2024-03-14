@@ -15,6 +15,7 @@ import Lesson from "../../models/Lesson";
 import { ISection } from "../../types/section.type";
 import { IIsLessonDone, ILesson } from "../../types/lesson.type";
 import moment from "moment";
+import Wishlist from "../../models/Wishlist";
 
 interface UserReportItem {
   _id: string;
@@ -37,9 +38,10 @@ interface CourseReportItem {
   learners: number;
   avgStudyTime: number;
   views: number;
-  socialInteractions: number;
+  socialInteractions?: number;
   totalVideosLength: number;
   lessons: number;
+  numberOfWishlist: number;
 }
 
 export const getSummaryReports = async (req: Request, res: Response, next: NextFunction) => {
@@ -491,34 +493,180 @@ export const getReportsCourseInsights = async (req: Request, res: Response, next
     const courseQuery: any = {
       // createdBy: req.query.authorId,
     }
+    const orderQuery: any = {};
+
     const courses = await Course.find();
 
     const results: CourseReportItem[] = [];
 
-    for (const course of courses) {
-      const learners = await Order.find({ "items._id": course._id });
-      const courseInfo = await getCourseDetailInfo(course._id);
+    // filter condition
+    const dictUsersOfCourse: Record<string, any> = {}
+    const dictOrdersOfUser: Record<string, any> = {}
+    const dictLessonsDoneOfUser: Record<string, any> = {}
+    const dictSectionOfCourse: Record<string, any> = {}
+    const dictLessonsOfCourse: Record<string, any> = {}
+    const dictLessonsOfSection: Record<string, any> = {}
+    const dictWishlistOfCourse: Record<string, any> = {}
+    // dict lessons of course
 
-      const studentsOfCourse = learners.map((student) => student.user);
+    const lessonDoneRes = await IsLessonDone.find().populate('lessonId');
+    const courseRes = await Course.find();
+    const sectionsRes = await Section.find();
+    const lessonsRes = await Lesson.find();
+    const ordersRes = await Order.find(orderQuery);
+    const wishlistRes = await Wishlist.find({
+      isDeleted: false
+    });
 
-      let totalStudyTime = 0;
-      for (const student of studentsOfCourse) {
-        const { totalVideosLengthDone } = await getProgressOfCourse(course._id, student._id);
-        totalStudyTime += totalVideosLengthDone;
+    wishlistRes.forEach((item) => {
+      if(item.courseId) {
+        const currentKey = item.courseId.toString();
+        if (dictWishlistOfCourse[currentKey]) {
+          dictWishlistOfCourse[currentKey].push(item)
+        } else {
+          dictWishlistOfCourse[currentKey] = [item]
+        }
+      }
+    
+    })
+
+    const orderDetails = ordersRes.flatMap((order) => {
+      return order.items.map((item: any) => ({
+        orderId: order._id, 
+        userId: order.user._id,
+        userEmail: order.user.email,
+        // ... other relevant order fields if needed
+    
+        courseId: item._id,
+        courseName: item.name,
+        courseThumbnail: item.thumbnail,
+        coursePrice: item.finalPrice,
+        reviewed: item.reviewed,
+      }));
+    });
+    // create dict courses of user
+    orderDetails.forEach((item) => {
+      if(item.courseId) {
+        if (dictUsersOfCourse[item.courseId]) {
+          dictUsersOfCourse[item.courseId].push(item)
+        } else {
+          dictUsersOfCourse[item.courseId] = [item]
+        }
       }
 
+    })
+    // create dict orders of user
+    ordersRes.forEach((item) => {
+      if(item.user) {
+        const currentKey = item.user._id.toString();
+        if (dictOrdersOfUser[currentKey]) {
+          dictOrdersOfUser[currentKey].push(item)
+        } else {
+          dictOrdersOfUser[currentKey] = [item]
+        }
+      }
+    })
+    // create dict lessons of section
+    lessonsRes.forEach((item) => {
+      const currentKey = item.sectionId.toString()
+      if(dictLessonsOfSection[currentKey]) {
+        dictLessonsOfSection[currentKey].push(item)
+      } else {
+        dictLessonsOfSection[currentKey] = [item]
+      }
+    })
+
+    // Group lesson done by userId (create dict lessons of of user and lesson)
+    lessonDoneRes.forEach((item: any) => {
+      if(item._doc) {
+        const currentKey = item.userId.toString() + item.lessonId?._id?.toString();
+        const currentValue = {
+          ...item._doc,
+          lesson: item._doc?.lessonId
+        }
+        dictLessonsDoneOfUser[currentKey] = currentValue
+      }
+    })
+
+    // Group section by course id (dict sections of course)
+    sectionsRes.forEach((item) => {
+      if (item.courseId) {
+        const currentKey = item.courseId.toString()
+        if (dictSectionOfCourse[currentKey]) {
+          dictSectionOfCourse[currentKey].push(item)
+        } else {
+          dictSectionOfCourse[currentKey] = [item]
+        }
+      }
+    })
+
+     // Group lesson by course id
+     courseRes.forEach((courseItem) => {
+      const courseId = courseItem._id.toString()
+      const listSectionOfCourse = dictSectionOfCourse[courseId] as ISection[] ?? [];
+      listSectionOfCourse.forEach((sectionItem) => {
+          const listLessonOfSection = dictLessonsOfSection[sectionItem._id.toString()] ?? [];
+          listLessonOfSection.forEach((lessonItem) => {
+              if (dictLessonsOfCourse[courseId]) {
+                dictLessonsOfCourse[courseId].push(lessonItem)
+              } else {
+                dictLessonsOfCourse[courseId] = [lessonItem]
+              }
+          })
+      })
+    })
+     
+
+    for (const course of courses) {
+      const currentCourseId = course._id.toString()
+      const listUsersOfCurrentCourse = dictUsersOfCourse[currentCourseId] ?? [];
+      const listLessonsOfCurrentCourse = dictLessonsOfCourse[currentCourseId] ?? [];
+      const listWishlistOfCurrentCourse = dictWishlistOfCourse[currentCourseId] ?? [];
+      // const courseInfo = await getCourseDetailInfo(course._id);
+
+      // const studentsOfCourse = learners.map((student) => student.user);
+
+      const totalVideoLength = listLessonsOfCurrentCourse.reduce((total, lesson) => total + lesson.videoLength, 0);
+
+      let totalStudyTime = 0;
+      for (const user of listUsersOfCurrentCourse) {
+        const currentUserId = user.userId.toString();
+        const listLessonOfCurrentCourse = dictLessonsOfCourse[course._id.toString()] ?? [];
+        const listLessonDone = []
+        for (const lessonItem of listLessonOfCurrentCourse) {
+          if(dictLessonsDoneOfUser[currentUserId + lessonItem._id.toString()]) {
+            const lessonDone = dictLessonsDoneOfUser[currentUserId + lessonItem._id.toString()];
+            if(lessonDone) {
+              totalStudyTime += lessonDone?.lesson?.videoLength ?? 0;
+              listLessonDone.push(lessonDone);
+            }
+          }
+        }
+
+        let currentUserProgress = 0; 
+        if(listLessonOfCurrentCourse.length > 0) {
+          currentUserProgress = listLessonDone.length / listLessonOfCurrentCourse.length
+        }
+        
+        // const { totalVideosLengthDone } = await getProgressOfCourse(course._id, student._id);
+        // totalStudyTime += totalVideosLengthDone;
+      }
+
+      
+
       const avgStudyTime =
-        studentsOfCourse.length === 0 ? 0 : totalStudyTime / studentsOfCourse.length;
+      listUsersOfCurrentCourse.length === 0 ? 0 : totalStudyTime / listUsersOfCurrentCourse.length;
 
       const courseReportItem: CourseReportItem = {
         _id: course._id,
         name: course.name,
-        learners: learners.length,
-        avgStudyTime: avgStudyTime,
+        learners: listUsersOfCurrentCourse.length,
+        avgStudyTime: avgStudyTime, // TODO LATER
         views: course.views,
         socialInteractions: 0,
-        totalVideosLength: courseInfo.totalVideosLength,
-        lessons: courseInfo.lessons,
+        totalVideosLength: totalVideoLength, // TODO LATER
+        lessons: listLessonsOfCurrentCourse.length,
+        numberOfWishlist: listWishlistOfCurrentCourse.length,
       };
 
       results.push(courseReportItem);
