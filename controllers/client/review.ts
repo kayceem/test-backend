@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import Review from "../../models/Review";
+import ReviewReply from "../../models/ReviewReply";
 import Order from "../../models/Order";
 import CustomError from "../../utils/error";
 import CustomErrorMessage from "../../utils/errorMessage";
@@ -44,7 +45,7 @@ export const postReview = async (req: UserAuthRequest, res: Response, next: Next
       orderId,
       userId,
       createdBy: userId,
-    }); 
+    });
 
     const reviewRes = await review.save();
 
@@ -79,6 +80,211 @@ export const postReview = async (req: UserAuthRequest, res: Response, next: Next
       return next(error);
     } else {
       const customError = new CustomErrorMessage(ERROR_CREATE_DATA, 422);
+      return next(customError);
+    }
+  }
+};
+
+export const getReviewsByCourseId = async (req: Request, res: Response, next: NextFunction) => {
+  const { courseId } = req.params;
+  const searchTerm = (req.query._q as string) || "";
+  const page = parseInt(req.query._page as string) || 1;
+  const limit = parseInt(req.query._limit as string) || 10;
+  const skip = (page - 1) * limit;
+
+  try {
+    let searchCondition = searchTerm
+      ? { title: { $regex: searchTerm, $options: "i" } }
+      : ({} as any);
+
+    if (req.query._rating) {
+      const ratingValue = parseInt(req.query._rating as string);
+      const groupedRatings = {
+        "1": [0.5, 1, 1.5],
+        "2": [2, 2.5],
+        "3": [3, 3.5],
+        "4": [4, 4.5],
+        "5": [5],
+      };
+
+      const selectedRatings = groupedRatings[ratingValue.toString()];
+
+      if (selectedRatings) {
+        searchCondition.ratingStar = { $in: selectedRatings };
+      }
+    }
+
+    const [reviews, total] = await Promise.all([
+      Review.find({ courseId: courseId, isDeleted: false, ...searchCondition })
+        .populate({
+          path: "createdBy",
+          select: "name avatar",
+        })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      Review.countDocuments({ courseId: courseId, isDeleted: false, ...searchCondition }),
+    ]);
+
+    if (!reviews) {
+      return next(new CustomErrorMessage(ERROR_NOT_FOUND_DATA, 404));
+    }
+
+    res.status(200).json({
+      message: GET_SUCCESS,
+      reviews,
+      total,
+    });
+  } catch (error) {
+    if (error instanceof CustomError) {
+      return next(error);
+    } else {
+      const customError = new CustomErrorMessage(ERROR_GET_DATA, 422);
+      return next(customError);
+    }
+  }
+};
+
+export const getReviewRepliesByReviewId = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { reviewId } = req.params;
+
+  try {
+    const replies = await ReviewReply.find({ reviewId: reviewId, isDeleted: false })
+      .populate({
+        path: "createdBy",
+        select: "name avatar",
+      })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    if (!replies) {
+      return next(new CustomErrorMessage(ERROR_NOT_FOUND_DATA, 404));
+    }
+
+    res.status(200).json({
+      message: GET_SUCCESS,
+      replies,
+    });
+  } catch (error) {
+    if (error instanceof CustomError) {
+      return next(error);
+    } else {
+      const customError = new CustomErrorMessage(ERROR_GET_DATA, 422);
+      return next(customError);
+    }
+  }
+};
+
+export const getTotalReviewsByCourseId = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { courseId } = req.params;
+
+  try {
+    const totalReviews = await Review.countDocuments({ courseId: courseId, isDeleted: false });
+
+    res.status(200).json({
+      message: GET_SUCCESS,
+      totalReviews,
+    });
+  } catch (error) {
+    if (error instanceof CustomError) {
+      return next(error);
+    } else {
+      const customError = new CustomErrorMessage(ERROR_GET_DATA, 422);
+      return next(customError);
+    }
+  }
+};
+
+export const getAverageRatingByCourseId = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { courseId } = req.params;
+
+  try {
+    const averageRating = await Review.aggregate([
+      { $match: { courseId: new mongoose.Types.ObjectId(courseId), isDeleted: false } },
+      {
+        $group: {
+          _id: "$courseId",
+          averageRating: { $avg: "$ratingStar" },
+        },
+      },
+    ]);
+
+    const rating = averageRating.length > 0 ? averageRating[0].averageRating : 0;
+
+    res.status(200).json({
+      message: GET_SUCCESS,
+      averageRating: rating,
+    });
+  } catch (error) {
+    if (error instanceof CustomError) {
+      return next(error);
+    } else {
+      const customError = new CustomErrorMessage(ERROR_GET_DATA, 422);
+      return next(customError);
+    }
+  }
+};
+
+export const getRatingPercentageByCourseId = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { courseId } = req.params;
+
+  try {
+    const totalReviews = await Review.countDocuments({ courseId: courseId, isDeleted: false });
+    if (totalReviews === 0) {
+      return res.status(200).json({
+        message: ERROR_NOT_FOUND_DATA,
+        ratingPercentages: {},
+      });
+    }
+
+    const groupedRatings = {
+      "1": [0.5, 1, 1.5],
+      "2": [2, 2.5],
+      "3": [3, 3.5],
+      "4": [4, 4.5],
+      "5": [5],
+    };
+
+    const ratingPercentages = {};
+
+    for (let group in groupedRatings) {
+      let count = 0;
+      for (let value of groupedRatings[group]) {
+        count += await Review.countDocuments({
+          courseId: courseId,
+          ratingStar: value,
+          isDeleted: false,
+        });
+      }
+      ratingPercentages[group] = ((count / totalReviews) * 100).toFixed(2) + "%";
+    }
+
+    res.status(200).json({
+      message: GET_SUCCESS,
+      ratingPercentages,
+    });
+  } catch (error) {
+    if (error instanceof CustomError) {
+      return next(error);
+    } else {
+      const customError = new CustomErrorMessage(ERROR_GET_DATA, 422);
       return next(customError);
     }
   }
