@@ -41,8 +41,8 @@ export const getUsers = async (req: AuthorAuthRequest, res: Response, next: Next
   try {
     const query: getUsersQuery = {};
 
-    if(req.role && req.role === enumData.UserType.Author.code) {
-       query.createdBy = new mongoose.Types.ObjectId(req.userId) as any;
+    if (req.role && req.role === enumData.UserType.Author.code) {
+      query.createdBy = new mongoose.Types.ObjectId(req.userId) as any;
     }
 
     if (_q && typeof _q === "string") {
@@ -133,13 +133,15 @@ export const getUser = async (req: Request, res: Response, next: NextFunction) =
 };
 
 export const postUser = async (req: AuthorAuthRequest, res: Response, next: NextFunction) => {
-  const { name, email, phone, address, password, role, avatar } = req.body;
-  let avatarUrl;
-  if (!avatar) {
-    avatarUrl =
-      "https://lwfiles.mycourse.app/64b5524f42f5698b2785b91e-public/avatars/thumbs/64c077e0557e37da3707bb92.jpg";
+  const { name, email, phone, password, role } = req.body;
+
+  let avatar;
+
+  if (req.file) {
+    avatar = req.file.path;
   } else {
-    avatarUrl = avatar;
+    avatar =
+      "https://lwfiles.mycourse.app/64b5524f42f5698b2785b91e-public/avatars/thumbs/64c077e0557e37da3707bb92.jpg";
   }
 
   let session: ClientSession | null = null;
@@ -163,11 +165,11 @@ export const postUser = async (req: AuthorAuthRequest, res: Response, next: Next
       email,
       name,
       phone,
-      avatar: avatarUrl,
+      avatar: avatar,
       role,
       password: hashedPassword,
       createdBy: req.userId,
-      status: enumData.UserStatus.NEW.code
+      status: enumData.UserStatus.NEW.code,
     });
 
     const result = await newUser.save();
@@ -237,16 +239,15 @@ export const approveUser = async (req: AuthorAuthRequest, res: Response, next: N
       .replace("{1}", foundUser.username) // Replace {1} with the user's username
       .replace("{2}", "123456"); // Replace {2} with the generated or default password
     await sendEmail({
-        from: template.EmailTemplate.SendUserNameAndPasswordForAuthor.from,
-        to: foundUser.email,
-        subject: template.EmailTemplate.SendUserNameAndPasswordForAuthor.name,
-        html: bodyHtml,
-      });
-      
+      from: template.EmailTemplate.SendUserNameAndPasswordForAuthor.from,
+      to: foundUser.email,
+      subject: template.EmailTemplate.SendUserNameAndPasswordForAuthor.name,
+      html: bodyHtml,
+    });
+
     await session.commitTransaction();
     session.endSession();
 
- 
     res.status(201).json({
       message: "User created successfully!",
       userId: result._id,
