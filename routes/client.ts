@@ -17,6 +17,7 @@ import getIO from "../socket";
 import blogRouter from "../routes/client/blog";
 import commentsRouter from "../routes/client/commentsBlogs";
 import noteRouter from "../routes/client/noteCourse";
+import disscussRouter from "../routes/client/discussCourse";
 
 const router = Router();
 
@@ -64,5 +65,7 @@ router.use("/blog", blogRouter);
 router.use("/comments", commentsRouter);
 
 router.use("/note", noteRouter);
+
+router.use("/discuss", disscussRouter);
 
 export default router;
