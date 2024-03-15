@@ -15,4 +15,8 @@ router.patch(
   feedbackController.updateActiveStatusFeedback
 );
 
+router.post("/feedback/reply/create", isAuth, feedbackController.postFeedbackReply);
+
+router.get("/feedback/replies/:feedbackId", feedbackController.getFeedbackRepliesByFeedbackId);
+
 export default router;

@@ -57,7 +57,22 @@ export const template = {
         <br>
         <p><i>Note: This email is automatically generated. Please do not reply</i></p>`,
     },
+    ReplyToFeedback: {
+      code: "ReplyToCustomerFeedback",
+      name: "E Learning Platform System - Reply to customer feedback",
+      description: "Email template for replying to customer feedback",
+      from: "e-learning-platform@gmail.com",
+      numOfVariable: 1,
+      default: `<p>Dear Customer,</p>
+        <br>
+        <p>Thank you for your feedback.</p>
+        <p>Here is our response to your feedback:</p>
+        <p>{0}</p>
+        <br>
+        <p>Best regards,</p>
+        <p>E Learning Platform System</p>
+        <br>
+        <p><i>Please note: This email is automatically generated from the E Learning Platform System, please do not reply.</i></p>`,
+    },
   },
-
-
 };

@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import Feedback from "../../models/Feedback";
+import FeedbackReply from "../../models/FeedbackReply";
 import CustomError from "../../utils/error";
 import CustomErrorMessage from "../../utils/errorMessage";
 import mongoose, { ClientSession } from "mongoose";
@@ -7,6 +8,8 @@ import { coreHelper } from "../../utils/coreHelper";
 import ActionLog from "../../models/ActionLog";
 import { enumData } from "../../config/enumData";
 import { AuthorAuthRequest } from "../../middleware/is-auth";
+import { template } from "../../config/template";
+import sendEmail from "../../utils/sendmail";
 import {
   CREATE_SUCCESS,
   ERROR_CREATE_DATA,
@@ -184,6 +187,119 @@ export const loadHistoriesForFeedback = async (req: Request, res: Response, next
       return next(error);
     } else {
       const customError = new CustomErrorMessage(ERROR_GET_DATA_HISTORIES, 422);
+      return next(customError);
+    }
+  }
+};
+
+export const getFeedbackRepliesByFeedbackId = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { feedbackId } = req.params;
+
+  try {
+    const page = parseInt(req.query._page as string) || 1;
+    const limit = parseInt(req.query._limit as string) || 10;
+    const skip = (page - 1) * limit;
+
+    const [feedbackReplies, count] = await Promise.all([
+      FeedbackReply.find({ feedbackId })
+        .populate("createdBy", "name")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      FeedbackReply.countDocuments({ feedbackId }),
+    ]);
+
+    res.status(200).json({
+      message: GET_DETAIL_SUCCESS,
+      feedbackReplies,
+      count,
+      page,
+      pages: Math.ceil(count / limit),
+      limit,
+    });
+  } catch (error) {
+    if (error instanceof CustomError) {
+      return next(error);
+    } else {
+      const customError = new CustomErrorMessage(ERROR_GET_DATA_DETAIL, 422);
+      return next(customError);
+    }
+  }
+};
+
+export const postFeedbackReply = async (
+  req: AuthorAuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  const { feedbackId, contentReply } = req.body;
+
+  let session: ClientSession | null = null;
+
+  session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const feedbackReplyCode = await coreHelper.getCodeDefault("FEEDBACK_REPLY", FeedbackReply);
+
+    const feedbackReply = new FeedbackReply({
+      code: feedbackReplyCode,
+      feedbackId,
+      contentReply,
+      createdBy: req.userId,
+    });
+
+    const feedbackReplyRes = await feedbackReply.save();
+
+    const historyItem = new ActionLog({
+      feedbackId: feedbackId,
+      type: enumData.ActionLogEnType.Create.code,
+      createdBy: new mongoose.Types.ObjectId(req.userId),
+      functionType: "FEEDBACK_REPLY",
+      description: `User [${req.username}] has [${enumData.ActionLogEnType.Create.name}] Feedback Reply with Content: [${contentReply}]`,
+    });
+
+    await ActionLog.collection.insertOne(historyItem.toObject(), { session });
+
+    const feedback = await Feedback.findById(feedbackId);
+
+    if (!feedback) {
+      const error = new CustomError("Feedback", ERROR_NOT_FOUND_DATA, 404);
+      throw error;
+    }
+
+    const { email } = feedback;
+
+    const emailTemplate = template.EmailTemplate.ReplyToFeedback;
+    const emailContent = emailTemplate.default.replace("{0}", contentReply);
+
+    await sendEmail({
+      from: emailTemplate.from,
+      to: email,
+      subject: emailTemplate.name,
+      html: emailContent,
+    });
+
+    await session.commitTransaction();
+    session.endSession();
+
+    res.json({
+      message: CREATE_SUCCESS,
+    });
+  } catch (error) {
+    if (session) {
+      await session.abortTransaction();
+      session.endSession();
+    }
+
+    if (error instanceof CustomError) {
+      return next(error);
+    } else {
+      const customError = new CustomErrorMessage(ERROR_CREATE_DATA, 422);
       return next(customError);
     }
   }

@@ -23,6 +23,6 @@ const feedbackReplySchema = new Schema<IFeedbackReply>(
 
 feedbackReplySchema.add(baseSchema);
 
-const FeedbackReply = model<IFeedbackReply>("FeedbackReply", feedbackReplySchema);
+const FeedbackReply = model<IFeedbackReply>("Feedback_Reply", feedbackReplySchema);
 
 export default FeedbackReply;
