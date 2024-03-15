@@ -5,8 +5,18 @@ const router = Router();
 
 router.get("/", isAuth, feedbackController.getFeedbacks);
 
-router.get("/feedback/:feedbackId", isAuth, feedbackController.getFeedback);
+router.get("/feedback/:feedbackId", isAuth, feedbackController.getFeedbackById);
 
-router.delete('/feedback/delete/:feedbackId', isAuth, feedbackController.deleteFeedback);
+router.get("/feedback/histories/:feedbackId", isAuth, feedbackController.loadHistoriesForFeedback);
+
+router.patch(
+  "/feedback/update-active-status",
+  isAuth,
+  feedbackController.updateActiveStatusFeedback
+);
+
+router.post("/feedback/reply/create", isAuth, feedbackController.postFeedbackReply);
+
+router.get("/feedback/replies/:feedbackId", feedbackController.getFeedbackRepliesByFeedbackId);
 
 export default router;

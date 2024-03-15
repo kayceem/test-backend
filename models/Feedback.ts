@@ -4,6 +4,10 @@ import { IFeedback } from "../types/feedback.type";
 
 const feedbackSchema = new Schema<IFeedback>(
   {
+    code: {
+      type: String,
+      required: true,
+    },
     name: {
       type: String,
       required: true,
