@@ -135,7 +135,7 @@ export const deleteDiscuss = async (req: Request, res: Response) => {
 };
 
 export const addRelyToDisCuss = async (req: Request, res: Response) => {
-  const { comments, userId, parentDiscussId, discussId, courseId, lessonId } = req.body;
+  const { comments, userId, parentDiscussId, discussId } = req.body;
   const addDiscussCourseReplyCode = await coreHelper.getCodeDefault("DISCUSSREPLY", CourseDiscuss);
   try {
     const parentComment = await CourseDiscuss.findById(parentDiscussId);
@@ -146,11 +146,9 @@ export const addRelyToDisCuss = async (req: Request, res: Response) => {
     // Create a new comment as a reply
     const newReply = new CourseDiscuss({
       code: addDiscussCourseReplyCode,
-      courseId,
       discussId,
       comments,
       userId,
-      lessonId,
       parentDiscussId,
     });
 
@@ -160,7 +158,6 @@ export const addRelyToDisCuss = async (req: Request, res: Response) => {
     parentComment.replies.push(savedReply._id);
     await parentComment.save();
 
-    // Populate necessary fields for the response
     await savedReply.populate("userId", "name avatar");
 
     res.status(201).json(savedReply);

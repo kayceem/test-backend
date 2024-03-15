@@ -6,9 +6,10 @@ export interface IdiscussCourse extends IBaseSchema {
   code: string;
   comments: string;
   userId: Schema.Types.ObjectId;
+  sectionId: Schema.Types.ObjectId;
   discussId: Schema.Types.ObjectId;
   parentDiscussId?: Schema.Types.ObjectId;
   replies: Schema.Types.ObjectId[];
   lessonId: Schema.Types.ObjectId;
-  courseId: Schema.Types.ObjectId;  
+  courseId: Schema.Types.ObjectId;
 }

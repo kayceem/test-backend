@@ -30,12 +30,14 @@ const CourseDiscurssSchema = new Schema<IdiscussCourse>(
     lessonId: {
       type: Schema.Types.ObjectId,
       ref: "Lesson",
-      required: true,
+    },
+    sectionId: {
+      type: Schema.Types.ObjectId,
+      ref: "Section",
     },
     courseId: {
       type: Schema.Types.ObjectId,
       ref: "Course",
-      required: true,
     },
     replies: [
       {
