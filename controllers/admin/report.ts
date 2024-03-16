@@ -5,7 +5,6 @@ import User from "../../models/User";
 import Order from "../../models/Order";
 import CustomError from "../../utils/error";
 import CustomErrorMessage from "../../utils/errorMessage";
-import { getProgressOfCourse, getCourseDetailInfo, getProgressOfCourseV2 } from "../../utils/helper";
 import { AuthorAuthRequest } from "../../middleware/is-auth";
 import { enumData } from "../../config/enumData";
 import mongoose from "mongoose";
@@ -16,6 +15,7 @@ import { ISection } from "../../types/section.type";
 import { IIsLessonDone, ILesson } from "../../types/lesson.type";
 import moment from "moment";
 import Wishlist from "../../models/Wishlist";
+import Review from "../../models/Review";
 
 interface UserReportItem {
   _id: string;
@@ -42,6 +42,9 @@ interface CourseReportItem {
   totalVideosLength: number;
   lessons: number;
   numberOfWishlist: number;
+  avgRatings?: number;
+  numberOfRatings?: number;
+  saleOfCourse?: number;
 }
 
 export const getSummaryReports = async (req: Request, res: Response, next: NextFunction) => {
@@ -507,6 +510,7 @@ export const getReportsCourseInsights = async (req: Request, res: Response, next
     const dictLessonsOfCourse: Record<string, any> = {}
     const dictLessonsOfSection: Record<string, any> = {}
     const dictWishlistOfCourse: Record<string, any> = {}
+    const dictReviewsOfCourse: Record<string, any> = {}
     // dict lessons of course
 
     const lessonDoneRes = await IsLessonDone.find().populate('lessonId');
@@ -518,6 +522,8 @@ export const getReportsCourseInsights = async (req: Request, res: Response, next
       isDeleted: false
     });
 
+    const reviewsRes = await Review.find();
+
     wishlistRes.forEach((item) => {
       if(item.courseId) {
         const currentKey = item.courseId.toString();
@@ -527,7 +533,6 @@ export const getReportsCourseInsights = async (req: Request, res: Response, next
           dictWishlistOfCourse[currentKey] = [item]
         }
       }
-    
     })
 
     const orderDetails = ordersRes.flatMap((order) => {
@@ -616,12 +621,25 @@ export const getReportsCourseInsights = async (req: Request, res: Response, next
       })
     })
      
+    reviewsRes.forEach((reviewItem) => {
+      if(reviewItem.courseId) {
+        const currentKey = reviewItem.courseId.toString();
+        if (dictReviewsOfCourse[currentKey]) {
+          dictReviewsOfCourse[currentKey].push(reviewItem)
+        } else {
+          dictReviewsOfCourse[currentKey] = [reviewItem]
+        }
+      }
+    
+    })
+
 
     for (const course of courses) {
       const currentCourseId = course._id.toString()
       const listUsersOfCurrentCourse = dictUsersOfCourse[currentCourseId] ?? [];
       const listLessonsOfCurrentCourse = dictLessonsOfCourse[currentCourseId] ?? [];
       const listWishlistOfCurrentCourse = dictWishlistOfCourse[currentCourseId] ?? [];
+      const listReviewsOfCurrentCourse = dictReviewsOfCourse[currentCourseId] ?? [];
       // const courseInfo = await getCourseDetailInfo(course._id);
 
       // const studentsOfCourse = learners.map((student) => student.user);
@@ -652,11 +670,11 @@ export const getReportsCourseInsights = async (req: Request, res: Response, next
         // totalStudyTime += totalVideosLengthDone;
       }
 
-      
-
       const avgStudyTime =
       listUsersOfCurrentCourse.length === 0 ? 0 : totalStudyTime / listUsersOfCurrentCourse.length;
 
+      const avgRatings = listReviewsOfCurrentCourse.reduce((total, review) => total + review.ratingStar, 0) / listReviewsOfCurrentCourse.length
+      const saleOfCurrentCourse = listUsersOfCurrentCourse.reduce((total, user) => total + user.coursePrice, 0);
       const courseReportItem: CourseReportItem = {
         _id: course._id,
         name: course.name,
@@ -667,6 +685,9 @@ export const getReportsCourseInsights = async (req: Request, res: Response, next
         totalVideosLength: totalVideoLength, // TODO LATER
         lessons: listLessonsOfCurrentCourse.length,
         numberOfWishlist: listWishlistOfCurrentCourse.length,
+        numberOfRatings: listReviewsOfCurrentCourse.length,
+        avgRatings: avgRatings,
+        saleOfCourse: saleOfCurrentCourse
       };
 
       results.push(courseReportItem);

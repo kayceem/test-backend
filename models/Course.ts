@@ -51,7 +51,7 @@ const courseSchema = new Schema<ICourse>(
     userId: {
       type: Schema.Types.ObjectId,
       ref: "User",
-      required: true,
+      required: true, // same meaning with createdBy
     },
     categoryId: {
       type: Schema.Types.ObjectId,

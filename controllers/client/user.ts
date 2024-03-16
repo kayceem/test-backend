@@ -9,6 +9,10 @@ import { getProgressOfCourse, getCoursesOrderByUserId } from "../../utils/helper
 import CustomError from "../../utils/error";
 import CustomErrorMessage from "../../utils/errorMessage";
 import { IDataSelect } from "../../types/dataSelect.type";
+import IsLessonDone from "../../models/IsLessonDone";
+import Section from "../../models/Section";
+import Lesson from "../../models/Lesson";
+import { ISection } from "../../types/section.type";
 
 interface PublicProfileResponse {
   _id: any;
@@ -118,44 +122,151 @@ export const getAuthorsSelect = async (req: Request, res: Response, next: NextFu
 
 export const getUserDetail = async (req: Request, res: Response, next: NextFunction) => {
   const { userId } = req.params;
-
+  const dictCoursesOfUser: Record<string, any> = {};
+  const dictCourse: Record<string, any> = {};
+  const dictLessonsDoneOfUser: Record<string, any> = {}
+  const dictSectionOfCourse: Record<string, any> = {}
+  const dictLessonsOfCourse: Record<string, any> = {}
+  const dictLessonsOfSection: Record<string, any> = {}
   try {
     const user = await User.findById(userId);
-
-    const courses = await Order.find({
-      "user._id": userId,
+    const courseRes = await Course.find({
+      isDeleted: false
+    }).populate('userId');
+    const ordersRes = await Order.find();
+    const lessonDoneRes = await IsLessonDone.find().populate('lessonId');
+    const sectionsRes = await Section.find();
+    const lessonsRes = await Lesson.find();
+    const orderDetails = ordersRes.flatMap((order) => {
+      return order.items.map((item: any) => ({
+        orderId: order._id, 
+        userId: order.user._id,
+        userEmail: order.user.email,
+        // ... other relevant order fields if needed
+    
+        courseId: item._id,
+        courseName: item.name,
+        courseThumbnail: item.thumbnail,
+        coursePrice: item.finalPrice,
+        reviewed: item.reviewed,
+      }));
+    });
+    // Create dict for course 
+    courseRes.forEach((courseItem) => {
+        const currentKey = courseItem._id.toString()
+        dictCourse[currentKey] = courseItem
     })
-      .select("items")
-      .populate("items._id");
 
-    const coursesEnrolled = courses
-      .map((courseItem) => {
-        return courseItem.items;
+    // create dict courses of user
+    orderDetails.forEach((item) => {
+      if (item.userId) {
+        if (dictCoursesOfUser[item.userId]) {
+          dictCoursesOfUser[item.userId].push(item)
+        } else {
+          dictCoursesOfUser[item.userId] = [item]
+        }
+      }
+    })
+       // create dict lessons of section
+    lessonsRes.forEach((item) => {
+        const currentKey = item.sectionId.toString()
+        if(dictLessonsOfSection[currentKey]) {
+          dictLessonsOfSection[currentKey].push(item)
+        } else {
+          dictLessonsOfSection[currentKey] = [item]
+        }
+    })
+
+    // Group lesson done by userId (create dict lessons of of user and lesson)
+    lessonDoneRes.forEach((item: any) => {
+      if(item._doc) {
+        const currentKey = item.userId.toString() + item.lessonId?._id?.toString();
+        const currentValue = {
+          ...item._doc,
+          lesson: item._doc?.lessonId
+        }
+        dictLessonsDoneOfUser[currentKey] = currentValue
+      }
+    })
+
+    // Group section by course id (dict sections of course)
+    sectionsRes.forEach((item) => {
+      if (item.courseId) {
+        if (dictSectionOfCourse[item.courseId.toString()]) {
+          dictSectionOfCourse[item.courseId.toString()].push(item)
+        } else {
+          dictSectionOfCourse[item.courseId.toString()] = [item]
+        }
+      }
+    })
+
+     // Group lesson by course id
+     courseRes.forEach((courseItem) => {
+      const listSectionOfCourse = dictSectionOfCourse[courseItem._id.toString()] as ISection[] ?? [];
+      listSectionOfCourse.forEach((sectionItem) => {
+          const listLessonOfSection = dictLessonsOfSection[sectionItem._id.toString()] ?? [];
+          listLessonOfSection.forEach((lessonItem) => {
+              if (dictLessonsOfCourse[courseItem._id.toString()]) {
+                dictLessonsOfCourse[courseItem._id.toString()].push(lessonItem)
+              } else {
+                dictLessonsOfCourse[courseItem._id.toString()] = [lessonItem]
+              }
+          })
+
       })
-      .flat()
-      .map((item) => item._id)
-      .map(async (courseItem) => {
-        const progress = (await getProgressOfCourse(courseItem._id, userId)).progress;
-        const totalVideosLengthDone = (await getProgressOfCourse(courseItem._id, userId))
-          .totalVideosLengthDone;
-        const user = await User.findById(courseItem._doc.userId.toString());
+        
+    })
 
-        return {
-          ...courseItem.toObject(),
-          userId: {
-            _id: user._id,
-            name: user.name,
-            avatar: user.avatar,
-          },
-          progress: progress,
-          totalVideosLengthDone,
-        };
-      });
+    const listCourseOfUser = dictCoursesOfUser[userId]
+    const listCourseIdOfUser = [...new Set<string>(listCourseOfUser.map((item) => item.courseId.toString()))]
+    let studyTime = 0;
+    const completedCourses = [];
+    const listCourseResult = []
+    // List courses
+    for (const courseId of listCourseIdOfUser) {
+        // const currentCourseId = courseItem.courseId.toString();
+        const currentInfoCourse = dictCourse[courseId];
+      if(currentInfoCourse) {
+        const listLessonOfCurrentCourse = dictLessonsOfCourse[courseId] ?? [];
+        const listLessonDone = []
+        let currentUserStudyTime = 0;
+        for (const lessonItem of listLessonOfCurrentCourse) {
+          const currentLessonId = lessonItem._id.toString();
+          if(dictLessonsDoneOfUser[userId + currentLessonId]) {
+            const lessonDone = dictLessonsDoneOfUser[userId + currentLessonId];
+            if(lessonDone) {
+              studyTime += lessonDone?.lesson?.videoLength ?? 0;
+              currentUserStudyTime+= lessonDone?.lesson?.videoLength ?? 0;
+              listLessonDone.push(lessonDone);
+            }
+          }
+        }
+
+        let currentUserProgress = 0; 
+        if(listLessonOfCurrentCourse.length > 0) {
+          currentUserProgress = listLessonDone.length / listLessonOfCurrentCourse.length
+        }
+        
+        if (currentUserProgress === 1) {
+          completedCourses.push(courseId);
+        }
+
+
+        const courseEnrolledItem = {
+          ...currentInfoCourse._doc,
+          progress: currentUserProgress,
+          totalVideosLengthDone: currentUserStudyTime,
+        }
+        listCourseResult.push(courseEnrolledItem)
+      }
+       
+    }
 
     const result = {
       ...user.toObject(),
-      courses: await Promise.all(coursesEnrolled),
+      courses: listCourseResult,
     };
+
 
     res.status(200).json({
       message: "Fetch user fetail with fully data successfully!",

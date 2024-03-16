@@ -118,7 +118,9 @@ export const getCourses = async (req: Request, res: Response, next: NextFunction
   page = page > 0 ? page : 1;
 
   const skip = (page - 1) * limit;
-
+  // Create dict
+  const dictCoursesOfUser: Record<string, any> = {};
+  const dictCourse: Record<string, any> = {};
   try {
     const query = buildQuery(req);
 
@@ -141,24 +143,51 @@ export const getCourses = async (req: Request, res: Response, next: NextFunction
 
       coursesQuery.sort(sortQuery);
     }
+    const ordersRes = await Order.find();
+    const orderDetails = ordersRes.flatMap((order) => {
+      return order.items.map((item: any) => ({
+        orderId: order._id, 
+        userId: order.user._id,
+        userEmail: order.user.email,
+        // ... other relevant order fields if needed
+    
+        courseId: item._id,
+        courseName: item.name,
+        courseThumbnail: item.thumbnail,
+        coursePrice: item.finalPrice,
+        reviewed: item.reviewed,
+      }));
+    });
+   // create dict courses of user
+   orderDetails.forEach((item) => {
+    if (item.userId) {
+      if (dictCoursesOfUser[item.userId]) {
+        dictCoursesOfUser[item.userId].push(item)
+      } else {
+        dictCoursesOfUser[item.userId] = [item]
+      }
+    }
+  })
 
     const totalCourses = await Course.where(query).countDocuments();
     const courses: ICourse[] = await coursesQuery;
 
     let courseIdOfUserList: string[] = [];
     if (typeof userId === "string" && userId.trim() !== "") {
-      const coursesOfUser: ICourse[] = await getCoursesOrderedByUserInfo(userId);
-      courseIdOfUserList = coursesOfUser.map((course) => course._id.toString());
+      const listCourseOfUser  = dictCoursesOfUser[userId]
+      const listCourseIfOfUser = listCourseOfUser.map((course: any) => course.courseId.toString())
+      courseIdOfUserList = [... new Set<string>(listCourseIfOfUser)];
     }
 
     let result: Array<ICourse & { isBought: boolean }> = [];
 
     for (const course of courses) {
+      const currentCourseId = course._id.toString();
       const courseItem = {
         ...course.toObject(),
         isBought:
           typeof userId === "string" && userId.trim() !== ""
-            ? courseIdOfUserList.includes(course._id.toString())
+            ? courseIdOfUserList.includes(currentCourseId)
             : false,
       };
       result.push(courseItem);
@@ -390,6 +419,8 @@ export const getRelatedCourses = async (req: Request, res: Response, next: NextF
   const { courseId } = req.params;
   const userId = req.query.userId as string | undefined;
   let limit: string | undefined = req.query.limit as string | undefined;
+  // create dict
+  const dictCoursesOfUser: Record<string, any> = {};
 
   try {
     const course = await Course.findById(courseId);
@@ -415,9 +446,36 @@ export const getRelatedCourses = async (req: Request, res: Response, next: NextF
         relatedCourses,
       });
     }
+    const ordersRes = await Order.find();
 
-    const coursesOfUser = await getCoursesOrderedByUserInfo(userId);
-    const courseIdOfUserList = coursesOfUser.map((course) => course._id.toString());
+
+    const orderDetails = ordersRes.flatMap((order) => {
+      return order.items.map((item: any) => ({
+        orderId: order._id, 
+        userId: order.user._id,
+        userEmail: order.user.email,
+        // ... other relevant order fields if needed
+        courseId: item._id,
+        courseName: item.name,
+        courseThumbnail: item.thumbnail,
+        coursePrice: item.finalPrice,
+        reviewed: item.reviewed,
+      }));
+    });
+
+      // create dict courses of user
+      orderDetails.forEach((item) => {
+        if (item.userId) {
+          if (dictCoursesOfUser[item.userId]) {
+            dictCoursesOfUser[item.userId].push(item)
+          } else {
+            dictCoursesOfUser[item.userId] = [item]
+          }
+        }
+      })
+
+    const coursesOfUser = dictCoursesOfUser[userId] || [];
+    const courseIdOfUserList = [...new Set<string>(coursesOfUser.map((course) => course.courseId.toString()))];
 
     let result = relatedCourses.map((course) => {
       return {
@@ -443,9 +501,52 @@ export const getRelatedCourses = async (req: Request, res: Response, next: NextF
 export const getSuggestedCourses = async (req: Request, res: Response, next: NextFunction) => {
   const userId = req.params.userId as string;
   let limit: number = req.query.limit ? parseInt(req.query.limit as string) : 5;
-
+  const dictCoursesOfUser: Record<string, any> = {}
+  const dictCourse: Record<string, any> = {}
   try {
-    const boughtCourses = await getCoursesOrderedByUserInfo(userId);
+    const ordersRes = await Order.find();
+    const courseRes = await Course.find();
+    const orderDetails = ordersRes.flatMap((order) => {
+      return order.items.map((item: any) => ({
+        orderId: order._id, 
+        userId: order.user._id,
+        userEmail: order.user.email,
+        // ... other relevant order fields if needed
+    
+        courseId: item._id,
+        courseName: item.name,
+        courseThumbnail: item.thumbnail,
+        coursePrice: item.finalPrice,
+        reviewed: item.reviewed,
+      }));
+    });
+  // create dict courses of user
+  orderDetails.forEach((item) => {
+    if (item.userId) {
+      if (dictCoursesOfUser[item.userId]) {
+        dictCoursesOfUser[item.userId].push(item)
+      } else {
+        dictCoursesOfUser[item.userId] = [item]
+      }
+    }
+  })
+
+    // create dict course
+    courseRes.forEach((item) => {
+        const currentKey = item._id.toString()
+        dictCourse[currentKey] = item
+    })
+
+    const listCourseOfCurrentUser = dictCoursesOfUser[userId] || [];
+    const boughtCourseId = [...new Set<string>(listCourseOfCurrentUser.map((course) => course.courseId.toString()))]
+    
+    const boughtCourses = []
+
+    boughtCourseId.forEach((courseId: string) => {
+        if(dictCourse[courseId]) {
+            boughtCourses.push(dictCourse[courseId])
+        }
+    });
 
     if (!boughtCourses.length) {
       return res.status(200).json({
@@ -454,8 +555,12 @@ export const getSuggestedCourses = async (req: Request, res: Response, next: Nex
       });
     }
 
-    const boughtCourseCategories = boughtCourses.map((course) => course.categoryId.toString());
+    const boughtCourseCategories = boughtCourses.map((course) => {
+      const currentCateId = course.categoryId.toString();
+        return currentCateId;
+    });
 
+    // Gợi ý những khó học cùng danh mục trong những khoá học đã mua và khác những khoá học đã mua!
     const suggestedCourses = await Course.find({
       categoryId: { $in: boughtCourseCategories },
       _id: { $nin: boughtCourses.map((course) => course._id) },
@@ -508,8 +613,38 @@ export const getCoursesFromWishlistByUserId = async (
   res: Response,
   next: NextFunction
 ) => {
+
+  const dictCoursesOfUser: Record<string, any> = {}
+
   try {
     const { userId } = req.params;
+
+    const ordersRes = await Order.find();
+    const courseRes = await Course.find();
+    const orderDetails = ordersRes.flatMap((order) => {
+      return order.items.map((item: any) => ({
+        orderId: order._id, 
+        userId: order.user._id,
+        userEmail: order.user.email,
+        // ... other relevant order fields if needed
+    
+        courseId: item._id,
+        courseName: item.name,
+        courseThumbnail: item.thumbnail,
+        coursePrice: item.finalPrice,
+        reviewed: item.reviewed,
+      }));
+    });
+  // create dict courses of user
+  orderDetails.forEach((item) => {
+    if (item.userId) {
+      if (dictCoursesOfUser[item.userId]) {
+        dictCoursesOfUser[item.userId].push(item)
+      } else {
+        dictCoursesOfUser[item.userId] = [item]
+      }
+    }
+  })
 
     const wishlists = await Wishlist.find({ userId, isDeleted: false });
     const courseIdsFromWishlist = wishlists.map((wishlist) => wishlist.courseId);
@@ -520,8 +655,8 @@ export const getCoursesFromWishlistByUserId = async (
       .populate("categoryId", "_id name")
       .populate("userId", "_id name avatar");
 
-    const coursesOfUser = await getCoursesOrderedByUserInfo(userId);
-    const courseIdOfUserList = coursesOfUser.map((course) => course._id.toString());
+    const coursesOfUser = dictCoursesOfUser[userId] ?? [];
+    const courseIdOfUserList = [...new Set(coursesOfUser.map((course) => course.courseId.toString()))];
 
     const result = courses.map((course) => {
       return {
