@@ -27,6 +27,8 @@ import ActionLog from "../../models/ActionLog";
 import { session } from "passport";
 import { template } from "../../config/template";
 import sendEmail from "../../utils/sendmail";
+import Order from "../../models/Order";
+import Course from "../../models/Course";
 
 interface getUsersQuery {
   $text?: {
@@ -37,10 +39,11 @@ interface getUsersQuery {
 
 export const getUsers = async (req: AuthorAuthRequest, res: Response, next: NextFunction) => {
   const { _q } = req.query;
-
+  const dictCoursesOfUser: Record<string, any> = {}
+  const dictCourse: Record<string, any> = {}
   try {
     const query: getUsersQuery = {};
-
+    const orderQuery: any = {};
     if (req.role && req.role === enumData.UserType.Author.code) {
       query.createdBy = new mongoose.Types.ObjectId(req.userId) as any;
     }
@@ -49,11 +52,57 @@ export const getUsers = async (req: AuthorAuthRequest, res: Response, next: Next
       query.$text = { $search: _q };
     }
 
+    const ordersRes = await Order.find(orderQuery);
+    const courseRes = await Course.find();
+    const orderDetails = ordersRes.flatMap((order) => {
+      return order.items.map((item: any) => ({
+        orderId: order._id, 
+        userId: order.user._id,
+        userEmail: order.user.email,
+        // ... other relevant order fields if needed
+    
+        courseId: item._id,
+        courseName: item.name,
+        courseThumbnail: item.thumbnail,
+        coursePrice: item.finalPrice,
+        reviewed: item.reviewed,
+      }));
+    });
+
+    // create dict courses of user
+    orderDetails.forEach((item) => {
+      if (item.userId) {
+        if (dictCoursesOfUser[item.userId]) {
+          dictCoursesOfUser[item.userId].push(item)
+        } else {
+          dictCoursesOfUser[item.userId] = [item]
+        }
+      }
+    })
+
+    // create dict course
+    courseRes.forEach((item) => {
+      const currentKey = item._id.toString()
+      dictCourse[currentKey] = item
+    })
+
+
     const users = await User.find(query).sort({ createdAt: -1 });
 
-    const result = users.map(async (user) => {
-      const courses = await getCoursesOrderByUserId(user._id);
-      return {
+    const result = []
+    users.forEach((user) => {
+      const currentUserId = user._id.toString()
+      const listCoursesRes = []
+      const listCourse = dictCoursesOfUser[currentUserId]
+      if(listCourse) {
+        const listCourseId = listCourse.map((item) => item.courseId.toString())
+      const listCourseIdDistinct = [...new Set<string>(listCourseId)]
+      listCourseIdDistinct.forEach((courseId) => {
+        if(dictCourse[courseId]) {
+          listCoursesRes.push(dictCourse[courseId])
+        }
+      })
+      const item =  {
         _id: user._id,
         name: user.name,
         email: user.email,
@@ -62,7 +111,7 @@ export const getUsers = async (req: AuthorAuthRequest, res: Response, next: Next
         phone: user.phone,
         address: user.address,
         payment: user.payment,
-        courses,
+        courses: listCoursesRes,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
         lastLogin: user.lastLogin,
@@ -71,11 +120,14 @@ export const getUsers = async (req: AuthorAuthRequest, res: Response, next: Next
         statusColor: enumData.UserStatus[user.status]?.color,
         status: user.status,
       };
+      result.push(item)
+      }
+
     });
 
     res.status(200).json({
       message: "Fetch users sucessfully!",
-      users: await Promise.all(result),
+      users: result,
     });
   } catch (error) {
     if (error instanceof CustomError) {
