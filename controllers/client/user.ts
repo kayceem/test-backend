@@ -262,41 +262,6 @@ export const getUserDetail = async (req: Request, res: Response, next: NextFunct
        
     }
 
-    // const courses = await Order.find({
-    //   "user._id": userId,
-    // })
-    //   .select("items")
-    //   .populate("items._id");
-
-    // const coursesEnrolled = courses
-    //   .map((courseItem) => {
-    //     return courseItem.items;
-    //   })
-    //   .flat()
-    //   .map((item) => item._id)
-    //   .map(async (courseItem) => {
-    //     const progress = (await getProgressOfCourse(courseItem._id, userId)).progress;
-    //     const totalVideosLengthDone = (await getProgressOfCourse(courseItem._id, userId))
-    //       .totalVideosLengthDone;
-    //     const user = await User.findById(courseItem._doc.userId.toString());
-
-    //     return {
-    //       ...courseItem.toObject(),
-    //       userId: {
-    //         _id: user._id,
-    //         name: user.name,
-    //         avatar: user.avatar,
-    //       },
-    //       progress: progress,
-    //       totalVideosLengthDone,
-    //     };
-    //   });
-
-    // const result = {
-    //   ...user.toObject(),
-    //   courses: await Promise.all(coursesEnrolled),
-    // };
-
     const result = {
       ...user.toObject(),
       courses: listCourseResult,
