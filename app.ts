@@ -12,12 +12,14 @@ import adminRouter from "./routes/admin";
 
 import { MONGODB_URI } from "./config/constant";
 import { FRONTEND_URL } from "./config/frontend-domain";
+import cron from "node-cron";
 import {
   ClientToServerEvents,
   InterServerEvents,
   ServerToClientEvents,
   SocketData,
 } from "./types/socket.type";
+import { runRon } from "./cron";
 const app = express();
 
 app.use(cors());
@@ -47,7 +49,6 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 app.use("/auth", authRouter);
 app.use("/admin", adminRouter);
 app.use(clientRouter);
-
 
 
 interface AppError extends Error {
@@ -96,3 +97,17 @@ mongoose
 
 export default app;
 export { io };
+
+/** AUTO RUN JOB HERE */
+
+
+/** Auto run this job every 1 minutes */
+// cron.schedule("* * * * *", function () {
+//   console.log("This task runs every minute");
+//   runRon()
+// });
+
+// Auto run every monday at 00:00
+cron.schedule("0 0 0 * * 1", function () {
+  console.log("This task runs every monday at 00:00");
+});
