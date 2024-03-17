@@ -44,8 +44,9 @@ export const getDiscuss = async (req: AuthorAuthRequest, res: Response) => {
     const statusFilter = (req.query._status as string) || "all";
 
     let query: any = {
-      ...(statusFilter !== "all" && { isDeleted: statusFilter === "inactive" }),
-      ...(searchTerm && { name: { $regex: new RegExp(searchTerm, "i") } }),
+      ...(statusFilter === "active" ? { isDeleted: false } : {}),
+      ...(statusFilter === "inactive" ? { isDeleted: true } : {}),
+      ...(searchTerm ? { name: { $regex: searchTerm, $options: "i" } } : {}),
     };
 
     const total = await CourseDiscuss.countDocuments(query);
