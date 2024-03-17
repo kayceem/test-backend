@@ -49,6 +49,10 @@ export const getDiscuss = async (req: AuthorAuthRequest, res: Response) => {
       ...(searchTerm ? { name: { $regex: searchTerm, $options: "i" } } : {}),
     };
 
+    // if (req.role && req.role === enumData.UserType.Author.code) {
+    //   query.createdBy = new mongoose.Types.ObjectId(req.userId) as any;
+    // }
+
     const total = await CourseDiscuss.countDocuments(query);
     const discuss = await CourseDiscuss.find(query)
       .sort({ createdAt: -1 })

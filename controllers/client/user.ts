@@ -167,6 +167,19 @@ export const getUserDetail = async (req: Request, res: Response, next: NextFunct
         }
       }
     })
+    // Found whether use have bought course ot not
+    const listCourseOfUser = dictCoursesOfUser[userId]
+
+    if(!listCourseOfUser) {
+     return res.status(200).json({
+        message: "Fetch user detail with fully data successfully!",
+        user: {
+          ...user.toObject(),
+          courses: []
+        },
+      });
+    }
+
        // create dict lessons of section
     lessonsRes.forEach((item) => {
         const currentKey = item.sectionId.toString()
@@ -217,13 +230,14 @@ export const getUserDetail = async (req: Request, res: Response, next: NextFunct
         
     })
 
-    const listCourseOfUser = dictCoursesOfUser[userId]
-    const listCourseIdOfUser = [...new Set<string>(listCourseOfUser.map((item) => item.courseId.toString()))]
+    
+    const listCourseIdOfUser = listCourseOfUser.map((item) => item.courseId.toString());
+    const listCourseIdDistinctOfUser = [...new Set<string>(listCourseIdOfUser)]
     let studyTime = 0;
     const completedCourses = [];
     const listCourseResult = []
     // List courses
-    for (const courseId of listCourseIdOfUser) {
+    for (const courseId of listCourseIdDistinctOfUser) {
         // const currentCourseId = courseItem.courseId.toString();
         const currentInfoCourse = dictCourse[courseId];
       if(currentInfoCourse) {

@@ -227,8 +227,8 @@ export const getPopularCourses = async (
     const coursePopularity = await Order.aggregate([
       { $unwind: "$items" },
       { $group: { _id: "$items._id", count: { $sum: 1 } } },
-      { $sort: { count: -1 } },
-      { $limit: limit },
+      { $sort: { count: -1 } }, 
+      { $limit: limit + 2 },// TRICK FIX LATER!
     ]);
 
     const popularCourseIds = coursePopularity.map((entry) => entry._id);
@@ -258,7 +258,7 @@ export const getPopularCourses = async (
     if (error instanceof CustomError) {
       return next(error);
     } else {
-      const customError = new CustomErrorMessage("ailed to fetch popular courses!", 422);
+      const customError = new CustomErrorMessage("Failed to fetch popular courses!", 422);
       return next(customError);
     }
   }

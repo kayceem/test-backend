@@ -47,15 +47,24 @@ interface CourseReportItem {
   saleOfCourse?: number;
 }
 
-export const getSummaryReports = async (req: Request, res: Response, next: NextFunction) => {
+export const getSummaryReports = async (req: AuthorAuthRequest, res: Response, next: NextFunction) => {
   const currentDate = new Date();
   const thirtyDaysAgo = new Date(currentDate);
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
+  const categoryQuery: any = {}
+  const courseQuery: any = {}
+  const userQuery: any = {}
+  if (req.role && req.role === enumData.UserType.Author.code) {
+    categoryQuery.createdBy = new mongoose.Types.ObjectId(req.userId) as any;
+    courseQuery.createdBy = new mongoose.Types.ObjectId(req.userId) as any;
+    userQuery.createdBy = new mongoose.Types.ObjectId(req.userId) as any;
+  }
+
   try {
-    const categories = await Category.countDocuments();
-    const courses = await Course.countDocuments();
-    const users = await User.countDocuments();
+    const categories = await Category.countDocuments(categoryQuery);
+    const courses = await Course.countDocuments(courseQuery);
+    const users = await User.countDocuments(userQuery);
 
     const orders = await Order.find({
       createdAt: { $gte: thirtyDaysAgo, $lte: currentDate },
@@ -194,7 +203,13 @@ export const getRevenues = async (req: Request, res: Response, next: NextFunctio
   }
 };
 
-export const getNewUserSignups = async (req: Request, res: Response, next: NextFunction) => {
+export const getNewUserSignups = async (req: AuthorAuthRequest, res: Response, next: NextFunction) => {
+  
+
+  const userQuery: any = {}
+  if (req.role && req.role === enumData.UserType.Author.code) {
+    userQuery.createdBy = new mongoose.Types.ObjectId(req.userId) as any;
+  }
   try {
     let previousDays: number = parseInt(req.query.days as string) || 7;
 
@@ -206,9 +221,11 @@ export const getNewUserSignups = async (req: Request, res: Response, next: NextF
     const previousDaysAgo: Date = new Date(currentDate);
     previousDaysAgo.setDate(previousDaysAgo.getDate() - previousDays);
 
-    const users = await User.find({
-      createdAt: { $gte: previousDaysAgo, $lte: currentDate },
-    });
+    if(previousDays && currentDate) {
+      userQuery.createdAt = { $gte: previousDaysAgo, $lte: currentDate };
+    }
+
+    const users = await User.find(userQuery);
 
     const signupsByDate: { [key: string]: number } = {};
 
@@ -714,7 +731,9 @@ export const getCoursesReportByAuthor = async (req: AuthorAuthRequest, res: Resp
   // Ensure dates start at the beginning and end of the day for accuracy
   dateStart.setHours(0, 0, 0, 0);
   dateEnd.setHours(23, 59, 59, 999); 
-
+  const dictReviewsOfCourse: Record<string, any> = {}
+  const dictCourse: Record<string, any> = {}
+  
   try {
     const courseQuery: any = {};
     const orderQuery: any = {};
@@ -729,7 +748,7 @@ export const getCoursesReportByAuthor = async (req: AuthorAuthRequest, res: Resp
         $lte: dateEnd
       }
     }
-
+    const reviewsRes = await Review.find();
     const ordersRes = await Order.find(orderQuery);
     const orderDetails = ordersRes.flatMap((order) => {
       return order.items.map((item: any) => ({
@@ -746,7 +765,16 @@ export const getCoursesReportByAuthor = async (req: AuthorAuthRequest, res: Resp
       }));
     });
 
-    const dictCourse: Record<string, any> = {}
+    reviewsRes.forEach((reviewItem) => {
+      if(reviewItem.courseId) {
+        const currentKey = reviewItem.courseId.toString();
+        if (dictReviewsOfCourse[currentKey]) {
+          dictReviewsOfCourse[currentKey].push(reviewItem)
+        } else {
+          dictReviewsOfCourse[currentKey] = [reviewItem]
+        }
+      }
+    })
 
     orderDetails.forEach((item) => {
       if (item.courseId) {
@@ -763,21 +791,27 @@ export const getCoursesReportByAuthor = async (req: AuthorAuthRequest, res: Resp
     
     
     const results: any = courses.map((courseItem) => {
-      const learners = dictCourse[courseItem._id.toString()]?.length ?? 0;
-      let totalEarnings: number = dictCourse[courseItem._id.toString()]?.reduce((total: number, item: any) => {
+      const currentCourseId = courseItem._id.toString()
+
+      const learners = dictCourse[currentCourseId]?.length ?? 0;
+      const listReviewsOfCurrentCourse = dictReviewsOfCourse[currentCourseId] ?? [];
+      let totalEarnings: number = dictCourse[currentCourseId]?.reduce((total: number, item: any) => {
         return total + item?.coursePrice ?? 0
       }, 0) ?? 0
 
       if(req.role && req.role === enumData.UserType.Author.code) {
         totalEarnings = totalEarnings * enumData.SettingString.REVENUE_RATING_AUTHOR.value
       }
+      const avgRatings = listReviewsOfCurrentCourse.reduce((total, review) => total + review.ratingStar, 0) / listReviewsOfCurrentCourse.length
 
       return {
         courseName: courseItem.name,
         createdAt: courseItem.createdAt,
         status: courseItem.status,
         learners: learners,
-        totalEarnings: totalEarnings.toFixed(2)
+        totalEarnings: totalEarnings.toFixed(2),
+        avgRatings,
+        numberOfRatings: listReviewsOfCurrentCourse.length
       };
     });
 
