@@ -7,7 +7,7 @@ import { enumData } from "../../config/enumData";
 import ActionLog from "../../models/ActionLog";
 
 // Get all note
-export const getAllNote = async (req: Request, res: Response) => {
+export const getAllNote = async (req: AuthorAuthRequest, res: Response) => {
   try {
     const notes = await Note.find().populate("userId", "name avatar").populate("lessonId", "name");
     res.status(200).json({ notes });

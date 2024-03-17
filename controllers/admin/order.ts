@@ -46,7 +46,7 @@ export const getOrders = async (req: Request, res: Response, next: NextFunction)
 
   try {
     const orderQuery: GetOrdersQuery = {
-     
+      
     };
 
     if (courseId && typeof courseId === "string" && courseId !== "all") {
@@ -68,7 +68,7 @@ export const getOrders = async (req: Request, res: Response, next: NextFunction)
       };
     }
 
-    const orders = await Order.find(orderQuery).populate("user._id", "_id name avatar email phone");
+    const orders = await Order.find(orderQuery).populate("user._id", "_id name avatar email phone").sort({ createdAt: -1 } );
 
     const result = orders.map((orderItem) => {
       return {
