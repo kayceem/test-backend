@@ -320,12 +320,35 @@ export const getNewUserSignupsList = async (req: Request, res: Response, next: N
 };
 
 export const getReportsUserProgress = async (req: Request, res: Response, next: NextFunction) => {
+  const dateStart = req.query.dateStart as string; // Replace with your start date
+  const dateEnd = req.query.dateEnd as string;   // Replace with your end date
+  
   try {
+
+
+    
     // Query
     const orderQuery: any = {};
     const userQuery: any = {
       // createdBy: req.query.authorId
     };
+    const reviewQuery: any = {};
+    const wishlistQuery: any = {};
+    if(dateStart && dateEnd) {
+      orderQuery.createdAt = {
+        $gte: moment(dateStart, 'DD/MM/YYYY').toDate(), 
+        $lte: moment(dateEnd, 'DD/MM/YYYY').toDate()
+    }
+      reviewQuery.createdAt = {
+        $gte: moment(dateStart, 'DD/MM/YYYY').toDate(), 
+        $lte: moment(dateEnd, 'DD/MM/YYYY').toDate()
+    }
+      wishlistQuery.createdAt = {
+        $gte: moment(dateStart, 'DD/MM/YYYY').toDate(), 
+        $lte: moment(dateEnd, 'DD/MM/YYYY').toDate()
+    }
+    }
+
     // TODO: SHOULD SEARCH FOR USER HAVE ROLE (USER - STUDENT!)
     const users = await User.find({
       role: 'USER', // TODO LATER!
@@ -508,12 +531,34 @@ export const getReportsUserProgress = async (req: Request, res: Response, next: 
 };
 
 export const getReportsCourseInsights = async (req: Request, res: Response, next: NextFunction) => {
+
+  const dateStart = req.query.dateStart as string; // Replace with your start date
+  const dateEnd = req.query.dateEnd as string;   // Replace with your end date
+
   try {
     // SHOULD BE OPIMIZE PERFORMANCE FOR WEBSITE ABOUT REPORT!
     const courseQuery: any = {
       // createdBy: req.query.authorId,
     }
+    const reviewQuery: any = {}
+    const wishlistQuery: any = {}
+
     const orderQuery: any = {};
+
+    if(dateStart && dateEnd) {
+      orderQuery.createdAt = {
+        $gte: moment(dateStart, 'DD/MM/YYYY').toDate(), 
+        $lte: moment(dateEnd, 'DD/MM/YYYY').toDate()
+    }
+      reviewQuery.createdAt = {
+        $gte: moment(dateStart, 'DD/MM/YYYY').toDate(), 
+        $lte: moment(dateEnd, 'DD/MM/YYYY').toDate()
+    }
+      wishlistQuery.createdAt = {
+        $gte: moment(dateStart, 'DD/MM/YYYY').toDate(), 
+        $lte: moment(dateEnd, 'DD/MM/YYYY').toDate()
+    }
+    }
 
     const courses = await Course.find();
 
@@ -536,10 +581,11 @@ export const getReportsCourseInsights = async (req: Request, res: Response, next
     const lessonsRes = await Lesson.find();
     const ordersRes = await Order.find(orderQuery);
     const wishlistRes = await Wishlist.find({
-      isDeleted: false
+      isDeleted: false,
+      ...wishlistQuery
     });
 
-    const reviewsRes = await Review.find();
+    const reviewsRes = await Review.find(reviewQuery);
 
     wishlistRes.forEach((item) => {
       if(item.courseId) {
