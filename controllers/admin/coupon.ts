@@ -39,9 +39,9 @@ export const getCoupons = async (req: AuthorAuthRequest, res: Response, next: Ne
       ...(searchTerm ? { description: { $regex: searchTerm, $options: "i" } } : {}),
     };
     const currentUserRole = req.role;
-    if(currentUserRole && currentUserRole === enumData.UserType.Author.code) {
+    if (currentUserRole && currentUserRole === enumData.UserType.Author.code) {
       query.createdBy = new mongoose.Types.ObjectId(req.userId) as any;
-   }
+    }
 
     const total = await Coupon.countDocuments(query);
 
@@ -111,6 +111,11 @@ export const postCoupon = async (req: AuthorAuthRequest, res: Response, next: Ne
   session.startTransaction();
 
   try {
+    if (discountAmount < 0) {
+      const customError = new CustomErrorMessage(ERROR_CREATE_DATA, 400);
+      return next(customError);
+    }
+
     const couponCode = await coreHelper.getCodeDefault("COUPON", Coupon);
 
     const coupon = new Coupon({
@@ -177,6 +182,11 @@ export const updateCoupon = async (req: AuthorAuthRequest, res: Response, next: 
   session.startTransaction();
 
   try {
+    if (discountAmount < 0) {
+      const customError = new CustomErrorMessage(ERROR_CREATE_DATA, 400);
+      return next(customError);
+    }
+
     const foundCoupon = await Coupon.findById(_id);
 
     if (!foundCoupon) {

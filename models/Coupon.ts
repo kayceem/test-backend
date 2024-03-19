@@ -21,6 +21,7 @@ const couponSchema = new Schema<ICoupon>(
       ref: "Coupon_Type",
       required: true,
     },
+    usedBy: [{ type: Schema.Types.ObjectId, ref: "User" }],
     dateStart: {
       type: Date,
       required: true,
