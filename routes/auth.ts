@@ -23,6 +23,8 @@ router.post("/github-login", authController.githubLogin);
 
 router.post("/admin-login", authController.adminLogin);
 
+router.post("/change-password", authController.changePassword);
+
 router.post("/reset", authController.postReset);
 
 router.post("/new-password", authController.postNewPassword);

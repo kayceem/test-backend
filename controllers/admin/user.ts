@@ -314,16 +314,16 @@ export const approveUser = async (req: AuthorAuthRequest, res: Response, next: N
 };
 
 export const updateUser = async (req: AuthorAuthRequest, res: Response, next: NextFunction) => {
-  const { name, email, phone, role, avatar } = req.body;
+  const { name, email, phone, role } = req.body;
   const { userId } = req.params;
 
-  let avatarUrl;
+  let avatar;
 
-  if (!avatar) {
-    avatarUrl =
-      "https://lwfiles.mycourse.app/64b5524f42f5698b2785b91e-public/avatars/thumbs/64c077e0557e37da3707bb92.jpg";
+  if (req.file) {
+    avatar = req.file.path;
   } else {
-    avatarUrl = avatar;
+    avatar =
+      "https://lwfiles.mycourse.app/64b5524f42f5698b2785b91e-public/avatars/thumbs/64c077e0557e37da3707bb92.jpg";
   }
 
   let session: ClientSession | null = null;
@@ -471,5 +471,30 @@ export const loadHistoriesUser = async (req: Request, res: Response, next: NextF
       const customError = new CustomErrorMessage(ERROR_GET_DATA_HISTORIES, 422);
       return next(customError);
     }
+  }
+};
+
+export const changePassword = async (req: AuthorAuthRequest, res: Response, next: NextFunction) => {
+  const { userId, oldPassword, newPassword } = req.body;
+
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Incorrect password" });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+    user.password = hashedPassword;
+    await user.save();
+
+    res.status(200).json({ message: "Password changed successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Error changing password" });
   }
 };
