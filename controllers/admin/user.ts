@@ -39,8 +39,8 @@ interface getUsersQuery {
 
 export const getUsers = async (req: AuthorAuthRequest, res: Response, next: NextFunction) => {
   const { _q } = req.query;
-  const dictCoursesOfUser: Record<string, any> = {}
-  const dictCourse: Record<string, any> = {}
+  const dictCoursesOfUser: Record<string, any> = {};
+  const dictCourse: Record<string, any> = {};
   try {
     const query: getUsersQuery = {};
     const orderQuery: any = {};
@@ -56,11 +56,11 @@ export const getUsers = async (req: AuthorAuthRequest, res: Response, next: Next
     const courseRes = await Course.find();
     const orderDetails = ordersRes.flatMap((order) => {
       return order.items.map((item: any) => ({
-        orderId: order._id, 
+        orderId: order._id,
         userId: order.user._id,
         userEmail: order.user.email,
         // ... other relevant order fields if needed
-    
+
         courseId: item._id,
         courseName: item.name,
         courseThumbnail: item.thumbnail,
@@ -73,56 +73,54 @@ export const getUsers = async (req: AuthorAuthRequest, res: Response, next: Next
     orderDetails.forEach((item) => {
       if (item.userId) {
         if (dictCoursesOfUser[item.userId]) {
-          dictCoursesOfUser[item.userId].push(item)
+          dictCoursesOfUser[item.userId].push(item);
         } else {
-          dictCoursesOfUser[item.userId] = [item]
+          dictCoursesOfUser[item.userId] = [item];
         }
       }
-    })
+    });
 
     // create dict course
     courseRes.forEach((item) => {
-      const currentKey = item._id.toString()
-      dictCourse[currentKey] = item
-    })
-
+      const currentKey = item._id.toString();
+      dictCourse[currentKey] = item;
+    });
 
     const users = await User.find(query).sort({ createdAt: -1 });
 
-    const result = []
+    const result = [];
     users.forEach((user) => {
-      const currentUserId = user._id.toString()
-      const listCoursesRes = []
-      const listCourse = dictCoursesOfUser[currentUserId]
-      if(listCourse) {
-        const listCourseId = listCourse.map((item) => item.courseId.toString())
-      const listCourseIdDistinct = [...new Set<string>(listCourseId)]
-      listCourseIdDistinct.forEach((courseId) => {
-        if(dictCourse[courseId]) {
-          listCoursesRes.push(dictCourse[courseId])
-        }
-      })
-      const item =  {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        avatar: user.avatar,
-        role: user.role,
-        phone: user.phone,
-        address: user.address,
-        payment: user.payment,
-        courses: listCoursesRes,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
-        lastLogin: user.lastLogin,
-        isDeleted: user.isDeleted,
-        statusName: enumData.UserStatus[user.status]?.name,
-        statusColor: enumData.UserStatus[user.status]?.color,
-        status: user.status,
-      };
-      result.push(item)
+      const currentUserId = user._id.toString();
+      const listCoursesRes = [];
+      const listCourse = dictCoursesOfUser[currentUserId];
+      if (listCourse) {
+        const listCourseId = listCourse.map((item) => item.courseId.toString());
+        const listCourseIdDistinct = [...new Set<string>(listCourseId)];
+        listCourseIdDistinct.forEach((courseId) => {
+          if (dictCourse[courseId]) {
+            listCoursesRes.push(dictCourse[courseId]);
+          }
+        });
+        const item = {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          avatar: user.avatar,
+          role: user.role,
+          phone: user.phone,
+          address: user.address,
+          payment: user.payment,
+          courses: listCoursesRes,
+          createdAt: user.createdAt,
+          updatedAt: user.updatedAt,
+          lastLogin: user.lastLogin,
+          isDeleted: user.isDeleted,
+          statusName: enumData.UserStatus[user.status]?.name,
+          statusColor: enumData.UserStatus[user.status]?.color,
+          status: user.status,
+        };
+        result.push(item);
       }
-
     });
 
     res.status(200).json({

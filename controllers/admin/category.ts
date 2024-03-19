@@ -21,9 +21,9 @@ export const getCategories = async (req: AuthorAuthRequest, res: Response, next:
 
   const query: GetCategoriesQuery = {};
   const currentUserRole = req.role;
-    if(currentUserRole && currentUserRole === enumData.UserType.Author.code) {
-      query.createdBy = new mongoose.Types.ObjectId(req.userId) as any;
-   }
+  if (currentUserRole && currentUserRole === enumData.UserType.Author.code) {
+    query.createdBy = new mongoose.Types.ObjectId(req.userId) as any;
+  }
   if (_q && typeof _q === "string") {
     query.$text = { $search: _q };
   }
@@ -74,7 +74,6 @@ export const getCategories = async (req: AuthorAuthRequest, res: Response, next:
 
 export const getAllCategories = async (req: Request, res: Response, next: NextFunction) => {
   try {
-
     const categories = await Category.find();
     res.status(200).json({
       message: "Fetch all categories sucessfully!",
@@ -111,7 +110,6 @@ export const getCategory = async (req: Request, res: Response, next: NextFunctio
 };
 
 export const postCategory = async (req: AuthorAuthRequest, res: Response, next: NextFunction) => {
- 
   let session: ClientSession | null = null;
   session = await mongoose.startSession();
   session.startTransaction();
@@ -138,8 +136,13 @@ export const postCategory = async (req: AuthorAuthRequest, res: Response, next: 
       throw validationError;
     }
 
-    const imageUrl = req.file ? req.file.path.replace("\\", "/") : "images/user-avatar.jpg";
-    const category = new Category({ name, cateImage: imageUrl, description, createdBy: req.userId });
+    const imageUrl = req.file ? req.file.path.replace("\\", "/") : "https://picsum.photos/200";
+    const category = new Category({
+      name,
+      cateImage: imageUrl,
+      description,
+      createdBy: req.userId,
+    });
     const categoryCreated = await category.save();
 
     await session.commitTransaction();
@@ -165,7 +168,7 @@ export const postCategory = async (req: AuthorAuthRequest, res: Response, next: 
 
 export const updateCategories = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { name, description, cateImage, cateSlug } = req.body;
+    const { name, description, cateSlug } = req.body;
 
     const { categoryId } = req.params;
 
@@ -186,7 +189,6 @@ export const updateCategories = async (req: Request, res: Response, next: NextFu
     updatedCategory.name = name;
     updatedCategory.description = description;
     updatedCategory.cateSlug = cateSlug;
-    updatedCategory.cateImage = cateImage;
 
     const response = await updatedCategory.save();
 
