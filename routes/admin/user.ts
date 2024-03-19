@@ -20,6 +20,8 @@ router.post(
   userController.postUser
 );
 
+router.post("/user/change-password", isAuth, isAdmin, userController.changePassword);
+
 router.patch("/user/approve", isAuth, isAdmin, userController.approveUser);
 
 router.put(

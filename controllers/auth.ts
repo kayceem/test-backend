@@ -278,7 +278,7 @@ export const adminLogin = async (req: Request, res: Response, next: NextFunction
       adminRole: userDoc.role,
     });
   } catch (error) {
-    console.log("error: ", error)
+    console.log("error: ", error);
 
     if (error instanceof CustomError) {
       return next(error);
@@ -317,7 +317,7 @@ export const adminSignupRequest = async (req: Request, res: Response, next: Next
     const currentYear = new Date().getFullYear();
     let username = `author_${currentYear}_${countNumberOfUser}`;
     let foundUserName = await User.findOne({ username });
-    while(foundUserName) {
+    while (foundUserName) {
       username = await coreHelper.getCodeDefault("author", User);
       foundUserName = await User.findOne({ username });
     }
@@ -648,4 +648,30 @@ export const facebookLogin = (req: Request, res: Response, next: NextFunction) =
         next(new CustomError("User Save", "Error saving user", 500));
       });
   })(req, res, next);
+};
+
+export const changePassword = async (req: Request, res: Response, next: NextFunction) => {
+  const { userId, oldPassword, newPassword } = req.body;
+
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Check if the old password is correct
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Incorrect password" });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+    user.password = hashedPassword;
+    await user.save();
+
+    res.status(200).json({ message: "Password changed successfully" });
+  } catch (error) {
+    next(error);
+  }
 };
