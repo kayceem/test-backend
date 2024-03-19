@@ -58,7 +58,9 @@ const orderSchema = new Schema<IOrder>(
         type: String,
       },
     },
-
+    couponCode: {
+      type: String,
+    },
     items: [
       {
         _id: {

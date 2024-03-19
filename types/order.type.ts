@@ -9,6 +9,7 @@ export interface IOrder extends IBaseSchema {
   note?: string;
   totalPrice?: number;
   user: IUser;
+  couponCode: string;
   items: ICourse[];
   status: string;
 }

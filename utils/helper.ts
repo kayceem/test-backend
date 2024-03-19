@@ -24,6 +24,8 @@ import { BACKEND_URL } from "../config/backend-domain";
 const configuration = new Configuration({
   apiKey: OPEN_AI_KEY,
 });
+import { COUPON_TYPES } from "../config/constant";
+import { ICoupon } from "../types/coupon.type";
 export const openai = new OpenAIApi(configuration);
 
 type AccentMap = Record<string, string>;
@@ -211,7 +213,6 @@ export const getProgressOfCourse = async (courseId: string, userId: string) => {
   };
 };
 
-
 export const getCoursesOrderByUserId = async (userId: string) => {
   const courses = await Order.find({
     "user._id": userId,
@@ -317,5 +318,59 @@ export const getCoursesOrderedByUserInfo = async (userId: string): Promise<ICour
       const customError = new CustomErrorMessage("Failed to fetch courses!", 422);
       throw customError;
     }
+  }
+};
+
+export const calculateTotalPrice = async (courseIdArray: string[]) => {
+  let totalPrice = 0;
+  try {
+    const courses = await Course.find({ _id: { $in: courseIdArray } }).select("finalPrice");
+
+    courses.forEach((course) => {
+      totalPrice += course.finalPrice;
+    });
+    return totalPrice;
+  } catch (error) {
+    throw new Error("Error calculating total price");
+  }
+};
+
+export const getMaxDiscountCoupon = (totalPrice: number, coupons: ICoupon[]) => {
+  let maxPercentDiscount = 0;
+  let maxFixedAmountDiscount = 0;
+  let maxPercentDiscountCoupon: ICoupon | null = null;
+  let maxFixedDiscountCoupon: ICoupon | null = null;
+
+  coupons.forEach((coupon) => {
+    const couponTypeIdString = String(coupon.couponTypeId);
+
+    if (couponTypeIdString === COUPON_TYPES.COUPON_TYPE_PERCENT) {
+      if (coupon.discountAmount > maxPercentDiscount) {
+        maxPercentDiscount = coupon.discountAmount;
+        maxPercentDiscountCoupon = coupon;
+      }
+    } else if (couponTypeIdString === COUPON_TYPES.COUPON_TYPE_FIXED_AMOUNT) {
+      if (coupon.discountAmount > maxFixedAmountDiscount) {
+        maxFixedAmountDiscount = coupon.discountAmount;
+        maxFixedDiscountCoupon = coupon;
+      }
+    }
+  });
+
+  if (maxPercentDiscount === 0) {
+    return maxFixedDiscountCoupon;
+  } else if (maxFixedAmountDiscount === 0) {
+    return maxPercentDiscountCoupon;
+  }
+
+  maxPercentDiscount = (totalPrice * maxPercentDiscount) / 100;
+
+  const percentDiscountedPrice = totalPrice - maxPercentDiscount;
+  const fixedAmountDiscountedPrice = totalPrice - maxFixedAmountDiscount;
+
+  if (percentDiscountedPrice < fixedAmountDiscountedPrice) {
+    return maxPercentDiscountCoupon;
+  } else {
+    return maxFixedDiscountCoupon;
   }
 };

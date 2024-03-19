@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { FRONTEND_URL } from "../../config/frontend-domain";
 import CustomError from "../../utils/error";
 import CustomErrorMessage from "../../utils/errorMessage";
+import Coupon from "../../models/Coupon";
 import moment from "moment";
 import querystring from "qs";
 import crypto from "crypto";
@@ -99,7 +100,13 @@ export const handleVnpayReturn = async (req: Request, res: Response, next: NextF
       const vnp_PayDate = vnp_Params["vnp_PayDate"] as string;
 
       const payDate = new Date(
-        `${vnp_PayDate.slice(0, 4)}-${vnp_PayDate.slice(4, 6)}-${vnp_PayDate.slice(6, 8)}T${vnp_PayDate.slice(8, 10)}:${vnp_PayDate.slice(10, 12)}:${vnp_PayDate.slice(12, 14)}.000Z`
+        `${vnp_PayDate.slice(0, 4)}-${vnp_PayDate.slice(4, 6)}-${vnp_PayDate.slice(
+          6,
+          8
+        )}T${vnp_PayDate.slice(8, 10)}:${vnp_PayDate.slice(10, 12)}:${vnp_PayDate.slice(
+          12,
+          14
+        )}.000Z`
       );
 
       const vnp_AmountUSD: number = vnp_AmountVND / 100 / 23000;
@@ -124,6 +131,16 @@ export const handleVnpayReturn = async (req: Request, res: Response, next: NextF
         );
 
         if (updatedOrder) {
+          const { couponCode, user } = updatedOrder;
+
+          if (couponCode !== null) {
+            const coupon = await Coupon.findOne({ code: couponCode });
+            if (coupon) {
+              coupon.usedBy.push(user._id);
+              await coupon.save();
+            }
+          }
+
           res.redirect(`${FRONTEND_URL}/order-completed?orderId=${orderId}`);
         } else {
           res.send("Error: Order not found");

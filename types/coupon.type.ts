@@ -6,6 +6,7 @@ export interface ICoupon extends IBaseSchema {
   description: string;
   discountAmount: number;
   couponTypeId: Schema.Types.ObjectId;
+  usedBy: Schema.Types.ObjectId[];
   dateStart: Date;
   dateEnd: Date;
 }

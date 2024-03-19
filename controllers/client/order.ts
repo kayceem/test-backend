@@ -31,7 +31,7 @@ export const getOrder = async (req: Request, res: Response, next: NextFunction) 
 };
 
 export const postOrder = async (req: Request, res: Response, next: NextFunction) => {
-  const { note, transaction, vatFee, items, user, totalPrice } = req.body;
+  const { note, transaction, vatFee, items, user, totalPrice, couponCode } = req.body;
 
   const status: string = totalPrice === 0 ? "Success" : "Pending";
 
@@ -49,6 +49,7 @@ export const postOrder = async (req: Request, res: Response, next: NextFunction)
       transaction: {
         method: transaction.method,
       },
+      couponCode,
       items: courses,
       user,
       status,
