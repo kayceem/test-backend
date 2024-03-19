@@ -20,7 +20,11 @@ import {
   UPDATE_SUCCESS,
 } from "../../config/constant";
 
-export const getCategoryBlog = async (req: AuthorAuthRequest, res: Response, next: NextFunction) => {
+export const getCategoryBlog = async (
+  req: AuthorAuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const searchTerm = (req.query._q as string) || "";
     const page = parseInt(req.query._page as string) || 1;
@@ -35,9 +39,9 @@ export const getCategoryBlog = async (req: AuthorAuthRequest, res: Response, nex
       ...(searchTerm ? { name: { $regex: searchTerm, $options: "i" } } : {}),
     };
     const currentUserRole = req.role;
-    if(currentUserRole && currentUserRole === enumData.UserType.Author.code) {
+    if (currentUserRole && currentUserRole === enumData.UserType.Author.code) {
       query.createdBy = new mongoose.Types.ObjectId(req.userId) as any;
-   }
+    }
     const total = await BlogCategory.countDocuments(query);
 
     const blogsCategories = await BlogCategory.find(query)
@@ -93,9 +97,11 @@ export const getCategoryById = async (req: Request, res: Response): Promise<void
 };
 
 export const createCategory = async (req: AuthorAuthRequest, res: Response, next: NextFunction) => {
-  const { name, description, cateImage } = req.body;
-  let session: ClientSession | null = null;
+  const { name, description } = req.body;
 
+  const imageUrl = req.file ? req.file.path.replace("\\", "/") : `https://picsum.photos/200`;
+  
+  let session: ClientSession | null = null;
   session = await mongoose.startSession();
   session.startTransaction();
 
@@ -105,7 +111,7 @@ export const createCategory = async (req: AuthorAuthRequest, res: Response, next
     const blogCategory = new BlogCategory({
       name,
       description,
-      cateImage,
+      cateImage: imageUrl,
       code: categoryBlogCode,
       createdBy: req.userId,
     });
