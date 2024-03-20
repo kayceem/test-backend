@@ -14,6 +14,11 @@ const noteSchema = new Schema<INoteCourse>(
       ref: "Lesson",
       required: true,
     },
+    courseId: {
+      type: Schema.Types.ObjectId,
+      ref: "Course",
+      required: true,
+    },
     content: {
       type: String,
       required: true,

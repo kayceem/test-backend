@@ -13,4 +13,6 @@ router.get("/lesson/:lessonId", isAuth, lessonController.getLesson);
 
 router.post("/lesson/create",isAuth, uploadMiddleware.array("images[]"), lessonController.postLesson);
 
+
+
 export default router;
