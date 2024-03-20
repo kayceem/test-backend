@@ -25,6 +25,15 @@ export const getLessonsBySectionId = async (req: Request, res: Response, next: N
   }
 };
 
+export const getAllLessons = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const lessons = await Lesson.find();
+    res.status(200).json({ lessons });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const getLessonsBySectionIdEnrolledCourse = async (
   req: Request,
   res: Response,
@@ -108,4 +117,3 @@ export const updateLessonDoneByUser = async (req: Request, res: Response, next: 
     }
   }
 };
-

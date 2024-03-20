@@ -26,10 +26,11 @@ export const getNoteByUserId = async (req: Request, res: Response) => {
 // CreateNote
 export const createNoteForLesson = async (req: AuthorAuthRequest, res: Response) => {
   const { lessonId } = req.params;
-  const { userId, content, videoMinute } = req.body;
+  const { userId, content, videoMinute, courseId } = req.body;
 
   try {
     const newNote = new Note({
+      courseId,
       userId,
       lessonId,
       content,

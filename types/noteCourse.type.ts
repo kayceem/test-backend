@@ -5,6 +5,7 @@ export interface INoteCourse extends IBaseSchema {
   _id: string;
   userId: Types.ObjectId;
   lessonId: Types.ObjectId;
+  courseId: Types.ObjectId;
   content: string;
   videoMinute: number;
 }

@@ -139,3 +139,4 @@ export const getNotesByLessonId = async (req: Request, res: Response) => {
     res.status(500).json({ error: (error as Error).message });
   }
 };
+  
