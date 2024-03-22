@@ -87,3 +87,33 @@ export const postSection = async (req: Request, res: Response, next: NextFunctio
     }
   }
 };
+
+export const updateSection = async (req: Request, res: Response, next: NextFunction) => {
+  const { courseId, name, access, description } = req.body;
+
+  const { sectionId } = req.params;
+
+  try {
+    const updatedSection = await Section.findByIdAndUpdate(
+      sectionId,
+      { courseId, name, access, description },
+      { new: true }
+    );
+
+    if (!updatedSection) {
+      return res.status(404).json({ message: "Section not found" });
+    }
+
+    res.json({
+      message: "Update section successfully!",
+      Section: updatedSection,
+    });
+  } catch (error) {
+    if (error instanceof CustomError) {
+      return next(error);
+    } else {
+      const customError = new CustomErrorMessage("Failed to update section!", 422);
+      return next(customError);
+    }
+  }
+};

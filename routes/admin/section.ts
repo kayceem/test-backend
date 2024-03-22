@@ -11,6 +11,13 @@ router.get("/course/:courseId", isAuth, sectionController.getSectionsByCourseId)
 
 router.get("/section/:sectionId", isAuth, sectionController.getSection);
 
-router.post("/section/create", uploadMiddleware.array("images[]"), isAuth, sectionController.postSection);
+router.post(
+  "/section/create",
+  uploadMiddleware.array("images[]"),
+  isAuth,
+  sectionController.postSection
+);
+
+router.put("/section/update/:sectionId", isAuth, sectionController.updateSection);
 
 export default router;
