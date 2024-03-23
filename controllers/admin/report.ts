@@ -16,6 +16,7 @@ import { IIsLessonDone, ILesson } from "../../types/lesson.type";
 import moment from "moment";
 import Wishlist from "../../models/Wishlist";
 import Review from "../../models/Review";
+import ObjectId from 'mongoose';
 
 interface UserReportItem {
   _id: string;
@@ -35,6 +36,7 @@ interface UserReportItem {
 interface CourseReportItem {
   _id: string;
   name: string;
+  author: string;
   learners: number;
   avgStudyTime: number;
   views: number;
@@ -322,10 +324,8 @@ export const getNewUserSignupsList = async (req: Request, res: Response, next: N
 export const getReportsUserProgress = async (req: Request, res: Response, next: NextFunction) => {
   const dateStart = req.query.dateStart as string; // Replace with your start date
   const dateEnd = req.query.dateEnd as string;   // Replace with your end date
-  
+  const authorId = req.query.authorId as string;
   try {
-
-
     
     // Query
     const orderQuery: any = {};
@@ -347,15 +347,31 @@ export const getReportsUserProgress = async (req: Request, res: Response, next: 
         $gte: moment(dateStart, 'DD/MM/YYYY').toDate(), 
         $lte: moment(dateEnd, 'DD/MM/YYYY').toDate()
     }
+
+    userQuery.createdAt = {
+      $gte: moment(dateStart, 'DD/MM/YYYY').toDate(), 
+      $lte: moment(dateEnd, 'DD/MM/YYYY').toDate()
+    }
+
+    
+    }
+
+    if(authorId) {
+     
     }
 
     // TODO: SHOULD SEARCH FOR USER HAVE ROLE (USER - STUDENT!)
     const users = await User.find({
-      role: 'USER', // TODO LATER!
+      role: enumData.UserType.User.code, // TODO LATER!
+      ...userQuery
+    }).sort({
+      createdAt: -1
     });
     const result: UserReportItem[] = [];
 
     const dictCoursesOfUser: Record<string, any> = {}
+    const dictUsersOfAuthor: Record<string, any> = {}
+    const dictCourse: Record<string, any> = {}
     const dictOrdersOfUser: Record<string, any> = {}
     const dictLessonsDoneOfUser: Record<string, any> = {}
     const dictSectionOfCourse: Record<string, any> = {}
@@ -364,45 +380,11 @@ export const getReportsUserProgress = async (req: Request, res: Response, next: 
     // dict lessons of course
 
     const lessonDoneRes = await IsLessonDone.find().populate('lessonId');
-    const courseRes = await Course.find();
+    const courseRes = await Course.find().populate('createdBy');
     const sectionsRes = await Section.find();
     const lessonsRes = await Lesson.find();
     const ordersRes = await Order.find(orderQuery);
-    const orderDetails = ordersRes.flatMap((order) => {
-      return order.items.map((item: any) => ({
-        orderId: order._id, 
-        userId: order.user._id,
-        userEmail: order.user.email,
-        // ... other relevant order fields if needed
-    
-        courseId: item._id,
-        courseName: item.name,
-        courseThumbnail: item.thumbnail,
-        coursePrice: item.finalPrice,
-        reviewed: item.reviewed,
-      }));
-    });
-    // create dict courses of user
-    orderDetails.forEach((item) => {
-      if (item.userId) {
-        if (dictCoursesOfUser[item.userId]) {
-          dictCoursesOfUser[item.userId].push(item)
-        } else {
-          dictCoursesOfUser[item.userId] = [item]
-        }
-      }
-    })
-    // create dict orders of user
-    ordersRes.forEach((item) => {
-      if(item.user) {
-        const currentKey = item.user._id.toString();
-        if (dictOrdersOfUser[currentKey]) {
-          dictOrdersOfUser[currentKey].push(item)
-        } else {
-          dictOrdersOfUser[currentKey] = [item]
-        }
-      }
-    })
+   
     // create dict lessons of section
     lessonsRes.forEach((item) => {
       const currentKey = item.sectionId.toString()
@@ -451,11 +433,64 @@ export const getReportsUserProgress = async (req: Request, res: Response, next: 
           })
 
       })
-        
+      dictCourse[courseItem._id.toString()] = courseItem
     })
-     
+    
+    const orderDetails = ordersRes.flatMap((order) => {
+      return order.items.map((item: any) => ({
+        orderId: order._id, 
+        userId: order.user._id,
+        userEmail: order.user.email,
+        // ... other relevant order fields if needed
+    
+        courseId: item._id,
+        courseName: item.name,
+        courseThumbnail: item.thumbnail,
+        coursePrice: item.finalPrice,
+        reviewed: item.reviewed,
+        
+      }));
+    });
 
-    for (const user of users) {
+    // create dict courses of user
+    orderDetails.forEach((item) => {
+      if (item.userId) {
+        if (dictCoursesOfUser[item.userId]) {
+          dictCoursesOfUser[item.userId].push(item)
+        } else {
+          dictCoursesOfUser[item.userId] = [item]
+        }
+        const currentAuthorId = dictCourse[item.courseId.toString()]?.createdBy?._id?.toString();
+        if(currentAuthorId) {
+          if(dictUsersOfAuthor[currentAuthorId]) {
+            dictUsersOfAuthor[currentAuthorId].push(item.userId.toString())
+          }else {
+            dictUsersOfAuthor[currentAuthorId] = [item.userId.toString()]
+          }
+        }
+        // create dict for author
+
+      }
+    })
+    // create dict orders of user
+    ordersRes.forEach((item) => {
+      if(item.user) {
+        const currentKey = item.user._id.toString();
+        if (dictOrdersOfUser[currentKey]) {
+          dictOrdersOfUser[currentKey].push(item)
+        } else {
+          dictOrdersOfUser[currentKey] = [item]
+        }
+      }
+    })
+
+    let resUser = users;
+    if(authorId) {
+      const listUserIdOfCurrentAuthor = dictUsersOfAuthor[authorId]
+      resUser = users.filter((item) => listUserIdOfCurrentAuthor.includes(item._id.toString()))
+    }
+
+    for (const user of resUser) {
       // current key
       const currentUserId = user?._id.toString()
       // List orders
@@ -534,6 +569,7 @@ export const getReportsCourseInsights = async (req: Request, res: Response, next
 
   const dateStart = req.query.dateStart as string; // Replace with your start date
   const dateEnd = req.query.dateEnd as string;   // Replace with your end date
+  const authorId = req.query.authorId as string;   // Replace with your end date
 
   try {
     // SHOULD BE OPIMIZE PERFORMANCE FOR WEBSITE ABOUT REPORT!
@@ -560,7 +596,11 @@ export const getReportsCourseInsights = async (req: Request, res: Response, next
     }
     }
 
-    const courses = await Course.find();
+    if(authorId) {
+      courseQuery.createdBy = authorId
+    }
+
+    const courses = await Course.find(courseQuery).populate('createdBy');
 
     const results: CourseReportItem[] = [];
 
@@ -733,13 +773,18 @@ export const getReportsCourseInsights = async (req: Request, res: Response, next
         // totalStudyTime += totalVideosLengthDone;
       }
 
-      const avgStudyTime =
-      listUsersOfCurrentCourse.length === 0 ? 0 : totalStudyTime / listUsersOfCurrentCourse.length;
-
-      const avgRatings = listReviewsOfCurrentCourse.reduce((total, review) => total + review.ratingStar, 0) / listReviewsOfCurrentCourse.length
-      const saleOfCurrentCourse = listUsersOfCurrentCourse.reduce((total, user) => total + user.coursePrice, 0);
+      let avgStudyTime = 0;
+      if(listUsersOfCurrentCourse.length > 0) {
+        avgStudyTime = totalStudyTime / listUsersOfCurrentCourse.length;
+      }
+      let avgRatings = 0;
+      if(listReviewsOfCurrentCourse.length > 0) {
+        avgRatings = listReviewsOfCurrentCourse.reduce((total, review) => total + (review?.ratingStar || 0), 0) / listReviewsOfCurrentCourse.length
+      }
+      const saleOfCurrentCourse = listUsersOfCurrentCourse.reduce((total, user) => total + (user?.coursePrice || 0), 0);
       const courseReportItem: CourseReportItem = {
         _id: course._id,
+        author: course?.createdBy?.name,
         name: course.name,
         learners: listUsersOfCurrentCourse.length,
         avgStudyTime: avgStudyTime, // TODO LATER
