@@ -98,13 +98,22 @@ export const postLesson = async (req: Request, res: Response, next: NextFunction
 };
 
 export const updateLesson = async (req: Request, res: Response, next: NextFunction) => {
-  const { description, content, access, type, videoLength, courseId } = req.body;
+  const { description, content, access, type, videoLength, courseId, name } = req.body;
+
   const { lessonId } = req.params;
 
   try {
     const updatedLesson = await Lesson.findByIdAndUpdate(
       lessonId,
-      { description, content, access, type, videoLength, courseId },
+      {
+        name,
+        description,
+        content,
+        access,
+        type,
+        videoLength,
+        courseId: courseId,
+      },
       { new: true }
     );
 
@@ -112,7 +121,7 @@ export const updateLesson = async (req: Request, res: Response, next: NextFuncti
       return res.status(404).json({ message: "Lesson not found" });
     }
 
-    res.json({
+    res.status(200).json({
       message: "Update lesson successfully!",
       lesson: updatedLesson,
     });

@@ -18,6 +18,11 @@ router.post(
   lessonController.postLesson
 );
 
-router.put("/lesson/update/:lessonId", isAuth, lessonController.updateLesson);
+router.put(
+  "/lesson/update/:lessonId",
+  isAuth,
+  uploadMiddleware.array("images[]"),
+  lessonController.updateLesson
+);
 
 export default router;
