@@ -65,7 +65,8 @@ export const getLesson = async (req: Request, res: Response, next: NextFunction)
 
 export const postLesson = async (req: Request, res: Response, next: NextFunction) => {
   // Bổ sung truyền xuống có thêm courseId
-  const { sectionId, name, icon, description, type, content, access, videoLength, courseId } = req.body;
+  const { sectionId, name, icon, description, type, content, access, videoLength, courseId } =
+    req.body;
 
   try {
     const lesson = new Lesson({
@@ -77,7 +78,7 @@ export const postLesson = async (req: Request, res: Response, next: NextFunction
       access,
       type,
       videoLength,
-      courseId: courseId
+      courseId: courseId,
     });
 
     const response = await lesson.save();
@@ -91,6 +92,35 @@ export const postLesson = async (req: Request, res: Response, next: NextFunction
       return next(error);
     } else {
       const customError = new CustomErrorMessage("Failed to post lesson!", 422);
+      return next(customError);
+    }
+  }
+};
+
+export const updateLesson = async (req: Request, res: Response, next: NextFunction) => {
+  const { description, content, access, type, videoLength, courseId } = req.body;
+  const { lessonId } = req.params;
+
+  try {
+    const updatedLesson = await Lesson.findByIdAndUpdate(
+      lessonId,
+      { description, content, access, type, videoLength, courseId },
+      { new: true }
+    );
+
+    if (!updatedLesson) {
+      return res.status(404).json({ message: "Lesson not found" });
+    }
+
+    res.json({
+      message: "Update lesson successfully!",
+      lesson: updatedLesson,
+    });
+  } catch (error) {
+    if (error instanceof CustomError) {
+      return next(error);
+    } else {
+      const customError = new CustomErrorMessage("Failed to update lesson!", 422);
       return next(customError);
     }
   }

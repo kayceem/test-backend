@@ -11,8 +11,13 @@ router.get("/section/:sectionId", isAuth, lessonController.getLessonsBySectionId
 
 router.get("/lesson/:lessonId", isAuth, lessonController.getLesson);
 
-router.post("/lesson/create",isAuth, uploadMiddleware.array("images[]"), lessonController.postLesson);
+router.post(
+  "/lesson/create",
+  isAuth,
+  uploadMiddleware.array("images[]"),
+  lessonController.postLesson
+);
 
-
+router.put("/lesson/update/:lessonId", isAuth, lessonController.updateLesson);
 
 export default router;
