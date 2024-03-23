@@ -9,7 +9,10 @@ import ActionLog from "../../models/ActionLog";
 // Get all note
 export const getAllNote = async (req: AuthorAuthRequest, res: Response) => {
   try {
-    const notes = await Note.find().populate("userId", "name avatar").populate("lessonId", "name");
+    const notes = await Note.find()
+      .populate("userId", "name avatar")
+      .populate("lessonId", "name")
+      .populate("courseId", "name");
     res.status(200).json({ notes });
   } catch (error: unknown) {
     res.status(500).json({ error: (error as Error).message });
@@ -61,7 +64,7 @@ export const createNoteForLesson = async (req: AuthorAuthRequest, res: Response)
     await ActionLog.collection.insertOne(historyItem.toObject(), { session });
     await session.commitTransaction();
     session.endSession();
-    
+
     const savedNote = await newNote.save();
 
     res.status(201).json({
@@ -139,4 +142,3 @@ export const getNotesByLessonId = async (req: Request, res: Response) => {
     res.status(500).json({ error: (error as Error).message });
   }
 };
-  
