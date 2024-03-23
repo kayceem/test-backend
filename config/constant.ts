@@ -1,10 +1,10 @@
+
 const UNSPLASH_API_KEY = "uq_ad2eH1y4LjziHL50dLDv8h1esiKtEUNejDcwEOgw";
 const YOUTUBE_API_KEY = "AIzaSyBhd4f7KxGoXeR5HHXUZeYm5e5JHmS35Ws";
 const OPEN_AI_KEY = "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";
 // Mongodb URI remote
-// export const MONGODB_URI = "mongodb://localhost:27017//e_learning";
-export const MONGODB_URI =
-  "mongodb+srv://nhatsang0101:48nJ1AfSQzAeKHoC@cluster0.aup360f.mongodb.net/e_learning";
+  // Mongodb URI remote
+export const MONGODB_URI = process.env.MONGODB_URI;
 export const PWD_SALT_ROUNDS = 12;
 export const ERROR_NOT_FOUND_DATA = "Error! Cannot found data";
 export const ERROR_GET_DATA = "Failed to fetch data";

@@ -352,7 +352,6 @@ export const getReportsUserProgress = async (req: Request, res: Response, next: 
       $gte: moment(dateStart, 'DD/MM/YYYY').toDate(), 
       $lte: moment(dateEnd, 'DD/MM/YYYY').toDate()
     }
-
     
     }
 

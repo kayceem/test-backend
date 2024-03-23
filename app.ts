@@ -1,3 +1,5 @@
+import dotenv from 'dotenv';
+dotenv.config(); 
 import express, { NextFunction, Response, Request } from "express";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
@@ -19,6 +21,8 @@ import {
   ServerToClientEvents,
   SocketData,
 } from "./types/socket.type";
+// Likely your main server file or an initialization file
+
 import { runRon } from "./cron";
 const app = express();
 
