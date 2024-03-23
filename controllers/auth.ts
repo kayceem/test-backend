@@ -280,7 +280,7 @@ export const adminLogin = async (req: Request, res: Response, next: NextFunction
   } catch (error) {
     console.log("error: ", error);
 
-    if (error instanceof CustomError) {
+    if (error) {
       return next(error);
     } else {
       const customError = new CustomErrorMessage("Internal Server Error", 500);
