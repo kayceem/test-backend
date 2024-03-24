@@ -174,13 +174,20 @@ export const getCourses = async (req: Request, res: Response, next: NextFunction
 
     let courseIdOfUserList: string[] = [];
     if (typeof userId === "string" && userId.trim() !== "") {
-      const listCourseOfUser  = dictCoursesOfUser[userId]
-      const listCourseIfOfUser = listCourseOfUser.map((course: any) => course.courseId.toString())
-      courseIdOfUserList = [... new Set<string>(listCourseIfOfUser)];
+      const listCourseOfUser  = dictCoursesOfUser[userId] ?? []
+      let listCourseIfOfUser = []
+      if(listCourseIfOfUser.length > 0) {
+        listCourseIfOfUser = listCourseOfUser.map((course: any) => course.courseId.toString())
+      }
+      if(listCourseOfUser.length > 0) {
+        courseIdOfUserList = [... new Set<string>(listCourseIfOfUser)];
+      }else {
+        courseIdOfUserList = [];
+      }
     }
 
     let result: Array<ICourse & { isBought: boolean }> = [];
-
+    // FIX BUG HERE LATER!
     for (const course of courses) {
       const currentCourseId = course._id.toString();
       const courseItem = {
