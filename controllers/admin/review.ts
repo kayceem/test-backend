@@ -48,13 +48,25 @@ export const getReviews = async (req: AuthorAuthRequest, res: Response, next: Ne
       .skip(skip)
       .limit(limit);
 
+    const reviewsWithReplies = await Promise.all(
+      reviews.map(async (review) => {
+        const replyCount = await ReviewReply.countDocuments({ reviewId: review._id });
+        const hasReplies = replyCount > 0;
+        return {
+          ...review.toObject(),
+          hasReplies,
+          replyCount,
+        };
+      })
+    );
+
     res.status(200).json({
       message: GET_SUCCESS,
       total,
       page,
       pages: Math.ceil(total / limit),
       limit,
-      reviews,
+      reviews: reviewsWithReplies,
     });
   } catch (error) {
     if (error instanceof CustomError) {
