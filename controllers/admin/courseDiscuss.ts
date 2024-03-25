@@ -19,8 +19,17 @@ import ActionLog from "../../models/ActionLog";
 import { session } from "passport";
 import Course from "../../models/Course";
 
-export const getAllDiscurdCourse = async (req: Request, res: Response) => {
+export const getAllDiscussCourse = async (req: AuthorAuthRequest, res: Response) => {
   try {
+
+    let listCourseIdOfCurrentAuthor = [];
+    if(req.userId && req.role === enumData.UserType.Author.code){
+      const listCourseOfCurrentAuthor = await Course.find({
+        createdBy: req.userId
+      })
+      listCourseIdOfCurrentAuthor = listCourseOfCurrentAuthor.map((course) => course._id);
+    }
+
     const discuss = await CourseDiscuss.find({ isDeleted: false })
       .sort({ createdAt: -1 })
       .populate("userId", "name")
@@ -29,7 +38,14 @@ export const getAllDiscurdCourse = async (req: Request, res: Response) => {
         populate: { path: "userId", select: "name avatar" },
       });
 
-    res.json({ discuss });
+      const discussRes = discuss.filter((discuss: any) => {
+        if(req.userId && req.role === enumData.UserType.Author.code){
+          return listCourseIdOfCurrentAuthor.includes(discuss.courseId.toString());
+        }
+        return true;
+      })
+
+    res.json({ discuss: discussRes });
   } catch (error) {
     const errorMessage = (error as Error).message;
     res.status(500).json({ error: errorMessage });
