@@ -5,7 +5,7 @@ import isAuth from "../../middleware/is-auth";
 
 const router = Router();
 
-router.get("/getAll", isAuth, subscibeController.getAllSubscribe);
+router.get("/getAll", subscibeController.getAllSubscribe);
 
 router.get("/getSubriceById/:id", isAuth, subscibeController.getSubscriceById);
 
