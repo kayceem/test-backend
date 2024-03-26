@@ -179,16 +179,24 @@ export const postCourse = async (req: AuthorAuthRequest, res: Response, next: Ne
     description,
     level,
     categoryId,
-    userId,
     courseSlug,
     willLearns,
     subTitle,
+    views,
+    tags,
+    requirements,
   } = req.body;
-  // Create transaction to make sure data intergrity
+
   let session: ClientSession | null = null;
+
+  session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
-    session = await mongoose.startSession();
-    session.startTransaction();
+    if (price < 0 || finalPrice < 0 || views < 0) {
+      const customError = new CustomErrorMessage(ERROR_CREATE_DATA, 400);
+      return next(customError);
+    }
 
     const courseCode = await coreHelper.getCodeDefault("COURSE", Course);
 
@@ -201,37 +209,34 @@ export const postCourse = async (req: AuthorAuthRequest, res: Response, next: Ne
       finalPrice,
       description,
       level,
+      userId: req.userId,
       courseSlug,
       categoryId,
-      userId,
       willLearns,
       subTitle,
+      tags,
+      views,
+      requirements,
       createdBy: req.userId,
     });
 
-    const courseRes = await course.save({
-      session: session,
-    });
+    const courseRes = await course.save();
 
     const historyItem = new ActionLog({
       courseId: courseRes._id,
       type: enumData.ActionLogEnType.Create.code,
-      createdBy: new mongoose.Types.ObjectId((req as any).userId) as any,
+      createdBy: new mongoose.Types.ObjectId(req.userId),
       functionType: "COURSE",
-      description: `User [${(req as any).username}] has [${
-        enumData.ActionLogEnType.Create.name
-      }] Course`,
+      description: `User [${req.username}] has [${enumData.ActionLogEnType.Create.name}] Course`,
     });
 
-    await historyItem.save({
-      session: session,
-    });
+    await ActionLog.collection.insertOne(historyItem.toObject(), { session });
 
     await session.commitTransaction();
     session.endSession();
+
     res.json({
-      message: "Create course successfully!",
-      course: courseRes,
+      message: CREATE_SUCCESS,
     });
   } catch (error) {
     if (session) {
@@ -242,7 +247,7 @@ export const postCourse = async (req: AuthorAuthRequest, res: Response, next: Ne
     if (error instanceof CustomError) {
       return next(error);
     } else {
-      const customError = new CustomErrorMessage("Failed to create courses!", 422);
+      const customError = new CustomErrorMessage(ERROR_CREATE_DATA, 422);
       return next(customError);
     }
   }
