@@ -22,7 +22,9 @@ import BLog from "../../models/Blog";
 
 export const getAllBlogComments = async (req: Request, res: Response): Promise<void> => {
   try {
-    const comments = await BlogComment.find({ isDeleted: false }).sort({ createdAt: -1 });
+    const comments = await BlogComment.find({ isDeleted: false })
+      .sort({ createdAt: -1 })
+      .populate("blogId", "title");
     res.json({ comments });
   } catch (err) {
     res
@@ -64,19 +66,19 @@ export const getCommentsBlog = async (
         populate: { path: "userId", select: "name avatar" },
       });
 
-      let listBlogIdOfCurrentAuthor = [];
-      if(req.userId && req.role === enumData.UserType.Author.code){
-        const listBlogOfCurrentAuthor = await BLog.find({
-          createdBy: req.userId
-        })
-        listBlogIdOfCurrentAuthor = listBlogOfCurrentAuthor.map((blog) => blog._id);
+    let listBlogIdOfCurrentAuthor = [];
+    if (req.userId && req.role === enumData.UserType.Author.code) {
+      const listBlogOfCurrentAuthor = await BLog.find({
+        createdBy: req.userId,
+      });
+      listBlogIdOfCurrentAuthor = listBlogOfCurrentAuthor.map((blog) => blog._id);
+    }
+    const blogCommentsRes = comments.filter((blogCommentItem: any) => {
+      if (listBlogIdOfCurrentAuthor.length > 0) {
+        return listBlogIdOfCurrentAuthor.includes(blogCommentItem?.blogId?.toString());
       }
-      const blogCommentsRes = comments.filter((blogCommentItem: any) => {
-        if (listBlogIdOfCurrentAuthor.length > 0) {
-          return listBlogIdOfCurrentAuthor.includes(blogCommentItem?.blogId?.toString());
-        }
-        return true;
-      })
+      return true;
+    });
 
     res.status(200).json({
       message: GET_SUCCESS,
