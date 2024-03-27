@@ -21,12 +21,11 @@ import Course from "../../models/Course";
 
 export const getAllDiscussCourse = async (req: AuthorAuthRequest, res: Response) => {
   try {
-
     let listCourseIdOfCurrentAuthor = [];
-    if(req.userId && req.role === enumData.UserType.Author.code){
+    if (req.userId && req.role === enumData.UserType.Author.code) {
       const listCourseOfCurrentAuthor = await Course.find({
-        createdBy: req.userId
-      })
+        createdBy: req.userId,
+      });
       listCourseIdOfCurrentAuthor = listCourseOfCurrentAuthor.map((course) => course._id);
     }
 
@@ -38,12 +37,12 @@ export const getAllDiscussCourse = async (req: AuthorAuthRequest, res: Response)
         populate: { path: "userId", select: "name avatar" },
       });
 
-      const discussRes = discuss.filter((discuss: any) => {
-        if(req.userId && req.role === enumData.UserType.Author.code){
-          return listCourseIdOfCurrentAuthor.includes(discuss.courseId.toString());
-        }
-        return true;
-      })
+    const discussRes = discuss.filter((discuss: any) => {
+      if (req.userId && req.role === enumData.UserType.Author.code) {
+        return listCourseIdOfCurrentAuthor.includes(discuss.courseId.toString());
+      }
+      return true;
+    });
 
     res.json({ discuss: discussRes });
   } catch (error) {
@@ -67,14 +66,13 @@ export const getDiscuss = async (req: AuthorAuthRequest, res: Response) => {
     };
 
     if (req.role && req.role === enumData.UserType.Author.code) {
-
-        const listCourseOfCurrentUser = await Course.find({
-          createdBy: req.userId
-        })
-        const listCourseIdOfCurrentUser = listCourseOfCurrentUser.map((course) => course._id);
-        query.courseId = {
-          $in: listCourseIdOfCurrentUser
-        }
+      const listCourseOfCurrentUser = await Course.find({
+        createdBy: req.userId,
+      });
+      const listCourseIdOfCurrentUser = listCourseOfCurrentUser.map((course) => course._id);
+      query.courseId = {
+        $in: listCourseIdOfCurrentUser,
+      };
       // query.createdBy = new mongoose.Types.ObjectId(req.userId) as any;
     }
 
@@ -83,7 +81,9 @@ export const getDiscuss = async (req: AuthorAuthRequest, res: Response) => {
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
-      .populate("userId", "name avatar");
+      .populate("userId", "name avatar")
+      .populate("lessonId", "name")
+      .populate("courseId", "name");
 
     res.status(200).json({
       message: "Fetch data successfully",
