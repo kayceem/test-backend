@@ -40,6 +40,11 @@ export interface ICourseDetail {
     name: string;
     avatar: string;
   };
+  authorId?: {
+    _id: string;
+    name: string;
+    avatar: string;
+  };
   courseSlug: string;
   level: string;
   sections: number;
@@ -50,4 +55,9 @@ export interface ICourseDetail {
   avgRatingStars: number;
   createdAt: Date;
   updatedAt: Date;
+  createdBy?: {
+    _id?: string;
+    name?: string;
+    avatar?: string;
+  }
 }
