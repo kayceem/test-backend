@@ -10,11 +10,14 @@ export const getAllBlog = async (req: Request, res: Response, next: NextFunction
   const skip = (page - 1) * limit;
   const author = req.query.author as string;
   const categoryId = req.query.categoryId as string;
+  const title = req.query.title as string;
 
   try {
     const blogs = await Blog.find({
       ...(author ? { author: author } : {}),
       ...(categoryId ? { categoryId: categoryId } : {}),
+      ...(author ? { author: { $regex: author, $options: "i" } } : {}),
+      ...(title ? { title: { $regex: title, $options: "i" } } : {}),
       isDeleted: { $ne: true },
     })
       .populate("categoryId", "name")
