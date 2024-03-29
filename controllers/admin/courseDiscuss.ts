@@ -63,6 +63,7 @@ export const getDiscuss = async (req: AuthorAuthRequest, res: Response) => {
       ...(statusFilter === "active" ? { isDeleted: false } : {}),
       ...(statusFilter === "inactive" ? { isDeleted: true } : {}),
       ...(searchTerm ? { name: { $regex: searchTerm, $options: "i" } } : {}),
+      
     };
 
     if (req.role && req.role === enumData.UserType.Author.code) {
