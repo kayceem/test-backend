@@ -20,6 +20,7 @@ import commentsRouter from "../routes/client/commentsBlogs";
 import noteRouter from "../routes/client/noteCourse";
 import disscussRouter from "../routes/client/discussCourse";
 import subscribe from "../routes/client/subscribe";
+import isUserAuth from "../middleware/is-user-auth";
 
 const router = Router();
 
@@ -34,7 +35,7 @@ const router = Router();
 //       })
 // });
 
-router.use("/courses", courseRouter);
+router.use("/courses",isUserAuth, courseRouter);
 
 router.use("/categories", categoryRouter);
 

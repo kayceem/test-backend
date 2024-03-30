@@ -14,6 +14,7 @@ import { getCoursesOrderedByUserInfo } from "../../utils/helper";
 import CustomError from "../../utils/error";
 import CustomErrorMessage from "../../utils/errorMessage";
 import Review from "../../models/Review";
+import { AuthorAuthRequest } from "../../middleware/is-auth";
 
 interface QueryParameters {
   _q?: string;
@@ -109,9 +110,9 @@ const buildQuery = (req: Request): CourseQuery => {
   return query;
 };
 
-export const getCourses = async (req: Request, res: Response, next: NextFunction) => {
-  const { _limit, _sort, _page, userId } = req.query;
-
+export const getCourses = async (req: AuthorAuthRequest, res: Response, next: NextFunction) => {
+  const { _limit, _sort, _page } = req.query;
+  const userId = req.userId;
   let limit = parseInt(_limit as string);
   let page = parseInt(_page as string);
 
@@ -202,7 +203,7 @@ export const getCourses = async (req: Request, res: Response, next: NextFunction
     if (typeof userId === "string" && userId.trim() !== "") {
       const listCourseOfUser = dictCoursesOfUser[userId] ?? [];
       let listCourseIfOfUser = [];
-      if (listCourseIfOfUser.length > 0) {
+      if (listCourseOfUser.length > 0) {
         listCourseIfOfUser = listCourseOfUser.map((course: any) => course.courseId.toString());
       }
       if (listCourseOfUser.length > 0) {
