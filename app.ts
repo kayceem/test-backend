@@ -110,5 +110,4 @@ export { io };
 // Auto run every monday at 00:00
 cron.schedule("0 0 0 * * 1", function () {
   console.log("This task runs every monday at 00:00");
-  console.log("test hello world!");
 });
