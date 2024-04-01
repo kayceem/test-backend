@@ -15,7 +15,11 @@ import CustomError from "../../utils/error";
 import CustomErrorMessage from "../../utils/errorMessage";
 import Review from "../../models/Review";
 import { AuthorAuthRequest } from "../../middleware/is-auth";
-
+import { UserAuthRequest } from "../../middleware/is-user-auth";
+import jwt, { JwtPayload } from "jsonwebtoken";
+interface DecodedToken extends JwtPayload {
+  userId: string;
+}
 interface QueryParameters {
   _q?: string;
   _min?: string;
@@ -110,9 +114,20 @@ const buildQuery = (req: Request): CourseQuery => {
   return query;
 };
 
-export const getCourses = async (req: AuthorAuthRequest, res: Response, next: NextFunction) => {
+export const getCourses = async (req: Request, res: Response, next: NextFunction) => {
   const { _limit, _sort, _page } = req.query;
-  const userId = req.userId;
+
+  const currentUserRole = req.headers.role;
+  let userId = "";
+  if(currentUserRole !== "client") {
+    // Get userId when user login
+    const authorizationHeader = req.headers.authorization;
+    const tokenArray = authorizationHeader.split(" ");
+    const token = tokenArray[1];
+    // const userId = req.userId;
+    const decodedToken: DecodedToken =  jwt.verify(token, "somesupersecret") as DecodedToken;
+    userId  = decodedToken.userId;
+  }
   let limit = parseInt(_limit as string);
   let page = parseInt(_page as string);
 

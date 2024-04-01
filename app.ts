@@ -41,7 +41,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   res.setHeader("Access-Control-Allow-Methods", "OPTIONS, GET, POST, PUT, PATCH, DELETE");
   res.setHeader(
     "Access-Control-Allow-Headers",
-    "Content-Type, Authorization, userId, adminRole, userRole"
+    "Content-Type, Authorization, userId, adminRole, userRole, role"
   );
 
   next();

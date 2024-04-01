@@ -35,7 +35,7 @@ const router = Router();
 //       })
 // });
 
-router.use("/courses",isUserAuth, courseRouter);
+router.use("/courses", courseRouter);
 
 router.use("/categories", categoryRouter);
 
