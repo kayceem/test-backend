@@ -33,6 +33,9 @@ jobs:
         password: ${{secrets.ftp_password}}
         server-dir: /e-learning-api-dev.trannhatsang.com/
         local-dir: dist/
+    - name: Install dependencies for source at hosting!
+      run: npm install
+
     - name: Discord notification
       env:
         DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
