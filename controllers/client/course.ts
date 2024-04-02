@@ -119,7 +119,7 @@ export const getCourses = async (req: Request, res: Response, next: NextFunction
 
   const currentUserRole = req.headers.role;
   let userId = "";
-  if(currentUserRole !== "client") {
+  if(currentUserRole && currentUserRole !== "client") {
     // Get userId when user login
     const authorizationHeader = req.headers.authorization;
     const tokenArray = authorizationHeader.split(" ");
