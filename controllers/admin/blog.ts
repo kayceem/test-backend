@@ -88,6 +88,7 @@ export const createBlog = async (req: AuthorAuthRequest, res: Response, next: Ne
     blogImg,
     author,
     readTime,
+    thumbnail,
     userId,
     technology,
   } = req.body;
@@ -103,6 +104,7 @@ export const createBlog = async (req: AuthorAuthRequest, res: Response, next: Ne
       code: blogCode,
       title,
       content,
+      thumbnail,
       categoryId,
       tags: tags.split(",").map((tag) => tag.trim()), // Chuyển đổi chuỗi tags thành mảng
       blogImg,
@@ -159,7 +161,7 @@ export const getBlogById = async (req: Request, res: Response, next: NextFunctio
 };
 
 export const updateBlog = async (req: AuthorAuthRequest, res: Response, next: NextFunction) => {
-  const { title, content, categoryId, tags, blogImg, author } = req.body;
+  const { title, content, categoryId, tags, blogImg, author, thumbnail } = req.body;
   const blogId = req.params.id;
 
   let session: ClientSession | null = null;
@@ -177,6 +179,7 @@ export const updateBlog = async (req: AuthorAuthRequest, res: Response, next: Ne
     blog.title = title;
     blog.content = content;
     blog.categoryId = categoryId;
+    blog.thumbnail = thumbnail;
     blog.tags = Array.isArray(tags) ? tags : tags.split(",").map((tag) => tag.trim());
     blog.blogImg = blogImg;
     blog.author = author;

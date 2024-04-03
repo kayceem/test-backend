@@ -8,6 +8,7 @@ export interface IBlog extends IBaseSchema {
   blogImg: string;
   technology: string;
   tags: string[];
+  thumbnail: string;
   readTime: string;
   datePublished: Date;
   content: string;
