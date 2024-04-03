@@ -37,6 +37,10 @@ const blogSchema = new Schema<IBlog>(
       type: Date,
       default: Date.now,
     },
+    thumbnail: {
+      type: String,
+      required: true,
+    },
     content: {
       type: String,
       required: true,
