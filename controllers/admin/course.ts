@@ -185,6 +185,7 @@ export const postCourse = async (req: AuthorAuthRequest, res: Response, next: Ne
     views,
     tags,
     requirements,
+    coursePreview,
   } = req.body;
 
   let session: ClientSession | null = null;
@@ -217,6 +218,7 @@ export const postCourse = async (req: AuthorAuthRequest, res: Response, next: Ne
       tags,
       views,
       requirements,
+      coursePreview,
       createdBy: req.userId,
     });
 

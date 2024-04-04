@@ -15,6 +15,7 @@ export interface ICourse extends IBaseSchema {
   level: string;
   courseSlug: string;
   userId: IUser;
+  coursePreview: string;
   categoryId: ICategory;
   requirements?: string[];
   willLearns?: string[];
@@ -44,6 +45,7 @@ export interface ICourseDetail {
     _id: string;
     name: string;
     avatar: string;
+    biography: string;
   };
   courseSlug: string;
   level: string;
@@ -60,5 +62,5 @@ export interface ICourseDetail {
     _id?: string;
     name?: string;
     avatar?: string;
-  }
+  };
 }

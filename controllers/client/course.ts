@@ -17,6 +17,21 @@ import Review from "../../models/Review";
 import { AuthorAuthRequest } from "../../middleware/is-auth";
 import { UserAuthRequest } from "../../middleware/is-user-auth";
 import jwt, { JwtPayload } from "jsonwebtoken";
+import {
+  CREATE_SUCCESS,
+  ERROR_CREATE_DATA,
+  ERROR_GET_DATA,
+  ERROR_GET_DATA_DETAIL,
+  ERROR_GET_DATA_HISTORIES,
+  ERROR_NOT_FOUND_DATA,
+  ERROR_UPDATE_ACTIVE_DATA,
+  ERROR_UPDATE_DATA,
+  GET_DETAIL_SUCCESS,
+  GET_HISOTIES_SUCCESS,
+  GET_SUCCESS,
+  UPDATE_ACTIVE_SUCCESS,
+  UPDATE_SUCCESS,
+} from "../../config/constant";
 interface DecodedToken extends JwtPayload {
   userId: string;
 }
@@ -119,14 +134,14 @@ export const getCourses = async (req: Request, res: Response, next: NextFunction
 
   const currentUserRole = req.headers.role;
   let userId = "";
-  if(currentUserRole && currentUserRole !== "client") {
+  if (currentUserRole && currentUserRole !== "client") {
     // Get userId when user login
     const authorizationHeader = req.headers.authorization;
     const tokenArray = authorizationHeader.split(" ");
     const token = tokenArray[1];
     // const userId = req.userId;
-    const decodedToken: DecodedToken =  jwt.verify(token, "somesupersecret") as DecodedToken;
-    userId  = decodedToken.userId;
+    const decodedToken: DecodedToken = jwt.verify(token, "somesupersecret") as DecodedToken;
+    userId = decodedToken.userId;
   }
   let limit = parseInt(_limit as string);
   let page = parseInt(_page as string);
@@ -264,10 +279,10 @@ export const getCourses = async (req: Request, res: Response, next: NextFunction
     }
 
     // Lọc khoá học theo lượt đánh giá
-    if(req.query._avgRatings && parseInt(req.query._avgRatings as string) >= 3) {
+    if (req.query._avgRatings && parseInt(req.query._avgRatings as string) >= 3) {
       const _avgRatings = parseInt(req.query._avgRatings as string);
       result = result.filter((item: any) => item.avgRatings >= _avgRatings);
-      totalCourses = result.length
+      totalCourses = result.length;
     }
 
     res.status(200).json({
@@ -445,7 +460,7 @@ export const getCourseDetail = async (req: Request, res: Response, next: NextFun
 
     const foundCourse = await Course.findOne({
       _id: courseId,
-    })
+    });
 
     let isBought = false;
 
@@ -644,7 +659,6 @@ export const getSuggestedCourses = async (req: Request, res: Response, next: Nex
       }
     });
 
-
     const listCourseOfCurrentUser = dictCoursesOfUser[userId] || [];
     const boughtCourseId = [
       ...new Set<string>(listCourseOfCurrentUser.map((course) => course.courseId.toString())),
@@ -693,9 +707,7 @@ export const getSuggestedCourses = async (req: Request, res: Response, next: Nex
       .populate("userId", "_id name avatar")
       .limit(limit);
 
-    
-
-    const suggestedCoursesRes = []
+    const suggestedCoursesRes = [];
     for (const course of suggestedCourses) {
       const currentCourseId = course._id.toString();
       const listReviewsOfCurrentCourse = dictReviewsOfCourse[currentCourseId] ?? [];
@@ -719,7 +731,7 @@ export const getSuggestedCourses = async (req: Request, res: Response, next: Nex
             ? courseIdOfUserList.includes(currentCourseId)
             : false,
       };
-      suggestedCoursesRes.push(courseItem)
+      suggestedCoursesRes.push(courseItem);
     }
 
     res.status(200).json({
@@ -828,6 +840,31 @@ export const getCoursesFromWishlistByUserId = async (
       return next(error);
     } else {
       const customError = new CustomErrorMessage("Failed to retrieve courses from wishlist", 422);
+      return next(customError);
+    }
+  }
+};
+
+export const increaseCourseView = async (req: Request, res: Response, next: NextFunction) => {
+  const courseId = req.params.courseId;
+
+  try {
+    const course = await Course.findById(courseId);
+
+    if (!course) {
+      const error = new CustomError("Course", ERROR_NOT_FOUND_DATA, 404);
+      throw error;
+    }
+
+    course.views += 1;
+    await course.save();
+
+    res.json({ message: UPDATE_SUCCESS });
+  } catch (error) {
+    if (error instanceof CustomError) {
+      return next(error);
+    } else {
+      const customError = new CustomErrorMessage(ERROR_UPDATE_DATA, 422);
       return next(customError);
     }
   }
