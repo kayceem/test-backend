@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import CustomErrorMessage from "./errorMessage";
 import CustomError from "./error";
 import Order from "../models/Order";
+import User from "../models/User";
 import { IOrder } from "../types/order.type";
 import Course from "../models/Course";
 import { ICourse, ICourseDetail } from "../types/course.type";
@@ -280,6 +281,9 @@ export const getCourseDetailInfo = async (courseId: string): Promise<ICourseDeta
     const avgRatingStars =
       reviews.reduce((acc, review) => acc + review.ratingStar, 0) / reviews.length || 0;
 
+    const userInfo = await User.findById(course.userId?._id);
+    const userBiography = userInfo?.biography || "No biography available";
+
     const result: ICourseDetail = {
       _id: course._id,
       name: course.name,
@@ -304,6 +308,7 @@ export const getCourseDetailInfo = async (courseId: string): Promise<ICourseDeta
         _id: course?.createdBy?._id,
         name: course?.createdBy?.name,
         avatar: course?.createdBy?.avatar,
+        biography: userBiography,
       },
       // UserId here meaning an author! Remove later!
       courseSlug: course?.courseSlug,

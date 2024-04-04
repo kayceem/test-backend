@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import Lesson from "../../models/Lesson";
 import Section from "../../models/Section";
+import Course from "../../models/Course";
 import IsLessonDone from "../../models/IsLessonDone";
 import CustomError from "../../utils/error";
 import CustomErrorMessage from "../../utils/errorMessage";
@@ -152,6 +153,26 @@ export const getFreeLessonsByCourseId = async (req: Request, res: Response, next
       access: "FREE",
       isDeleted: false,
     }).sort({ createdAt: 1 });
+
+    const course = await Course.findOne({ _id: courseId });
+    const { coursePreview } = course;
+
+    const defaultLesson = new Lesson({
+      _id: new mongoose.Types.ObjectId(),
+      name: "Course Preview",
+      description: "Preview of the course",
+      content: coursePreview,
+      access: "FREE",
+      type: "link",
+      isDeleted: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      __v: 0,
+      sectionId: sectionIds[0],
+      videoLength: 68,
+    });
+
+    freeLessons.unshift(defaultLesson);
 
     res.status(200).json({
       message: GET_SUCCESS,
