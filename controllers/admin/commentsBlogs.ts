@@ -66,6 +66,8 @@ export const getCommentsBlog = async (
         populate: { path: "userId", select: "name avatar" },
       });
 
+    const length = BlogComment.length;
+
     let listBlogIdOfCurrentAuthor = [];
     if (req.userId && req.role === enumData.UserType.Author.code) {
       const listBlogOfCurrentAuthor = await BLog.find({
@@ -86,6 +88,7 @@ export const getCommentsBlog = async (
       page,
       pages: Math.ceil(total / limit),
       limit,
+      length,
       comments: blogCommentsRes,
     });
   } catch (error) {
@@ -147,11 +150,13 @@ export const getCommentsByBlogId = async (req: Request, res: Response) => {
       .populate("createdBy", "name")
       .populate("updatedBy", "name");
 
+    const length = await BlogComment.countDocuments({ blogId, parentCommentId: null });
+
     if (!comments) {
       const error = new CustomError("Blog Comments", ERROR_NOT_FOUND_DATA, 404);
       throw error;
     }
-    res.json({ comments });
+    res.json({ comments, length });
   } catch (error) {
     const errorMessage = (error as Error).message;
     res.status(500).json({ error: errorMessage });

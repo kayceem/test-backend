@@ -26,4 +26,6 @@ router.get("/course/detail/:courseId", courseController.getCourseDetail);
 
 router.post("/course/increase-view/:courseId", courseController.increaseCourseView);
 
+router.get("/course/getUserByCourse/:courseId", courseController.getUsersByCourseId);
+
 export default router;
