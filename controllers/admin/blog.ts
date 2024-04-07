@@ -46,6 +46,7 @@ export const getBlogPrams = async (req: AuthorAuthRequest, res: Response, next: 
     }
     const blogs = await Blog.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit);
     const total = await Blog.countDocuments(query);
+    const length = Blog.length;
     const pages = Math.ceil(total / limit);
     res.status(200).json({
       message: "Get all blogs successfully",
@@ -53,6 +54,7 @@ export const getBlogPrams = async (req: AuthorAuthRequest, res: Response, next: 
       page,
       pages,
       limit,
+      length,
       blogs,
     });
   } catch (error) {
