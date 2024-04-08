@@ -44,7 +44,7 @@ export const getUsers = async (req: AuthorAuthRequest, res: Response, next: Next
   const dictUsersOfAuthor: Record<string, any> = {};
   const dictCoursesOfAuthor: Record<string, any> = {};
   try {
-    const query: getUsersQuery = {};
+    let query: getUsersQuery = {};
     const orderQuery: any = {};
 
     if (_q && typeof _q === "string") {
@@ -103,14 +103,14 @@ export const getUsers = async (req: AuthorAuthRequest, res: Response, next: Next
       // create dict for author
     });
 
-    if (req.role && req.role === enumData.UserType.Author.code) {
-      // query.createdBy = new mongoose.Types.ObjectId(req.userId) as any;
+    if (req.role && req.role === enumData.UserType.Admin.code) {
+      query = {}
     }
 
     const users = await User.find(query).sort({ createdAt: -1 });
     let resUser = users;
     let listCourseIdOfCurrentAuthor = []
-    if (req.userId && enumData.UserType.Author.code) {
+    if (req.userId && req.role === enumData.UserType.Author.code) {
       // Danh sách userId của tác giả
       const listUserIdOfCurrentAuthor = dictUsersOfAuthor[req.userId];
       resUser = users.filter((item) => listUserIdOfCurrentAuthor.includes(item._id.toString()));
