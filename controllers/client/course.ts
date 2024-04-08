@@ -869,3 +869,32 @@ export const increaseCourseView = async (req: Request, res: Response, next: Next
     }
   }
 };
+
+export const getUsersByCourseId = async (req: Request, res: Response, next: NextFunction) => {
+  const courseId = req.params.courseId;
+
+  try {
+    const orders = await Order.find({ "items._id": courseId }).sort({ createdAt: -1 });
+
+    const users = orders.map((order) => order.user);
+
+    const uniqueUsers = users.reduce((acc, user) => {
+      if (!acc.find((u) => u._id.toString() === user._id.toString())) {
+        acc.push(user);
+      }
+      return acc;
+    }, []);
+
+    res.status(200).json({
+      message: "Fetch users by course id successfully!",
+      users: uniqueUsers,
+    });
+  } catch (error) {
+    if (error instanceof CustomError) {
+      return next(error);
+    } else {
+      const customError = new CustomErrorMessage(ERROR_GET_DATA, 422);
+      return next(customError);
+    }
+  }
+};
