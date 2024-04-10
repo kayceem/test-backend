@@ -33,11 +33,38 @@ export const getReviews = async (req: AuthorAuthRequest, res: Response, next: Ne
     const skip = (page - 1) * limit;
 
     const statusFilter = (req.query._status as string) || "all";
+    const dateFilter = (req.query._date as string) || "all";
+
+    let dateQuery = {};
+
+    switch (dateFilter) {
+      case "today":
+        dateQuery = { createdAt: { $gte: new Date(new Date().setHours(0, 0, 0, 0)) } };
+        break;
+      case "yesterday":
+        const yesterday = new Date(new Date().setDate(new Date().getDate() - 1));
+        dateQuery = {
+          createdAt: {
+            $gte: new Date(yesterday.setHours(0, 0, 0, 0)),
+            $lt: new Date(new Date().setHours(0, 0, 0, 0)),
+          },
+        };
+        break;
+      case "7days":
+        dateQuery = { createdAt: { $gte: new Date(new Date().setDate(new Date().getDate() - 7)) } };
+        break;
+      case "30days":
+        dateQuery = {
+          createdAt: { $gte: new Date(new Date().setDate(new Date().getDate() - 30)) },
+        };
+        break;
+    }
 
     let query = {
       ...(statusFilter === "active" ? { isDeleted: false } : {}),
       ...(statusFilter === "inactive" ? { isDeleted: true } : {}),
       ...(searchTerm ? { title: { $regex: searchTerm, $options: "i" } } : {}),
+      ...dateQuery,
     };
 
     const total = await Review.countDocuments(query);
@@ -61,15 +88,16 @@ export const getReviews = async (req: AuthorAuthRequest, res: Response, next: Ne
       })
     );
 
-      if(req.userId && req.role === enumData.UserType.Author.code) {
-        const listCourseByCurrentAuthor = await Course.find({ createdBy: req.userId });
-        const listCourseIdByCurrentAuthor = listCourseByCurrentAuthor.map((item) => item._id.toString());
+    if (req.userId && req.role === enumData.UserType.Author.code) {
+      const listCourseByCurrentAuthor = await Course.find({ createdBy: req.userId });
+      const listCourseIdByCurrentAuthor = listCourseByCurrentAuthor.map((item) =>
+        item._id.toString()
+      );
 
-        reviewsWithReplies.filter((item: any) => {
-          return listCourseIdByCurrentAuthor.includes(item.courseId._id.toString())
-        })
-      }
-
+      reviewsWithReplies.filter((item: any) => {
+        return listCourseIdByCurrentAuthor.includes(item.courseId._id.toString());
+      });
+    }
 
     res.status(200).json({
       message: GET_SUCCESS,
