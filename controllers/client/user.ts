@@ -272,6 +272,7 @@ export const getUserDetail = async (req: Request, res: Response, next: NextFunct
     const result = {
       ...user.toObject(),
       courses: listCourseResult,
+      achievement: getAchievement(listCourseResult.length),
     };
 
     res.status(200).json({
@@ -369,3 +370,14 @@ export const getPublicProfile = async (req: Request, res: Response, next: NextFu
   }
 };
 
+function getAchievement(numCourses: number): string {
+  if (numCourses >= 10) {
+    return "Legend";
+  } else if (numCourses >= 6) {
+    return "Excellence";
+  } else if (numCourses >= 3) {
+    return "Intermediate";
+  } else {
+    return "Newbie";
+  }
+}
