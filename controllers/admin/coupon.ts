@@ -30,13 +30,16 @@ export const getCoupons = async (req: AuthorAuthRequest, res: Response, next: Ne
     const page = parseInt(req.query._page as string) || 1;
     const limit = parseInt(req.query._limit as string) || 10;
     const skip = (page - 1) * limit;
-
+    const dateStart = req.query.dateStart as string;
+    const dateEnd = req.query.dateEnd as string;
     const statusFilter = (req.query._status as string) || "all";
 
     let query: any = {
       ...(statusFilter === "active" ? { isDeleted: false } : {}),
       ...(statusFilter === "inactive" ? { isDeleted: true } : {}),
       ...(searchTerm ? { description: { $regex: searchTerm, $options: "i" } } : {}),
+      ...(dateStart ? { dateStart: { $gte: new Date(dateStart) } } : {}),
+      ...(dateEnd ? { dateEnd: { $lte: new Date(dateEnd) } } : {}),
     };
     const currentUserRole = req.role;
     if (currentUserRole && currentUserRole === enumData.UserType.Author.code) {
