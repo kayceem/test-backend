@@ -32,6 +32,14 @@ router.put(
   userController.updateUser
 );
 
+router.put(
+  "/user/setting/:userId",
+  isAuth,
+  isAdmin,
+  uploadMiddleware.single("avatar"),
+  userController.settingUser
+);
+
 router.patch("/user/update-active-status", isAuth, userController.updateActiveStatusUser);
 
 router.get("/user/histories/:userId", isAuth, userController.loadHistoriesUser);

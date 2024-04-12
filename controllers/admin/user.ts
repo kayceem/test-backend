@@ -104,18 +104,18 @@ export const getUsers = async (req: AuthorAuthRequest, res: Response, next: Next
     });
 
     if (req.role && req.role === enumData.UserType.Admin.code) {
-      query = {}
+      query = {};
     }
 
     const users = await User.find(query).sort({ createdAt: -1 });
     let resUser = users;
-    let listCourseIdOfCurrentAuthor = []
+    let listCourseIdOfCurrentAuthor = [];
     if (req.userId && req.role === enumData.UserType.Author.code) {
       // Danh sách userId của tác giả
       const listUserIdOfCurrentAuthor = dictUsersOfAuthor[req.userId];
       resUser = users.filter((item) => listUserIdOfCurrentAuthor.includes(item._id.toString()));
 
-       listCourseIdOfCurrentAuthor = dictCoursesOfAuthor[req.userId]
+      listCourseIdOfCurrentAuthor = dictCoursesOfAuthor[req.userId];
     }
 
     const result = [];
@@ -123,8 +123,10 @@ export const getUsers = async (req: AuthorAuthRequest, res: Response, next: Next
       const currentUserId = user._id.toString();
       const listCoursesRes = [];
       let listCourse = dictCoursesOfUser[currentUserId];
-      if(listCourseIdOfCurrentAuthor.length > 0) {
-        listCourse = listCourse.filter((item) => listCourseIdOfCurrentAuthor.includes(item.courseId.toString()))
+      if (listCourseIdOfCurrentAuthor.length > 0) {
+        listCourse = listCourse.filter((item) =>
+          listCourseIdOfCurrentAuthor.includes(item.courseId.toString())
+        );
       }
       // Trường hợp đã có order
       if (listCourse && listCourse.length > 0) {
@@ -375,7 +377,7 @@ export const approveUser = async (req: AuthorAuthRequest, res: Response, next: N
 };
 
 export const updateUser = async (req: AuthorAuthRequest, res: Response, next: NextFunction) => {
-  const { name, email, phone, role } = req.body;
+  const { name, email, phone, role, username, biography, headline } = req.body;
   const { userId } = req.params;
 
   let avatar;
@@ -557,5 +559,70 @@ export const changePassword = async (req: AuthorAuthRequest, res: Response, next
     res.status(200).json({ message: "Password changed successfully" });
   } catch (error) {
     res.status(500).json({ message: "Error changing password" });
+  }
+};
+
+export const settingUser = async (req: AuthorAuthRequest, res: Response, next: NextFunction) => {
+  const { name, email, phone, role, username, biography, headline } = req.body;
+  const { userId } = req.params;
+
+  let avatar;
+
+  if (req.file) {
+    avatar = req.file.path;
+  } else {
+    avatar =
+      "https://lwfiles.mycourse.app/64b5524f42f5698b2785b91e-public/avatars/thumbs/64c077e0557e37da3707bb92.jpg";
+  }
+
+  let session: ClientSession | null = null;
+  session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const updatedUser = await User.findById(userId);
+
+    if (!updatedUser) {
+      const error = new CustomError("User", ERROR_NOT_FOUND_DATA, 404);
+      throw error;
+    }
+
+    updatedUser.name = name;
+    updatedUser.email = email;
+    updatedUser.phone = phone;
+    updatedUser.role = role;
+    updatedUser.username = username;
+    updatedUser.biography = biography;
+    updatedUser.headline = headline;
+    updatedUser.avatar = avatar;
+
+    updatedUser.updatedAt = new Date();
+    updatedUser.updatedBy = new mongoose.Types.ObjectId(req.userId) as any;
+
+    const response = await updatedUser.save();
+
+    const historyItem = new ActionLog({
+      UserId: response._id,
+      type: enumData.ActionLogEnType.Update.code,
+      createdBy: new mongoose.Types.ObjectId(req.userId) as any,
+      functionType: "User",
+      description: `User [${req.username}] has [${enumData.ActionLogEnType.Update.name}] User`,
+    });
+
+    await ActionLog.collection.insertOne(historyItem.toObject(), { session });
+    await session.commitTransaction();
+    session.endSession();
+
+    res.status(200).json({
+      message: "Update user succesfully!",
+      user: response,
+    });
+  } catch (error) {
+    if (error instanceof CustomError) {
+      return next(error);
+    } else {
+      const customError = new CustomErrorMessage("Failed to update user!", 422);
+      return next(customError);
+    }
   }
 };

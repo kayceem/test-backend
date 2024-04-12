@@ -28,16 +28,23 @@ export const getBlogPrams = async (req: AuthorAuthRequest, res: Response, next: 
     const skip = (page - 1) * limit;
     const statusFilter = (req.query._status as string) || "all";
     const categoryId = req.query.categoryId as string;
-    const searchAuthor = (req.query.author as string) || "";
-    const tags = req.query.tags as string;
+    const searchAuthor = (req.query._author as string) || "";
+    const tags = req.query._tags as string;
 
     let query: any = {
       ...(statusFilter === "active" ? { isDeleted: false } : {}),
       ...(statusFilter === "inactive" ? { isDeleted: true } : {}),
-      ...(searchTerm ? { name: { $regex: searchTerm, $options: "i" } } : {}),
+      ...(searchTerm
+        ? {
+            $or: [
+              { title: { $regex: searchTerm, $options: "i" } },
+              { content: { $regex: searchTerm, $options: "i" } },
+            ],
+          }
+        : {}),
       ...(categoryId ? { categoryId: new mongoose.Types.ObjectId(categoryId) } : {}),
-      ...(searchAuthor ? { author: searchAuthor } : {}),
-      ...(tags ? { tags: tags } : {}),
+      ...(searchAuthor ? { author: { $regex: searchAuthor, $options: "i" } } : {}),
+      ...(tags ? { tags: { $in: tags.split(",") } } : {}),
     };
 
     const currentUserRole = req.role;
