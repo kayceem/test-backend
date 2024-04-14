@@ -41,12 +41,12 @@ export const getOrders = async (req: Request, res: Response, next: NextFunction)
     default:
       break;
   }
+  
   const previousDaysAgo = new Date(currentDate);
   previousDaysAgo.setDate(previousDaysAgo.getDate() - previousDays);
 
   try {
     const orderQuery: GetOrdersQuery = {
-      
     };
 
     if (courseId && typeof courseId === "string" && courseId !== "all") {

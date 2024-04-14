@@ -30,26 +30,62 @@ import sendEmail from "../../utils/sendmail";
 import Order from "../../models/Order";
 import Course from "../../models/Course";
 
-interface getUsersQuery {
-  $text?: {
-    $search: string;
-  };
-  createdBy?: string;
-}
-
 export const getUsers = async (req: AuthorAuthRequest, res: Response, next: NextFunction) => {
-  const { _q } = req.query;
+  let searchTerm = (req.query._q as string) || "";
+  let searchRole = (req.query._role as string) || "";
+  const statusFilter = (req.query._status as string) || "all";
   const dictCoursesOfUser: Record<string, any> = {};
   const dictCourse: Record<string, any> = {};
   const dictUsersOfAuthor: Record<string, any> = {};
   const dictCoursesOfAuthor: Record<string, any> = {};
-  try {
-    let query: getUsersQuery = {};
-    const orderQuery: any = {};
 
-    if (_q && typeof _q === "string") {
-      query.$text = { $search: _q };
-    }
+  const searchCourseId = (req.query._courses as string) || "";
+  const currentDate = new Date();
+  let previousDays = -1;
+
+  switch (req.query._date) {
+    case "all":
+      previousDays = -1;
+      break;
+    case "today":
+      previousDays = 0;
+      break;
+    case "yesterday":
+      previousDays = 1;
+      break;
+    case "7days":
+      previousDays = 7;
+      break;
+    case "30days":
+      previousDays = 30;
+      break;
+    default:
+      break;
+  }
+
+  const previousDaysAgo = new Date(currentDate);
+  previousDaysAgo.setDate(previousDaysAgo.getDate() - previousDays);
+
+  try {
+    let query: any = {
+      ...(searchTerm
+        ? {
+            $or: [
+              { name: { $regex: searchTerm, $options: "i" } },
+              { email: { $regex: searchTerm, $options: "i" } },
+            ],
+          }
+        : {}),
+      ...(searchRole ? { role: { $regex: searchRole, $options: "i" } } : {}),
+      ...(statusFilter === "active" ? { isDeleted: false } : {}),
+      ...(statusFilter === "inactive" ? { isDeleted: true } : {}),
+      ...(searchCourseId ? { courses: { $elemMatch: { _id: searchCourseId } } } : {}),
+    };
+    console.log("query", query);
+
+    const orderQuery: any = {
+      ...(searchCourseId ? { courses: { $elemMatch: { _id: searchCourseId } } } : {}),
+    };
 
     const ordersRes = await Order.find(orderQuery);
     const courseRes = await Course.find().populate("createdBy");
@@ -65,8 +101,6 @@ export const getUsers = async (req: AuthorAuthRequest, res: Response, next: Next
         orderId: order._id,
         userId: order.user._id,
         userEmail: order.user.email,
-        // ... other relevant order fields if needed
-
         courseId: item._id,
         courseName: item.name,
         courseThumbnail: item.thumbnail,
@@ -93,7 +127,6 @@ export const getUsers = async (req: AuthorAuthRequest, res: Response, next: Next
         } else {
           dictUsersOfAuthor[currentAuthorId] = [item.userId.toString()];
         }
-
         if (dictCoursesOfAuthor[currentAuthorId]) {
           dictCoursesOfAuthor[currentAuthorId].push(item.courseId.toString());
         } else {
@@ -104,7 +137,27 @@ export const getUsers = async (req: AuthorAuthRequest, res: Response, next: Next
     });
 
     if (req.role && req.role === enumData.UserType.Admin.code) {
-      query = {};
+      query = {
+        ...(searchTerm
+          ? {
+              $or: [
+                { name: { $regex: searchTerm, $options: "i" } },
+                { email: { $regex: searchTerm, $options: "i" } },
+              ],
+            }
+          : {}),
+        ...(searchRole ? { role: { $regex: searchRole, $options: "i" } } : {}),
+        ...(statusFilter === "active" ? { isDeleted: false } : {}),
+        ...(statusFilter === "inactive" ? { isDeleted: true } : {}),
+        ...(searchCourseId ? { courses: { $elemMatch: { _id: searchCourseId } } } : {}),
+      };
+    }
+
+    if (previousDays >= 0) {
+      query["createdAt"] = {
+        $gte: previousDaysAgo,
+        $lt: currentDate,
+      };
     }
 
     const users = await User.find(query).sort({ createdAt: -1 });
@@ -114,7 +167,6 @@ export const getUsers = async (req: AuthorAuthRequest, res: Response, next: Next
       // Danh sách userId của tác giả
       const listUserIdOfCurrentAuthor = dictUsersOfAuthor[req.userId];
       resUser = users.filter((item) => listUserIdOfCurrentAuthor.includes(item._id.toString()));
-
       listCourseIdOfCurrentAuthor = dictCoursesOfAuthor[req.userId];
     }
 
