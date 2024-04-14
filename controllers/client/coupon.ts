@@ -63,7 +63,6 @@ export const getValidCouponsForCourses = async (
         dateEnd: { $gte: currentDate },
         isDeleted: false,
       });
-
       maxDiscountCoupon = getMaxDiscountCoupon(totalPrice, validCoupons);
     }
 
