@@ -31,10 +31,8 @@ export const getReviews = async (req: AuthorAuthRequest, res: Response, next: Ne
     const page = parseInt(req.query._page as string) || 1;
     const limit = parseInt(req.query._limit as string) || 10;
     const skip = (page - 1) * limit;
-
     const statusFilter = (req.query._status as string) || "all";
     const dateFilter = (req.query._date as string) || "all";
-
     let dateQuery = {};
 
     switch (dateFilter) {
