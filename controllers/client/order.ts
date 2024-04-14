@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import Order from "../../models/Order";
 import { IOrderItem } from "../../types/order.type";
 import Course from "../../models/Course";
+import { randomBytes } from "crypto";
 import CustomError from "../../utils/error";
 import CustomErrorMessage from "../../utils/errorMessage";
 
@@ -33,9 +34,38 @@ export const getOrder = async (req: Request, res: Response, next: NextFunction) 
 export const postOrder = async (req: Request, res: Response, next: NextFunction) => {
   const { note, transaction, vatFee, items, user, totalPrice, couponCode } = req.body;
 
-  const status: string = totalPrice === 0 ? "Success" : "Pending";
+  let status: string;
+
+  if (transaction.method === "Visa") {
+    status = "Success";
+  } else {
+    status = totalPrice === 0 ? "Success" : "Pending";
+  }
+
+  let updatedTransaction: any;
 
   try {
+    if (transaction.method === "Visa") {
+      const currentTime = new Date();
+      const randomTransactionNo = randomBytes(8).toString("hex");
+      const visaTransactionInfo = {
+        method: "Visa",
+        amount: totalPrice,
+        bankCode: "NCB",
+        bankTranNo: randomTransactionNo,
+        cardType: "ATM",
+        payDate: currentTime,
+        orderInfo: `Thanh+toan+cho+ma+GD%3A${randomTransactionNo}`,
+        transactionNo: randomTransactionNo,
+      };
+
+      updatedTransaction = visaTransactionInfo;
+    } else {
+      updatedTransaction = {
+        method: transaction.method,
+      };
+    }
+
     const courses = await Course.find({
       _id: {
         $in: items.map((item: IOrderItem) => item.courseId),
@@ -46,9 +76,7 @@ export const postOrder = async (req: Request, res: Response, next: NextFunction)
       note,
       vatFee,
       totalPrice,
-      transaction: {
-        method: transaction.method,
-      },
+      transaction: updatedTransaction,
       couponCode,
       items: courses,
       user,

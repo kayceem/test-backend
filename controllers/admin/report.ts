@@ -3,6 +3,7 @@ import Category from "../../models/Category";
 import Course from "../../models/Course";
 import User from "../../models/User";
 import Order from "../../models/Order";
+import { IOrder } from "../../types/order.type";
 import CustomError from "../../utils/error";
 import CustomErrorMessage from "../../utils/errorMessage";
 import { AuthorAuthRequest } from "../../middleware/is-auth";
@@ -16,7 +17,7 @@ import { IIsLessonDone, ILesson } from "../../types/lesson.type";
 import moment from "moment";
 import Wishlist from "../../models/Wishlist";
 import Review from "../../models/Review";
-import ObjectId from 'mongoose';
+import ObjectId from "mongoose";
 
 interface UserReportItem {
   _id: string;
@@ -49,14 +50,18 @@ interface CourseReportItem {
   saleOfCourse?: number;
 }
 
-export const getSummaryReports = async (req: AuthorAuthRequest, res: Response, next: NextFunction) => {
+export const getSummaryReports = async (
+  req: AuthorAuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
   const currentDate = new Date();
   const thirtyDaysAgo = new Date(currentDate);
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-  const categoryQuery: any = {}
-  const courseQuery: any = {}
-  const userQuery: any = {}
+  const categoryQuery: any = {};
+  const courseQuery: any = {};
+  const userQuery: any = {};
   if (req.role && req.role === enumData.UserType.Author.code) {
     categoryQuery.createdBy = new mongoose.Types.ObjectId(req.userId) as any;
     courseQuery.createdBy = new mongoose.Types.ObjectId(req.userId) as any;
@@ -76,7 +81,8 @@ export const getSummaryReports = async (req: AuthorAuthRequest, res: Response, n
       return total + order.totalPrice;
     }, 0);
 
-    const avgTimeLearningPerUser = 10;
+    const totalOrdersIn30Days = orders.length;
+
     const conversions = 50;
 
     const reports = {
@@ -85,7 +91,7 @@ export const getSummaryReports = async (req: AuthorAuthRequest, res: Response, n
       users,
       orders,
       saleOf30days,
-      avgTimeLearningPerUser,
+      totalOrdersIn30Days,
       conversions,
     };
 
@@ -205,10 +211,12 @@ export const getRevenues = async (req: Request, res: Response, next: NextFunctio
   }
 };
 
-export const getNewUserSignups = async (req: AuthorAuthRequest, res: Response, next: NextFunction) => {
-  
-
-  const userQuery: any = {}
+export const getNewUserSignups = async (
+  req: AuthorAuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  const userQuery: any = {};
   if (req.role && req.role === enumData.UserType.Author.code) {
     userQuery.createdBy = new mongoose.Types.ObjectId(req.userId) as any;
   }
@@ -223,7 +231,7 @@ export const getNewUserSignups = async (req: AuthorAuthRequest, res: Response, n
     const previousDaysAgo: Date = new Date(currentDate);
     previousDaysAgo.setDate(previousDaysAgo.getDate() - previousDays);
 
-    if(previousDays && currentDate) {
+    if (previousDays && currentDate) {
       userQuery.createdAt = { $gte: previousDaysAgo, $lte: currentDate };
     }
 
@@ -321,12 +329,15 @@ export const getNewUserSignupsList = async (req: Request, res: Response, next: N
   }
 };
 
-export const getReportsUserProgress = async (req: AuthorAuthRequest, res: Response, next: NextFunction) => {
+export const getReportsUserProgress = async (
+  req: AuthorAuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
   const dateStart = req.query.dateStart as string; // Replace with your start date
-  const dateEnd = req.query.dateEnd as string;   // Replace with your end date
+  const dateEnd = req.query.dateEnd as string; // Replace with your end date
   const authorId = req.query.authorId as string;
   try {
-    
     // Query
     const orderQuery: any = {};
     const userQuery: any = {
@@ -334,122 +345,118 @@ export const getReportsUserProgress = async (req: AuthorAuthRequest, res: Respon
     };
     const reviewQuery: any = {};
     const wishlistQuery: any = {};
-    if(req.userId) {
+    if (req.userId) {
       // Chỉ list ra những User của tác giả hiện tại - Nếu đăng nhập bằng tài khoản tác giả!
-      
     }
 
-    if(dateStart && dateEnd) {
+    if (dateStart && dateEnd) {
       orderQuery.createdAt = {
-        $gte: moment(dateStart, 'DD/MM/YYYY').toDate(), 
-        $lte: moment(dateEnd, 'DD/MM/YYYY').toDate()
-    }
+        $gte: moment(dateStart, "DD/MM/YYYY").toDate(),
+        $lte: moment(dateEnd, "DD/MM/YYYY").toDate(),
+      };
       reviewQuery.createdAt = {
-        $gte: moment(dateStart, 'DD/MM/YYYY').toDate(), 
-        $lte: moment(dateEnd, 'DD/MM/YYYY').toDate()
-    }
+        $gte: moment(dateStart, "DD/MM/YYYY").toDate(),
+        $lte: moment(dateEnd, "DD/MM/YYYY").toDate(),
+      };
       wishlistQuery.createdAt = {
-        $gte: moment(dateStart, 'DD/MM/YYYY').toDate(), 
-        $lte: moment(dateEnd, 'DD/MM/YYYY').toDate()
-    }
+        $gte: moment(dateStart, "DD/MM/YYYY").toDate(),
+        $lte: moment(dateEnd, "DD/MM/YYYY").toDate(),
+      };
 
-    userQuery.createdAt = {
-      $gte: moment(dateStart, 'DD/MM/YYYY').toDate(), 
-      $lte: moment(dateEnd, 'DD/MM/YYYY').toDate()
-    }
-    
+      userQuery.createdAt = {
+        $gte: moment(dateStart, "DD/MM/YYYY").toDate(),
+        $lte: moment(dateEnd, "DD/MM/YYYY").toDate(),
+      };
     }
 
     // TODO: SHOULD SEARCH FOR USER HAVE ROLE (USER - STUDENT!)
     const users = await User.find({
       role: enumData.UserType.User.code, // TODO LATER!
-      ...userQuery
+      ...userQuery,
     }).sort({
-      createdAt: -1
+      createdAt: -1,
     });
     const result: UserReportItem[] = [];
 
-    const dictCoursesOfUser: Record<string, any> = {}
-    const dictUsersOfAuthor: Record<string, any> = {}
-    const dictCoursesOfAuthor: Record<string, any> = {}
-    const dictCourse: Record<string, any> = {}
-    const dictOrdersOfUser: Record<string, any> = {}
-    const dictLessonsDoneOfUser: Record<string, any> = {}
-    const dictSectionOfCourse: Record<string, any> = {}
-    const dictLessonsOfCourse: Record<string, any> = {}
-    const dictLessonsOfSection: Record<string, any> = {}
+    const dictCoursesOfUser: Record<string, any> = {};
+    const dictUsersOfAuthor: Record<string, any> = {};
+    const dictCoursesOfAuthor: Record<string, any> = {};
+    const dictCourse: Record<string, any> = {};
+    const dictOrdersOfUser: Record<string, any> = {};
+    const dictLessonsDoneOfUser: Record<string, any> = {};
+    const dictSectionOfCourse: Record<string, any> = {};
+    const dictLessonsOfCourse: Record<string, any> = {};
+    const dictLessonsOfSection: Record<string, any> = {};
     // dict lessons of course
 
-    const lessonDoneRes = await IsLessonDone.find().populate('lessonId');
-    const courseRes = await Course.find().populate('createdBy');
+    const lessonDoneRes = await IsLessonDone.find().populate("lessonId");
+    const courseRes = await Course.find().populate("createdBy");
     const sectionsRes = await Section.find();
     const lessonsRes = await Lesson.find();
     const ordersRes = await Order.find(orderQuery);
-   
+
     // create dict lessons of section
     lessonsRes.forEach((item) => {
-      const currentKey = item.sectionId.toString()
-      if(dictLessonsOfSection[currentKey]) {
-        dictLessonsOfSection[currentKey].push(item)
+      const currentKey = item.sectionId.toString();
+      if (dictLessonsOfSection[currentKey]) {
+        dictLessonsOfSection[currentKey].push(item);
       } else {
-        dictLessonsOfSection[currentKey] = [item]
+        dictLessonsOfSection[currentKey] = [item];
       }
-    })
+    });
 
     // Group lesson done by userId (create dict lessons of of user and lesson)
     lessonDoneRes.forEach((item: any) => {
-      if(item._doc) {
+      if (item._doc) {
         const currentKey = item.userId.toString() + item.lessonId?._id?.toString();
         const currentValue = {
           ...item._doc,
-          lesson: item._doc?.lessonId
-        }
-        dictLessonsDoneOfUser[currentKey] = currentValue
+          lesson: item._doc?.lessonId,
+        };
+        dictLessonsDoneOfUser[currentKey] = currentValue;
       }
-    })
+    });
 
     // Group section by course id (dict sections of course)
     sectionsRes.forEach((item) => {
       if (item.courseId) {
         if (dictSectionOfCourse[item.courseId.toString()]) {
-          dictSectionOfCourse[item.courseId.toString()].push(item)
+          dictSectionOfCourse[item.courseId.toString()].push(item);
         } else {
-          dictSectionOfCourse[item.courseId.toString()] = [item]
+          dictSectionOfCourse[item.courseId.toString()] = [item];
         }
       }
-    })
+    });
 
-     // Group lesson by course id
-     courseRes.forEach((courseItem) => {
-
-      const listSectionOfCourse = dictSectionOfCourse[courseItem._id.toString()] as ISection[] ?? [];
+    // Group lesson by course id
+    courseRes.forEach((courseItem) => {
+      const listSectionOfCourse =
+        (dictSectionOfCourse[courseItem._id.toString()] as ISection[]) ?? [];
       listSectionOfCourse.forEach((sectionItem) => {
-          const listLessonOfSection = dictLessonsOfSection[sectionItem._id.toString()] ?? [];
-          listLessonOfSection.forEach((lessonItem) => {
-              if (dictLessonsOfCourse[courseItem._id.toString()]) {
-                dictLessonsOfCourse[courseItem._id.toString()].push(lessonItem)
-              } else {
-                dictLessonsOfCourse[courseItem._id.toString()] = [lessonItem]
-              }
-          })
+        const listLessonOfSection = dictLessonsOfSection[sectionItem._id.toString()] ?? [];
+        listLessonOfSection.forEach((lessonItem) => {
+          if (dictLessonsOfCourse[courseItem._id.toString()]) {
+            dictLessonsOfCourse[courseItem._id.toString()].push(lessonItem);
+          } else {
+            dictLessonsOfCourse[courseItem._id.toString()] = [lessonItem];
+          }
+        });
+      });
+      dictCourse[courseItem._id.toString()] = courseItem;
+    });
 
-      })
-      dictCourse[courseItem._id.toString()] = courseItem
-    })
-    
     const orderDetails = ordersRes.flatMap((order) => {
       return order.items.map((item: any) => ({
-        orderId: order._id, 
+        orderId: order._id,
         userId: order.user._id,
         userEmail: order.user.email,
         // ... other relevant order fields if needed
-    
+
         courseId: item._id,
         courseName: item.name,
         courseThumbnail: item.thumbnail,
         coursePrice: item.finalPrice,
         reviewed: item.reviewed,
-        
       }));
     });
 
@@ -457,104 +464,103 @@ export const getReportsUserProgress = async (req: AuthorAuthRequest, res: Respon
     orderDetails.forEach((item) => {
       if (item.userId) {
         if (dictCoursesOfUser[item.userId]) {
-          dictCoursesOfUser[item.userId].push(item)
+          dictCoursesOfUser[item.userId].push(item);
         } else {
-          dictCoursesOfUser[item.userId] = [item]
+          dictCoursesOfUser[item.userId] = [item];
         }
         const currentAuthorId = dictCourse[item.courseId.toString()]?.createdBy?._id?.toString();
-        
-        if(currentAuthorId) {
-          if(dictUsersOfAuthor[currentAuthorId]) {
-            dictUsersOfAuthor[currentAuthorId].push(item.userId.toString())
-          }else {
-            dictUsersOfAuthor[currentAuthorId] = [item.userId.toString()]
+
+        if (currentAuthorId) {
+          if (dictUsersOfAuthor[currentAuthorId]) {
+            dictUsersOfAuthor[currentAuthorId].push(item.userId.toString());
+          } else {
+            dictUsersOfAuthor[currentAuthorId] = [item.userId.toString()];
           }
 
-          if(dictCoursesOfAuthor[currentAuthorId]) {
-            dictCoursesOfAuthor[currentAuthorId].push(item.courseId.toString())
-          }else {
-            dictCoursesOfAuthor[currentAuthorId] = [item.courseId.toString()]
-
+          if (dictCoursesOfAuthor[currentAuthorId]) {
+            dictCoursesOfAuthor[currentAuthorId].push(item.courseId.toString());
+          } else {
+            dictCoursesOfAuthor[currentAuthorId] = [item.courseId.toString()];
           }
         }
         // create dict for author
-
       }
-    })
+    });
     // create dict orders of user
     ordersRes.forEach((item) => {
-      if(item.user) {
+      if (item.user) {
         const currentKey = item.user._id.toString();
         if (dictOrdersOfUser[currentKey]) {
-          dictOrdersOfUser[currentKey].push(item)
+          dictOrdersOfUser[currentKey].push(item);
         } else {
-          dictOrdersOfUser[currentKey] = [item]
+          dictOrdersOfUser[currentKey] = [item];
         }
       }
-    })
+    });
 
     let resUser = users;
-    let listCourseIdOfCurrentAuthor = []
-    if(req.userId && enumData.UserType.Author.code) {
-      // Danh sách userId của tác giả 
-      const listUserIdOfCurrentAuthor = dictUsersOfAuthor[req.userId]
-      resUser = users.filter((item) => listUserIdOfCurrentAuthor.includes(item._id.toString()))
+    let listCourseIdOfCurrentAuthor = [];
+    if (req.userId && enumData.UserType.Author.code) {
+      // Danh sách userId của tác giả
+      const listUserIdOfCurrentAuthor = dictUsersOfAuthor[req.userId];
+      resUser = users.filter((item) => listUserIdOfCurrentAuthor.includes(item._id.toString()));
 
-     listCourseIdOfCurrentAuthor = dictCoursesOfAuthor[req.userId]
+      listCourseIdOfCurrentAuthor = dictCoursesOfAuthor[req.userId];
     }
-    if(authorId) {
-      const listUserIdOfCurrentAuthor = dictUsersOfAuthor[authorId]
-      resUser = users.filter((item) => listUserIdOfCurrentAuthor.includes(item._id.toString()))
+    if (authorId) {
+      const listUserIdOfCurrentAuthor = dictUsersOfAuthor[authorId];
+      resUser = users.filter((item) => listUserIdOfCurrentAuthor.includes(item._id.toString()));
     }
-    
 
     for (const user of resUser) {
       // current key
-      const currentUserId = user?._id.toString()
+      const currentUserId = user?._id.toString();
       // List orders
       const listOrdersOfCurrentUser = dictOrdersOfUser[currentUserId] ?? [];
-      const lastEnrollment = listOrdersOfCurrentUser.sort((a, b) => {
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-      })[0]?.createdAt ?? null;
+      const lastEnrollment =
+        listOrdersOfCurrentUser.sort((a, b) => {
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        })[0]?.createdAt ?? null;
       let studyTime = 0;
       const completedCourses = [];
 
       // List courses
       let listCourseOfCurrentUser = dictCoursesOfUser[currentUserId] ?? [];
-      if(listCourseIdOfCurrentAuthor.length > 0) {
-        listCourseOfCurrentUser = listCourseOfCurrentUser.filter((item) => listCourseIdOfCurrentAuthor.includes(item.courseId.toString()))
+      if (listCourseIdOfCurrentAuthor.length > 0) {
+        listCourseOfCurrentUser = listCourseOfCurrentUser.filter((item) =>
+          listCourseIdOfCurrentAuthor.includes(item.courseId.toString())
+        );
       }
 
       for (const course of listCourseOfCurrentUser) {
         // const listSectionOfCurrentCourse = dictSectionOfCourse[course?.courseId.toString()] ?? [];
-        
+
         const listLessonOfCurrentCourse = dictLessonsOfCourse[course?.courseId.toString()] ?? [];
-        const listLessonDone = []
+        const listLessonDone = [];
         for (const lessonItem of listLessonOfCurrentCourse) {
-          if(dictLessonsDoneOfUser[currentUserId + lessonItem._id.toString()]) {
+          if (dictLessonsDoneOfUser[currentUserId + lessonItem._id.toString()]) {
             const lessonDone = dictLessonsDoneOfUser[currentUserId + lessonItem._id.toString()];
-            if(lessonDone) {
+            if (lessonDone) {
               studyTime += lessonDone?.lesson?.videoLength ?? 0;
               listLessonDone.push(lessonDone);
             }
           }
         }
 
-        let currentUserProgress = 0; 
-        if(listLessonOfCurrentCourse.length > 0) {
-          currentUserProgress = listLessonDone.length / listLessonOfCurrentCourse.length
+        let currentUserProgress = 0;
+        if (listLessonOfCurrentCourse.length > 0) {
+          currentUserProgress = listLessonDone.length / listLessonOfCurrentCourse.length;
         }
-        
+
         // const { progress, totalVideosLengthDone } = await getProgressOfCourseV2(listSectionOfCurrentCourse, lessonsRes, lessonDoneRes, currentUserId);
         // studyTime += totalVideosLengthDone || 0;
         if (currentUserProgress === 1) {
           completedCourses.push(course);
         }
-        
       }
-      const totalCourseOfCurrentUser = listCourseOfCurrentUser.length
-      const numberOfCompletedCourse = completedCourses.length
-      const numberOfInCompletedCourse = totalCourseOfCurrentUser - numberOfCompletedCourse
+      const totalCourseOfCurrentUser = listCourseOfCurrentUser.length;
+      const numberOfCompletedCourse = completedCourses.length;
+      const numberOfInCompletedCourse = totalCourseOfCurrentUser - numberOfCompletedCourse;
       const userReportItem: UserReportItem = {
         _id: user._id,
         name: user.name,
@@ -587,90 +593,93 @@ export const getReportsUserProgress = async (req: AuthorAuthRequest, res: Respon
   }
 };
 
-export const getReportsCourseInsights = async (req: AuthorAuthRequest, res: Response, next: NextFunction) => {
-
+export const getReportsCourseInsights = async (
+  req: AuthorAuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
   const dateStart = req.query.dateStart as string; // Replace with your start date
-  const dateEnd = req.query.dateEnd as string;   // Replace with your end date
-  const authorId = req.query.authorId as string;   // Replace with your end date
+  const dateEnd = req.query.dateEnd as string; // Replace with your end date
+  const authorId = req.query.authorId as string; // Replace with your end date
 
   try {
     // SHOULD BE OPIMIZE PERFORMANCE FOR WEBSITE ABOUT REPORT!
     const courseQuery: any = {
       // createdBy: req.query.authorId,
-    }
-    const reviewQuery: any = {}
-    const wishlistQuery: any = {}
+    };
+    const reviewQuery: any = {};
+    const wishlistQuery: any = {};
 
     const orderQuery: any = {};
 
-    if(dateStart && dateEnd) {
+    if (dateStart && dateEnd) {
       orderQuery.createdAt = {
-        $gte: moment(dateStart, 'DD/MM/YYYY').toDate(), 
-        $lte: moment(dateEnd, 'DD/MM/YYYY').toDate()
-    }
+        $gte: moment(dateStart, "DD/MM/YYYY").toDate(),
+        $lte: moment(dateEnd, "DD/MM/YYYY").toDate(),
+      };
       reviewQuery.createdAt = {
-        $gte: moment(dateStart, 'DD/MM/YYYY').toDate(), 
-        $lte: moment(dateEnd, 'DD/MM/YYYY').toDate()
-    }
+        $gte: moment(dateStart, "DD/MM/YYYY").toDate(),
+        $lte: moment(dateEnd, "DD/MM/YYYY").toDate(),
+      };
       wishlistQuery.createdAt = {
-        $gte: moment(dateStart, 'DD/MM/YYYY').toDate(), 
-        $lte: moment(dateEnd, 'DD/MM/YYYY').toDate()
-    }
-    }
-
-    if(req.userId && req.role === enumData.UserType.Author.code) {
-      courseQuery.createdBy = req.userId
+        $gte: moment(dateStart, "DD/MM/YYYY").toDate(),
+        $lte: moment(dateEnd, "DD/MM/YYYY").toDate(),
+      };
     }
 
-    if(authorId) {
-      courseQuery.createdBy = authorId
+    if (req.userId && req.role === enumData.UserType.Author.code) {
+      courseQuery.createdBy = req.userId;
     }
 
-    const courses = await Course.find(courseQuery).populate('createdBy');
+    if (authorId) {
+      courseQuery.createdBy = authorId;
+    }
+
+    const courses = await Course.find(courseQuery).populate("createdBy");
 
     const results: CourseReportItem[] = [];
 
     // filter condition
-    const dictUsersOfCourse: Record<string, any> = {}
-    const dictOrdersOfUser: Record<string, any> = {}
-    const dictLessonsDoneOfUser: Record<string, any> = {}
-    const dictSectionOfCourse: Record<string, any> = {}
-    const dictLessonsOfCourse: Record<string, any> = {}
-    const dictLessonsOfSection: Record<string, any> = {}
-    const dictWishlistOfCourse: Record<string, any> = {}
-    const dictReviewsOfCourse: Record<string, any> = {}
+    const dictUsersOfCourse: Record<string, any> = {};
+    const dictOrdersOfUser: Record<string, any> = {};
+    const dictLessonsDoneOfUser: Record<string, any> = {};
+    const dictSectionOfCourse: Record<string, any> = {};
+    const dictLessonsOfCourse: Record<string, any> = {};
+    const dictLessonsOfSection: Record<string, any> = {};
+    const dictWishlistOfCourse: Record<string, any> = {};
+    const dictReviewsOfCourse: Record<string, any> = {};
     // dict lessons of course
 
-    const lessonDoneRes = await IsLessonDone.find().populate('lessonId');
+    const lessonDoneRes = await IsLessonDone.find().populate("lessonId");
     const courseRes = await Course.find();
     const sectionsRes = await Section.find();
     const lessonsRes = await Lesson.find();
     const ordersRes = await Order.find(orderQuery);
     const wishlistRes = await Wishlist.find({
       isDeleted: false,
-      ...wishlistQuery
+      ...wishlistQuery,
     });
 
     const reviewsRes = await Review.find(reviewQuery);
 
     wishlistRes.forEach((item) => {
-      if(item.courseId) {
+      if (item.courseId) {
         const currentKey = item.courseId.toString();
         if (dictWishlistOfCourse[currentKey]) {
-          dictWishlistOfCourse[currentKey].push(item)
+          dictWishlistOfCourse[currentKey].push(item);
         } else {
-          dictWishlistOfCourse[currentKey] = [item]
+          dictWishlistOfCourse[currentKey] = [item];
         }
       }
-    })
+    });
 
     const orderDetails = ordersRes.flatMap((order) => {
       return order.items.map((item: any) => ({
-        orderId: order._id, 
+        orderId: order._id,
         userId: order.user._id,
         userEmail: order.user.email,
         // ... other relevant order fields if needed
-    
+
         courseId: item._id,
         courseName: item.name,
         courseThumbnail: item.thumbnail,
@@ -680,91 +689,87 @@ export const getReportsCourseInsights = async (req: AuthorAuthRequest, res: Resp
     });
     // create dict courses of user
     orderDetails.forEach((item) => {
-      if(item.courseId) {
+      if (item.courseId) {
         if (dictUsersOfCourse[item.courseId]) {
-          dictUsersOfCourse[item.courseId].push(item)
+          dictUsersOfCourse[item.courseId].push(item);
         } else {
-          dictUsersOfCourse[item.courseId] = [item]
+          dictUsersOfCourse[item.courseId] = [item];
         }
       }
-
-    })
+    });
     // create dict orders of user
     ordersRes.forEach((item) => {
-      if(item.user) {
+      if (item.user) {
         const currentKey = item.user._id.toString();
         if (dictOrdersOfUser[currentKey]) {
-          dictOrdersOfUser[currentKey].push(item)
+          dictOrdersOfUser[currentKey].push(item);
         } else {
-          dictOrdersOfUser[currentKey] = [item]
+          dictOrdersOfUser[currentKey] = [item];
         }
       }
-    })
+    });
     // create dict lessons of section
     lessonsRes.forEach((item) => {
-      const currentKey = item.sectionId.toString()
-      if(dictLessonsOfSection[currentKey]) {
-        dictLessonsOfSection[currentKey].push(item)
+      const currentKey = item.sectionId.toString();
+      if (dictLessonsOfSection[currentKey]) {
+        dictLessonsOfSection[currentKey].push(item);
       } else {
-        dictLessonsOfSection[currentKey] = [item]
+        dictLessonsOfSection[currentKey] = [item];
       }
-    })
+    });
 
     // Group lesson done by userId (create dict lessons of of user and lesson)
     lessonDoneRes.forEach((item: any) => {
-      if(item._doc) {
+      if (item._doc) {
         const currentKey = item.userId.toString() + item.lessonId?._id?.toString();
         const currentValue = {
           ...item._doc,
-          lesson: item._doc?.lessonId
-        }
-        dictLessonsDoneOfUser[currentKey] = currentValue
+          lesson: item._doc?.lessonId,
+        };
+        dictLessonsDoneOfUser[currentKey] = currentValue;
       }
-    })
+    });
 
     // Group section by course id (dict sections of course)
     sectionsRes.forEach((item) => {
       if (item.courseId) {
-        const currentKey = item.courseId.toString()
+        const currentKey = item.courseId.toString();
         if (dictSectionOfCourse[currentKey]) {
-          dictSectionOfCourse[currentKey].push(item)
+          dictSectionOfCourse[currentKey].push(item);
         } else {
-          dictSectionOfCourse[currentKey] = [item]
+          dictSectionOfCourse[currentKey] = [item];
         }
       }
-    })
+    });
 
-     // Group lesson by course id
-     courseRes.forEach((courseItem) => {
-      const courseId = courseItem._id.toString()
-      const listSectionOfCourse = dictSectionOfCourse[courseId] as ISection[] ?? [];
+    // Group lesson by course id
+    courseRes.forEach((courseItem) => {
+      const courseId = courseItem._id.toString();
+      const listSectionOfCourse = (dictSectionOfCourse[courseId] as ISection[]) ?? [];
       listSectionOfCourse.forEach((sectionItem) => {
-          const listLessonOfSection = dictLessonsOfSection[sectionItem._id.toString()] ?? [];
-          listLessonOfSection.forEach((lessonItem) => {
-              if (dictLessonsOfCourse[courseId]) {
-                dictLessonsOfCourse[courseId].push(lessonItem)
-              } else {
-                dictLessonsOfCourse[courseId] = [lessonItem]
-              }
-          })
-      })
-    })
-     
+        const listLessonOfSection = dictLessonsOfSection[sectionItem._id.toString()] ?? [];
+        listLessonOfSection.forEach((lessonItem) => {
+          if (dictLessonsOfCourse[courseId]) {
+            dictLessonsOfCourse[courseId].push(lessonItem);
+          } else {
+            dictLessonsOfCourse[courseId] = [lessonItem];
+          }
+        });
+      });
+    });
     reviewsRes.forEach((reviewItem) => {
-      if(reviewItem.courseId) {
+      if (reviewItem.courseId) {
         const currentKey = reviewItem.courseId.toString();
         if (dictReviewsOfCourse[currentKey]) {
-          dictReviewsOfCourse[currentKey].push(reviewItem)
+          dictReviewsOfCourse[currentKey].push(reviewItem);
         } else {
-          dictReviewsOfCourse[currentKey] = [reviewItem]
+          dictReviewsOfCourse[currentKey] = [reviewItem];
         }
       }
-    
-    })
-
+    });
 
     for (const course of courses) {
-      const currentCourseId = course._id.toString()
+      const currentCourseId = course._id.toString();
       const listUsersOfCurrentCourse = dictUsersOfCourse[currentCourseId] ?? [];
       const listLessonsOfCurrentCourse = dictLessonsOfCourse[currentCourseId] ?? [];
       const listWishlistOfCurrentCourse = dictWishlistOfCourse[currentCourseId] ?? [];
@@ -773,41 +778,51 @@ export const getReportsCourseInsights = async (req: AuthorAuthRequest, res: Resp
 
       // const studentsOfCourse = learners.map((student) => student.user);
 
-      const totalVideoLength = listLessonsOfCurrentCourse.reduce((total, lesson) => total + lesson.videoLength, 0);
+      const totalVideoLength = listLessonsOfCurrentCourse.reduce(
+        (total, lesson) => total + lesson.videoLength,
+        0
+      );
 
       let totalStudyTime = 0;
       for (const user of listUsersOfCurrentCourse) {
         const currentUserId = user.userId.toString();
         const listLessonOfCurrentCourse = dictLessonsOfCourse[course._id.toString()] ?? [];
-        const listLessonDone = []
+        const listLessonDone = [];
         for (const lessonItem of listLessonOfCurrentCourse) {
-          if(dictLessonsDoneOfUser[currentUserId + lessonItem._id.toString()]) {
+          if (dictLessonsDoneOfUser[currentUserId + lessonItem._id.toString()]) {
             const lessonDone = dictLessonsDoneOfUser[currentUserId + lessonItem._id.toString()];
-            if(lessonDone) {
+            if (lessonDone) {
               totalStudyTime += lessonDone?.lesson?.videoLength ?? 0;
               listLessonDone.push(lessonDone);
             }
           }
         }
 
-        let currentUserProgress = 0; 
-        if(listLessonOfCurrentCourse.length > 0) {
-          currentUserProgress = listLessonDone.length / listLessonOfCurrentCourse.length
+        let currentUserProgress = 0;
+        if (listLessonOfCurrentCourse.length > 0) {
+          currentUserProgress = listLessonDone.length / listLessonOfCurrentCourse.length;
         }
-        
+
         // const { totalVideosLengthDone } = await getProgressOfCourse(course._id, student._id);
         // totalStudyTime += totalVideosLengthDone;
       }
 
       let avgStudyTime = 0;
-      if(listUsersOfCurrentCourse.length > 0) {
+      if (listUsersOfCurrentCourse.length > 0) {
         avgStudyTime = totalStudyTime / listUsersOfCurrentCourse.length;
       }
       let avgRatings = 0;
-      if(listReviewsOfCurrentCourse.length > 0) {
-        avgRatings = listReviewsOfCurrentCourse.reduce((total, review) => total + (review?.ratingStar || 0), 0) / listReviewsOfCurrentCourse.length
+      if (listReviewsOfCurrentCourse.length > 0) {
+        avgRatings =
+          listReviewsOfCurrentCourse.reduce(
+            (total, review) => total + (review?.ratingStar || 0),
+            0
+          ) / listReviewsOfCurrentCourse.length;
       }
-      const saleOfCurrentCourse = listUsersOfCurrentCourse.reduce((total, user) => total + (user?.coursePrice || 0), 0);
+      const saleOfCurrentCourse = listUsersOfCurrentCourse.reduce(
+        (total, user) => total + (user?.coursePrice || 0),
+        0
+      );
       const courseReportItem: CourseReportItem = {
         _id: course._id,
         author: course?.createdBy?.name,
@@ -821,7 +836,7 @@ export const getReportsCourseInsights = async (req: AuthorAuthRequest, res: Resp
         numberOfWishlist: listWishlistOfCurrentCourse.length,
         numberOfRatings: listReviewsOfCurrentCourse.length,
         avgRatings: avgRatings,
-        saleOfCourse: saleOfCurrentCourse
+        saleOfCourse: saleOfCurrentCourse,
       };
 
       results.push(courseReportItem);
@@ -841,39 +856,43 @@ export const getReportsCourseInsights = async (req: AuthorAuthRequest, res: Resp
   }
 };
 
-export const getCoursesReportByAuthor = async (req: AuthorAuthRequest, res: Response, next: NextFunction) => {
+export const getCoursesReportByAuthor = async (
+  req: AuthorAuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
   const dateStart = new Date(req.query.dateStart as string); // Replace with your start date
-  const dateEnd = new Date(req.query.dateEnd as string);   // Replace with your end date
-  
+  const dateEnd = new Date(req.query.dateEnd as string); // Replace with your end date
+
   // Ensure dates start at the beginning and end of the day for accuracy
   dateStart.setHours(0, 0, 0, 0);
-  dateEnd.setHours(23, 59, 59, 999); 
-  const dictReviewsOfCourse: Record<string, any> = {}
-  const dictCourse: Record<string, any> = {}
-  
+  dateEnd.setHours(23, 59, 59, 999);
+  const dictReviewsOfCourse: Record<string, any> = {};
+  const dictCourse: Record<string, any> = {};
+
   try {
     const courseQuery: any = {};
     const orderQuery: any = {};
     // Filter by Author!
-    if(req.role && req.role === enumData.UserType.Author.code) {
-       courseQuery.createdBy = new mongoose.Types.ObjectId(req.userId) as any;
-    } 
+    if (req.role && req.role === enumData.UserType.Author.code) {
+      courseQuery.createdBy = new mongoose.Types.ObjectId(req.userId) as any;
+    }
     // Filter by from date start to date end
-    if(req.body.dateStart && req.body.dateEnd) {
+    if (req.body.dateStart && req.body.dateEnd) {
       orderQuery.createdAt = {
         $gte: dateStart,
-        $lte: dateEnd
-      }
+        $lte: dateEnd,
+      };
     }
     const reviewsRes = await Review.find();
     const ordersRes = await Order.find(orderQuery);
     const orderDetails = ordersRes.flatMap((order) => {
       return order.items.map((item: any) => ({
-        orderId: order._id, 
+        orderId: order._id,
         userId: order.user._id,
         userEmail: order.user.email,
         // ... other relevant order fields if needed
-    
+
         courseId: item._id,
         courseName: item.name,
         courseThumbnail: item.thumbnail,
@@ -883,43 +902,45 @@ export const getCoursesReportByAuthor = async (req: AuthorAuthRequest, res: Resp
     });
 
     reviewsRes.forEach((reviewItem) => {
-      if(reviewItem.courseId) {
+      if (reviewItem.courseId) {
         const currentKey = reviewItem.courseId.toString();
         if (dictReviewsOfCourse[currentKey]) {
-          dictReviewsOfCourse[currentKey].push(reviewItem)
+          dictReviewsOfCourse[currentKey].push(reviewItem);
         } else {
-          dictReviewsOfCourse[currentKey] = [reviewItem]
+          dictReviewsOfCourse[currentKey] = [reviewItem];
         }
       }
-    })
+    });
 
     orderDetails.forEach((item) => {
       if (item.courseId) {
         if (dictCourse[item.courseId]) {
-          dictCourse[item.courseId].push(item)
+          dictCourse[item.courseId].push(item);
         } else {
-          dictCourse[item.courseId] = [item]
+          dictCourse[item.courseId] = [item];
         }
       }
-    })
+    });
 
     // SHOULD BE OPIMIZE PERFORMANCE FOR WEBSITE ABOUT REPORT!
     const courses: any = await Course.find(courseQuery);
-    
-    
+
     const results: any = courses.map((courseItem) => {
-      const currentCourseId = courseItem._id.toString()
+      const currentCourseId = courseItem._id.toString();
 
       const learners = dictCourse[currentCourseId]?.length ?? 0;
       const listReviewsOfCurrentCourse = dictReviewsOfCourse[currentCourseId] ?? [];
-      let totalEarnings: number = dictCourse[currentCourseId]?.reduce((total: number, item: any) => {
-        return total + item?.coursePrice ?? 0
-      }, 0) ?? 0
+      let totalEarnings: number =
+        dictCourse[currentCourseId]?.reduce((total: number, item: any) => {
+          return total + item?.coursePrice ?? 0;
+        }, 0) ?? 0;
 
-      if(req.role && req.role === enumData.UserType.Author.code) {
-        totalEarnings = totalEarnings * enumData.SettingString.REVENUE_RATING_AUTHOR.value
+      if (req.role && req.role === enumData.UserType.Author.code) {
+        totalEarnings = totalEarnings * enumData.SettingString.REVENUE_RATING_AUTHOR.value;
       }
-      const avgRatings = listReviewsOfCurrentCourse.reduce((total, review) => total + review.ratingStar, 0) / listReviewsOfCurrentCourse.length
+      const avgRatings =
+        listReviewsOfCurrentCourse.reduce((total, review) => total + review.ratingStar, 0) /
+        listReviewsOfCurrentCourse.length;
 
       return {
         courseName: courseItem.name,
@@ -928,7 +949,7 @@ export const getCoursesReportByAuthor = async (req: AuthorAuthRequest, res: Resp
         learners: learners,
         totalEarnings: totalEarnings.toFixed(2),
         avgRatings,
-        numberOfRatings: listReviewsOfCurrentCourse.length
+        numberOfRatings: listReviewsOfCurrentCourse.length,
       };
     });
 
@@ -941,6 +962,89 @@ export const getCoursesReportByAuthor = async (req: AuthorAuthRequest, res: Resp
       return next(error);
     } else {
       const customError = new CustomErrorMessage("Failed to get courses report by author!", 422);
+      return next(customError);
+    }
+  }
+};
+
+export const getTopUsers = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const users = await User.find();
+
+    const userCoursesCount: Record<string, number> = {};
+
+    const orders = await Order.find({ status: "Success" }).populate("user").populate("items._id");
+    orders.forEach((order: IOrder) => {
+      const userId = order.user._id.toString();
+      const coursesCount = order.items.length;
+      if (userCoursesCount[userId]) {
+        userCoursesCount[userId] += coursesCount;
+      } else {
+        userCoursesCount[userId] = coursesCount;
+      }
+    });
+
+    const sortedUsers = users.sort((a, b) => {
+      const countA = userCoursesCount[a._id.toString()] || 0;
+      const countB = userCoursesCount[b._id.toString()] || 0;
+      return countB - countA;
+    });
+
+    const currentDate = moment();
+
+    const topUsers = sortedUsers.slice(0, 10).map((user) => ({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      avatar: user.avatar,
+      coursesCount: userCoursesCount[user._id.toString()] || 0,
+      joinTime: moment(user.createdAt).from(currentDate, true),
+    }));
+
+    res.status(200).json({
+      message: "Top 10 users fetched successfully!",
+      topUsers,
+    });
+  } catch (error) {
+    if (error instanceof CustomError) {
+      return next(error);
+    } else {
+      const customError = new CustomErrorMessage("Failed to fetch top users!", 422);
+      return next(customError);
+    }
+  }
+};
+
+export const getTopOrders = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const orders = await Order.find({ status: "Success" }).populate("user").populate("items._id");
+
+    const sortedOrders = orders.sort((a, b) => (b.totalPrice || 0) - (a.totalPrice || 0));
+
+    const currentDate = moment();
+
+    const topOrders = sortedOrders.slice(0, 10).map((order) => ({
+      _id: order._id,
+      vatFee: order.vatFee,
+      transaction: order.transaction,
+      note: order.note,
+      totalPrice: order.totalPrice,
+      user: order.user,
+      couponCode: order.couponCode,
+      items: order.items,
+      status: order.status,
+      orderTime: moment(order.createdAt).from(currentDate, true),
+    }));
+
+    res.status(200).json({
+      message: "Top 10 orders fetched successfully!",
+      topOrders,
+    });
+  } catch (error) {
+    if (error instanceof CustomError) {
+      return next(error);
+    } else {
+      const customError = new CustomErrorMessage("Failed to fetch top orders!", 422);
       return next(customError);
     }
   }
