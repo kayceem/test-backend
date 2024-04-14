@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import Course from "../../models/Course";
 import ActionLog from "../../models/ActionLog";
 import { ICourse } from "../../types/course.type";
+import Order from "../../models/Order";
 import CustomError from "../../utils/error";
 import CustomErrorMessage from "../../utils/errorMessage";
 import { enumData } from "../../config/enumData";
@@ -52,11 +53,6 @@ export const getCourses = async (req: AuthorAuthRequest, res: Response, next: Ne
     query.categoryId = _category;
   }
 
-  // Filter data by author (who has created that course)
-  // if(req.username !== "admin") {
-  //   query.createdBy = new mongoose.Types.ObjectId(req.userId) as any;
-  // }
-
   try {
     const promiseCourses = Course.find(query, {
       ...(query.$text && { score: { $meta: "textScore" } }),
@@ -73,6 +69,19 @@ export const getCourses = async (req: AuthorAuthRequest, res: Response, next: Ne
       courses = await promiseCourses;
     }
 
+    // Get the number of learners for each course
+    const coursesWithLearners = await Promise.all(
+      courses.map(async (course) => {
+        const learnersCount = await Order.find({
+          items: { $elemMatch: { _id: course._id } },
+        }).countDocuments();
+        return {
+          ...course.toObject(),
+          learners: learnersCount,
+        };
+      })
+    );
+
     const totalCourses: number = await Course.where(query).countDocuments();
 
     const pagination = {
@@ -83,7 +92,7 @@ export const getCourses = async (req: AuthorAuthRequest, res: Response, next: Ne
 
     res.status(200).json({
       message: "Fetch all courses successfully!",
-      courses,
+      courses: coursesWithLearners,
       pagination,
     });
   } catch (error) {
