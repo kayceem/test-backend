@@ -116,7 +116,7 @@ export const googleLogin = async (req: Request, res: Response, next: NextFunctio
     const jwtToken = jwt.sign(
       { email: userDoc.email, userId: userDoc._id.toString() },
       "somesupersecret",
-      { expiresIn: "1h" }
+      { expiresIn: "4h" }
     );
 
     userDoc.loginToken = jwtToken;
@@ -158,7 +158,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     const token = jwt.sign(
       { email: userDoc.email, userId: userDoc._id.toString() },
       "somesupersecret",
-      { expiresIn: "1h" }
+      { expiresIn: "4h" }
     );
 
     userDoc.loginToken = token;
@@ -229,7 +229,7 @@ export const adminLogin = async (req: Request, res: Response, next: NextFunction
     const token = jwt.sign(
       { email: userDoc.email, userId: userDoc._id.toString(), adminRole: userDoc.role },
       "somesupersecret",
-      { expiresIn: "1h" }
+      { expiresIn: "4h" }
     );
 
     userDoc.loginToken = token;
@@ -602,7 +602,7 @@ export const githubLogin = async (req: Request, res: Response, next: NextFunctio
     const jwtToken = jwt.sign(
       { email: userDoc.email, userId: userDoc._id.toString() },
       "somesupersecret",
-      { expiresIn: "1h" }
+      { expiresIn: "4h" }
     );
     userDoc.loginToken = jwtToken; // Use loginToken instead of token
     userDoc.loginTokenExpiration = new Date(Date.now() + 60 * 60 * 1000);
@@ -635,7 +635,7 @@ export const facebookLogin = (req: Request, res: Response, next: NextFunction) =
     const jwtToken = jwt.sign(
       { email: user.email, userId: user._id.toString() },
       "somesupersecret",
-      { expiresIn: "1h" }
+      { expiresIn: "4h" }
     );
 
     user.loginToken = jwtToken;
