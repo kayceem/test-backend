@@ -500,7 +500,7 @@ export const getReportsUserProgress = async (
 
     let resUser = users;
     let listCourseIdOfCurrentAuthor = [];
-    if (req.userId && enumData.UserType.Author.code) {
+    if (req.userId && req.role === enumData.UserType.Author.code) {
       // Danh sách userId của tác giả
       const listUserIdOfCurrentAuthor = dictUsersOfAuthor[req.userId];
       resUser = users.filter((item) => listUserIdOfCurrentAuthor.includes(item._id.toString()));
