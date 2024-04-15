@@ -4,7 +4,7 @@ import { Request } from "express";
 
 const pdfStorage = multer.diskStorage({
   destination: (req: Request, file: Express.Multer.File, cb) => {
-    cb(null, "pdfs");
+    cb(null, "assets/pdfs");
   },
   filename: (req: Request, file: Express.Multer.File, cb) => {
     cb(null, uuidv4().substring(0, 8) + "-" + file.originalname);
