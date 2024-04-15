@@ -262,6 +262,14 @@ export const updateActiveStatusCategory = async (
       throw error;
     }
 
+    const listCourseOfCurrentCate = await Course.find({
+      categoryId: foundCategory._id,
+    })
+
+    if(listCourseOfCurrentCate.length > 0) {
+      throw new Error("Category is not empty. Can't deactivate this category");
+    }
+
     foundCategory.isDeleted = !foundCategory.isDeleted;
     foundCategory.updatedAt = new Date();
     foundCategory.updatedBy = new mongoose.Types.ObjectId(req.userId) as any;

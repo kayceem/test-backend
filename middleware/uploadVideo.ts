@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 const videoStorage = multer.diskStorage({
   destination: (req: Request, file: Express.Multer.File, cb: (error: Error | null, destination: string) => void) => {
-    cb(null, 'videos');
+    cb(null, 'assets/videos');
   },
   filename: (req: Request, file: Express.Multer.File, cb: (error: Error | null, filename: string) => void) => {
     cb(null, uuidv4().substring(0, 8) + '-' + file.originalname);
