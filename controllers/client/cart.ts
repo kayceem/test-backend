@@ -30,7 +30,6 @@ import {
 
 export const retrieveCartByIds = async (req: Request, res: Response, next: NextFunction) => {
   const { _courseIds, _userId } = req.query;
-
   if (!_courseIds) {
     res.status(200).json({
       message: "Cart is empty!",
@@ -54,7 +53,7 @@ export const retrieveCartByIds = async (req: Request, res: Response, next: NextF
 
     if (_userId && typeof _userId === "string" && _userId.trim() !== "") {
       const orderedCourses = await getCoursesOrderedByUserInfo(_userId);
-      orderedCourseIds = orderedCourses.map((course) => course._id.toString());
+      orderedCourseIds = orderedCourses.filter((item) => item != null).map((course) => course._id.toString());
     }
 
     const duplicatedIds = orderedCourseIds.filter((id) => courseIdsArray.includes(id));
