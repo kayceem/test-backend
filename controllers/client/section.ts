@@ -8,7 +8,7 @@ export const getSectionsByCourseId = async (req: Request, res: Response, next: N
   try {
     const { courseId } = req.params;
 
-    const sectionsOfCourse = await Section.find({ courseId });
+    const sectionsOfCourse = await Section.find({ courseId }).sort({ createdAt: 'ascending' });
 
     const result = sectionsOfCourse.map(async (section) => {
       const lessons = await Lesson.find({ sectionId: section._id });
