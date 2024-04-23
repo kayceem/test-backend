@@ -28,9 +28,6 @@ import Course from "../../models/Course";
 export const getReviews = async (req: AuthorAuthRequest, res: Response, next: NextFunction) => {
   try {
     const searchTerm = (req.query._q as string) || "";
-    const page = parseInt(req.query._page as string) || 1;
-    const limit = parseInt(req.query._limit as string) || 10;
-    const skip = (page - 1) * limit;
     const statusFilter = (req.query._status as string) || "all";
     const dateFilter = (req.query._date as string) || "all";
     let dateQuery = {};
@@ -70,9 +67,7 @@ export const getReviews = async (req: AuthorAuthRequest, res: Response, next: Ne
     const reviews = await Review.find(query)
       .sort({ createdAt: -1 })
       .populate("userId", "name")
-      .populate("courseId", "name")
-      .skip(skip)
-      .limit(limit);
+      .populate("courseId", "name");
 
     let reviewsWithReplies = await Promise.all(
       reviews.map(async (review) => {
@@ -92,7 +87,7 @@ export const getReviews = async (req: AuthorAuthRequest, res: Response, next: Ne
         item._id.toString()
       );
 
-      reviewsWithReplies.filter((item: any) => {
+      reviewsWithReplies = reviewsWithReplies.filter((item: any) => {
         return listCourseIdByCurrentAuthor.includes(item.courseId._id.toString());
       });
     }
@@ -100,9 +95,6 @@ export const getReviews = async (req: AuthorAuthRequest, res: Response, next: Ne
     res.status(200).json({
       message: GET_SUCCESS,
       total: reviewsWithReplies.length,
-      page,
-      pages: Math.ceil(total / limit),
-      limit,
       reviews: reviewsWithReplies,
     });
   } catch (error) {
