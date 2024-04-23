@@ -297,7 +297,9 @@ export const updateUser = async (req: Request, res: Response, next: NextFunction
   };
 
   if (req.file) {
-    updateData.avatar = `${BACKEND_URL}/${req.file.path}`;
+    const imagePath = req.file.path.replace(/\\/g, "/"); 
+    const cleanImagePath = imagePath.replace("assets/", "");
+    updateData.avatar = `${BACKEND_URL}/${cleanImagePath}`;
   }
 
   try {

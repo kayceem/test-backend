@@ -29,10 +29,6 @@ import {
 export const getFeedbacks = async (req: AuthorAuthRequest, res: Response, next: NextFunction) => {
   try {
     const searchTerm = (req.query._q as string) || "";
-    const page = parseInt(req.query._page as string) || 1;
-    const limit = parseInt(req.query._limit as string) || 10;
-    const skip = (page - 1) * limit;
-
     const statusFilter = (req.query._status as string) || "all";
 
     let query = {
@@ -41,9 +37,7 @@ export const getFeedbacks = async (req: AuthorAuthRequest, res: Response, next: 
       ...(searchTerm ? { name: { $regex: searchTerm, $options: "i" } } : {}),
     };
 
-    const total = await Feedback.countDocuments(query);
-
-    const feedbacks = await Feedback.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit);
+    const feedbacks = await Feedback.find(query).sort({ createdAt: -1 });
 
     const feedbacksWithReplies = await Promise.all(
       feedbacks.map(async (feedback) => {
@@ -59,10 +53,7 @@ export const getFeedbacks = async (req: AuthorAuthRequest, res: Response, next: 
 
     res.status(200).json({
       message: GET_SUCCESS,
-      total,
-      page,
-      pages: Math.ceil(total / limit),
-      limit,
+      total: feedbacksWithReplies.length,
       feedbacks: feedbacksWithReplies,
     });
   } catch (error) {

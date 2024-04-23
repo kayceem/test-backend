@@ -27,9 +27,6 @@ import {
 export const getCoupons = async (req: AuthorAuthRequest, res: Response, next: NextFunction) => {
   try {
     const searchTerm = (req.query._q as string) || "";
-    const page = parseInt(req.query._page as string) || 1;
-    const limit = parseInt(req.query._limit as string) || 10;
-    const skip = (page - 1) * limit;
     const dateStart = req.query.dateStart as string;
     const dateEnd = req.query.dateEnd as string;
     const statusFilter = (req.query._status as string) || "all";
@@ -46,20 +43,12 @@ export const getCoupons = async (req: AuthorAuthRequest, res: Response, next: Ne
       query.createdBy = new mongoose.Types.ObjectId(req.userId) as any;
     }
 
-    const total = await Coupon.countDocuments(query);
-
     const coupons = await Coupon.find(query)
       .populate("couponTypeId", "name")
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
+      .sort({ createdAt: -1 });
 
     res.status(200).json({
       message: GET_SUCCESS,
-      total,
-      page,
-      pages: Math.ceil(total / limit),
-      limit,
       coupons,
     });
   } catch (error) {

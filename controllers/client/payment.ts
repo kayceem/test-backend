@@ -107,7 +107,7 @@ export const handleVnpayReturn = async (req: Request, res: Response, next: NextF
           12,
           14
         )}.000Z`
-      );
+      ).toISOString();
 
       const vnp_AmountUSD: number = vnp_AmountVND / 100 / 23000;
 
