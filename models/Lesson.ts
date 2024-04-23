@@ -18,9 +18,6 @@ const lessonSchema = new Schema<ILesson>(
       required: true,
       index: true,
     },
-    icon: {
-      type: String,
-    },
     description: {
       type: String,
       required: true,
@@ -39,9 +36,6 @@ const lessonSchema = new Schema<ILesson>(
     type: {
       type: String,
       required: true,
-    },
-    password: {
-      type: String,
     },
   },
   { timestamps: true }
