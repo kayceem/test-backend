@@ -4,7 +4,7 @@ import { Request } from "express";
 
 const fileStorage = multer.diskStorage({
   destination: (req: Request, file: Express.Multer.File, cb) => {
-    cb(null, "images");
+    cb(null, "assets/images");
   },
   filename: (req: Request, file: Express.Multer.File, cb) => {
     cb(null, uuidv4().substring(0, 8) + "-" + file.originalname);
