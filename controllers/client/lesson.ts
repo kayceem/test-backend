@@ -144,7 +144,7 @@ export const getFreeLessonsByCourseId = async (req: Request, res: Response, next
   const { courseId } = req.params;
 
   try {
-    const sections = await Section.find({ courseId: courseId });
+    const sections = await Section.find({ courseId: courseId }).sort({ createdAt: 1 });
 
     const sectionIds = sections.map((section) => section._id);
 
@@ -152,7 +152,7 @@ export const getFreeLessonsByCourseId = async (req: Request, res: Response, next
       sectionId: { $in: sectionIds },
       access: "FREE",
       isDeleted: false,
-    }).sort({ createdAt: 1 });
+    });
 
     const course = await Course.findOne({ _id: courseId });
     const { coursePreview } = course;
@@ -207,6 +207,30 @@ export const getUsersByLessonId = async (req: Request, res: Response, next: Next
       return next(error);
     } else {
       const customError = new CustomErrorMessage("Failed to fetch users by lesson id!", 422);
+      return next(customError);
+    }
+  }
+};
+
+export const getAllLessonsByCourseId = async (req: Request, res: Response, next: NextFunction) => {
+  const { courseId } = req.params;
+
+  try {
+    const sections = await Section.find({ courseId: courseId }).sort({ createdAt: 1 });
+
+    const sectionIds = sections.map((section) => section._id);
+
+    const lessons = await Lesson.find({ sectionId: { $in: sectionIds }, isDeleted: false });
+
+    res.status(200).json({
+      message: GET_SUCCESS,
+      lessons: lessons,
+    });
+  } catch (error) {
+    if (error instanceof CustomError) {
+      return next(error);
+    } else {
+      const customError = new CustomErrorMessage(ERROR_GET_DATA, 422);
       return next(customError);
     }
   }
