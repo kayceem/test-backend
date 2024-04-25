@@ -50,7 +50,7 @@ export const getCategories = async (req: AuthorAuthRequest, res: Response, next:
   try {
     const categories: ICategory[] = await Category.find(query, {
       ...(query.$text && { score: { $meta: "textScore" } }),
-    });
+    }).sort({ createdAt: -1 });
 
     const finalCategories = await Promise.all(
       categories.map(async (cate: ICategory) => {
@@ -130,7 +130,7 @@ export const postCategory = async (req: AuthorAuthRequest, res: Response, next: 
   session = await mongoose.startSession();
   session.startTransaction();
   try {
-    const { name, description } = req.body;
+    const { name, description, cateImage } = req.body;
 
     await body("name")
       .isLength({ min: 3 })
@@ -152,10 +152,9 @@ export const postCategory = async (req: AuthorAuthRequest, res: Response, next: 
       throw validationError;
     }
 
-    const imageUrl = req.file ? req.file.path.replace("\\", "/") : "https://picsum.photos/200";
     const category = new Category({
       name,
-      cateImage: imageUrl,
+      cateImage: cateImage,
       description,
       createdBy: req.userId,
     });
@@ -184,7 +183,7 @@ export const postCategory = async (req: AuthorAuthRequest, res: Response, next: 
 
 export const updateCategories = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { name, description, cateSlug } = req.body;
+    const { name, description, cateSlug, cateImage } = req.body;
 
     const { categoryId } = req.params;
 
@@ -205,6 +204,7 @@ export const updateCategories = async (req: Request, res: Response, next: NextFu
     updatedCategory.name = name;
     updatedCategory.description = description;
     updatedCategory.cateSlug = cateSlug;
+    updatedCategory.cateImage = cateImage;
 
     const response = await updatedCategory.save();
 
