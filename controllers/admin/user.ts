@@ -297,16 +297,7 @@ export const getUser = async (req: Request, res: Response, next: NextFunction) =
 };
 
 export const postUser = async (req: AuthorAuthRequest, res: Response, next: NextFunction) => {
-  const { name, email, phone, password, role, status, username } = req.body;
-
-  let avatar;
-
-  if (req.file) {
-    avatar = req.file.path;
-  } else {
-    avatar =
-      "https://lwfiles.mycourse.app/64b5524f42f5698b2785b91e-public/avatars/thumbs/64c077e0557e37da3707bb92.jpg";
-  }
+  const { name, email, phone, password, role, status, username, avatar } = req.body;
 
   let session: ClientSession | null = null;
   session = await mongoose.startSession();
@@ -318,7 +309,7 @@ export const postUser = async (req: AuthorAuthRequest, res: Response, next: Next
     const existingUser = await User.findOne({ email });
 
     if (existingUser) {
-      const error = new CustomError("Email", "Email is already registered", 422);
+      const error = new CustomError("Email", "Email is already registered", 422);3
       return next(error);
     }
 
