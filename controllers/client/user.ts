@@ -269,10 +269,53 @@ export const getUserDetail = async (req: Request, res: Response, next: NextFunct
       }
     }
 
+    let numCompletedCourses = 0;
+
+    const completedCoursesDetail: any[] = [];
+
+    for (const courseId of listCourseIdDistinctOfUser) {
+      const currentInfoCourse = dictCourse[courseId];
+      if (currentInfoCourse) {
+        const listLessonOfCurrentCourse = dictLessonsOfCourse[courseId] ?? [];
+        const listLessonDone = [];
+        let currentUserStudyTime = 0;
+        for (const lessonItem of listLessonOfCurrentCourse) {
+          const currentLessonId = lessonItem._id.toString();
+          if (dictLessonsDoneOfUser[userId + currentLessonId]) {
+            const lessonDone = dictLessonsDoneOfUser[userId + currentLessonId];
+            if (lessonDone) {
+              studyTime += lessonDone?.lesson?.videoLength ?? 0;
+              currentUserStudyTime += lessonDone?.lesson?.videoLength ?? 0;
+              listLessonDone.push(lessonDone);
+            }
+          }
+        }
+
+        let currentUserProgress = 0;
+        if (listLessonOfCurrentCourse.length > 0) {
+          currentUserProgress = listLessonDone.length / listLessonOfCurrentCourse.length;
+        }
+
+        if (currentUserProgress === 1) {
+          numCompletedCourses++; // Tăng biến đếm nếu khóa học đã hoàn thành
+          completedCourses.push(courseId);
+
+          // Chỉ thêm thông tin của các khóa học đã hoàn thành vào completedCoursesDetail
+          const courseEnrolledItem = {
+            ...currentInfoCourse._doc,
+            progress: currentUserProgress,
+            totalVideosLengthDone: currentUserStudyTime,
+          };
+          completedCoursesDetail.push(courseEnrolledItem);
+        }
+      }
+    }
+
     const result = {
       ...user.toObject(),
       courses: listCourseResult,
       achievement: getAchievement(listCourseResult.length),
+      numCourses: numCompletedCourses,
     };
 
     res.status(200).json({
@@ -297,7 +340,7 @@ export const updateUser = async (req: Request, res: Response, next: NextFunction
   };
 
   if (req.file) {
-    const imagePath = req.file.path.replace(/\\/g, "/"); 
+    const imagePath = req.file.path.replace(/\\/g, "/");
     const cleanImagePath = imagePath.replace("assets/", "");
     updateData.avatar = `${BACKEND_URL}/${cleanImagePath}`;
   }
