@@ -51,7 +51,11 @@ export const getBlogPrams = async (req: AuthorAuthRequest, res: Response, next: 
     if (currentUserRole && currentUserRole === enumData.UserType.Author.code) {
       query.createdBy = new mongoose.Types.ObjectId(req.userId) as any;
     }
-    const blogs = await Blog.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit);
+    const blogs = await Blog.find(query)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .populate("userId", "name avatar");
     const total = await Blog.countDocuments(query);
     const length = Blog.length;
     const pages = Math.ceil(total / limit);
@@ -95,7 +99,6 @@ export const createBlog = async (req: AuthorAuthRequest, res: Response, next: Ne
     categoryId,
     tags = "",
     blogImg,
-    author,
     readTime,
     thumbnail,
     userId,
@@ -117,7 +120,7 @@ export const createBlog = async (req: AuthorAuthRequest, res: Response, next: Ne
       categoryId,
       tags: tags.split(",").map((tag) => tag.trim()), // Chuyển đổi chuỗi tags thành mảng
       blogImg,
-      author,
+      author: req.userId,
       technology,
       readTime,
       userId,
