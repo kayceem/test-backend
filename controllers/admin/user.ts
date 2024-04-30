@@ -81,10 +81,10 @@ export const getUsers = async (req: AuthorAuthRequest, res: Response, next: Next
       ...(statusFilter === "inactive" ? { isDeleted: true } : {}),
       ...(searchCourseId ? { courses: { $elemMatch: { _id: searchCourseId } } } : {}),
     };
-    console.log("query", query);
 
     const orderQuery: any = {
       ...(searchCourseId ? { courses: { $elemMatch: { _id: searchCourseId } } } : {}),
+      status: "Success"
     };
 
     const ordersRes = await Order.find(orderQuery);

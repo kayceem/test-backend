@@ -75,6 +75,7 @@ export const getSummaryReports = async (
 
     const orders = await Order.find({
       createdAt: { $gte: thirtyDaysAgo, $lte: currentDate },
+      status: "Success"
     });
 
     const saleOf30days = orders.reduce((total, order) => {
@@ -123,6 +124,7 @@ export const getCourseSales = async (req: Request, res: Response, next: NextFunc
   try {
     const orders = await Order.find({
       createdAt: { $gte: previousDaysAgo, $lte: currentDate },
+      status: "Success"
     });
 
     const numberSalesByDate: { [key: string]: number } = {};
@@ -174,6 +176,7 @@ export const getRevenues = async (req: Request, res: Response, next: NextFunctio
   try {
     const orders = await Order.find({
       createdAt: { $gte: previousDaysAgo, $lte: currentDate },
+      status: "Success"
     });
 
     const salesByDate: { [key: string]: number } = {};
@@ -339,7 +342,9 @@ export const getReportsUserProgress = async (
   const authorId = req.query.authorId as string;
   try {
     // Query
-    const orderQuery: any = {};
+    const orderQuery: any = {
+      status: "Success"
+    };
     const userQuery: any = {
       // createdBy: req.query.authorId
     };
@@ -610,7 +615,9 @@ export const getReportsCourseInsights = async (
     const reviewQuery: any = {};
     const wishlistQuery: any = {};
 
-    const orderQuery: any = {};
+    const orderQuery: any = {
+      status: "Success"
+    };
 
     if (dateStart && dateEnd) {
       orderQuery.createdAt = {
@@ -872,7 +879,9 @@ export const getCoursesReportByAuthor = async (
 
   try {
     const courseQuery: any = {};
-    const orderQuery: any = {};
+    const orderQuery: any = {
+      status: "Success"
+    };
     // Filter by Author!
     if (req.role && req.role === enumData.UserType.Author.code) {
       courseQuery.createdBy = new mongoose.Types.ObjectId(req.userId) as any;

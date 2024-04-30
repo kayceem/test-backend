@@ -4,7 +4,7 @@ import CustomError from "../../utils/error";
 import CustomErrorMessage from "../../utils/errorMessage";
 
 interface GetOrdersQuery {
-  "items._id"?: string;
+  status?: string;
   createdAt?: {
     $gte: Date;
     $lte: Date;
