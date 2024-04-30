@@ -130,7 +130,9 @@ export const getUserDetail = async (req: Request, res: Response, next: NextFunct
     const courseRes = await Course.find({
       isDeleted: false,
     }).populate("userId");
-    const ordersRes = await Order.find();
+    const ordersRes = await Order.find({
+      status: "Success"
+    });
     const lessonDoneRes = await IsLessonDone.find().populate("lessonId");
     const sectionsRes = await Section.find();
     const lessonsRes = await Lesson.find();

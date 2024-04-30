@@ -74,6 +74,7 @@ export const getCourses = async (req: AuthorAuthRequest, res: Response, next: Ne
       courses.map(async (course) => {
         const learnersCount = await Order.find({
           items: { $elemMatch: { _id: course._id } },
+          status: "Success"
         }).countDocuments();
         return {
           ...course.toObject(),

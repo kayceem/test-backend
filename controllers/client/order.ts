@@ -107,7 +107,7 @@ export const getOrdersByUserId = async (req: Request, res: Response, next: NextF
 
     const userId: string = req.params.userId;
     const totalItems: number = await Order.countDocuments({ "user._id": userId });
-    const orders = await Order.find({ "user._id": userId })
+    const orders = await Order.find({ "user._id": userId, status: "Success" })
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);

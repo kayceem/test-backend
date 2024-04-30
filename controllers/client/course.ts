@@ -179,7 +179,9 @@ export const getCourses = async (req: Request, res: Response, next: NextFunction
 
       coursesQuery.sort(sortQuery);
     }
-    const ordersRes = await Order.find();
+    const ordersRes = await Order.find({
+      status: "Success"
+    });
     const reviewsRes = await Review.find();
 
     const orderDetails = ordersRes.flatMap((order) => {
@@ -465,7 +467,7 @@ export const getCourseDetail = async (req: Request, res: Response, next: NextFun
     let isBought = false;
 
     if (userId) {
-      const orders = await Order.find({ "user._id": userId });
+      const orders = await Order.find({ "user._id": userId, status: "Success" });
 
       const userCourses = orders.reduce((courses: ICourse[], order: IOrder) => {
         return courses.concat(order.items);
@@ -544,7 +546,9 @@ export const getRelatedCourses = async (req: Request, res: Response, next: NextF
         relatedCourses,
       });
     }
-    const ordersRes = await Order.find();
+    const ordersRes = await Order.find({
+      status: "Success"
+    });
 
     const orderDetails = ordersRes.flatMap((order) => {
       return order.items.map((item: any) => ({
@@ -606,7 +610,9 @@ export const getSuggestedCourses = async (req: Request, res: Response, next: Nex
   const dictUsersOfCourse: Record<string, any> = {};
 
   try {
-    const ordersRes = await Order.find();
+    const ordersRes = await Order.find({
+      status: "Success"
+    });
     const courseRes = await Course.find();
     const reviewsRes = await Review.find();
     const orderDetails = ordersRes.flatMap((order) => {
@@ -783,7 +789,9 @@ export const getCoursesFromWishlistByUserId = async (
   try {
     const { userId } = req.params;
 
-    const ordersRes = await Order.find();
+    const ordersRes = await Order.find({
+      status: "Success"
+    });
     const courseRes = await Course.find();
     const orderDetails = ordersRes.flatMap((order) => {
       return order.items.map((item: any) => ({
@@ -874,7 +882,7 @@ export const getUsersByCourseId = async (req: Request, res: Response, next: Next
   const courseId = req.params.courseId;
 
   try {
-    const orders = await Order.find({ "items._id": courseId }).sort({ createdAt: -1 });
+    const orders = await Order.find({ "items._id": courseId, status: "Success" }).sort({ createdAt: -1 });
 
     const users = orders.map((order) => order.user);
 

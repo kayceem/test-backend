@@ -217,6 +217,7 @@ export const getProgressOfCourse = async (courseId: string, userId: string) => {
 export const getCoursesOrderByUserId = async (userId: string) => {
   const courses = await Order.find({
     "user._id": userId,
+    status: "Success"
   })
     .select("items")
     .populate("items._id");
@@ -268,7 +269,7 @@ export const getCourseDetailInfo = async (courseId: string): Promise<ICourseDeta
 
     const lessonsOfCourse = (dictLessonsOfCourse[course._id.toString()] as ILesson[]) ?? [];
 
-    const orders = (await Order.find({ "items._id": courseId })) as IOrder[];
+    const orders = (await Order.find({ "items._id": courseId, status: "Success" })) as IOrder[];
     const numOfStudents = orders.length;
 
     const totalVideosLength = lessonsOfCourse.reduce(
