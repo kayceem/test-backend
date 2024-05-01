@@ -281,8 +281,8 @@ export const getCourses = async (req: Request, res: Response, next: NextFunction
     }
 
     // Lọc khoá học theo lượt đánh giá
-    if (req.query._avgRatings && parseInt(req.query._avgRatings as string) >= 3) {
-      const _avgRatings = parseInt(req.query._avgRatings as string);
+    if (req.query._avgRatings && parseFloat(req.query._avgRatings as string) >= 3) {
+      const _avgRatings = parseFloat(req.query._avgRatings as string);
       result = result.filter((item: any) => item.avgRatings >= _avgRatings);
       totalCourses = result.length;
     }
