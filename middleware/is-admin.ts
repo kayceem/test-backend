@@ -12,7 +12,7 @@ interface AdminAuthRequest extends Request {
 export default async (req: AdminAuthRequest, res: Response, next: NextFunction) => {
   try {
     const user: IUser | null = await User.findById(req.userId);
-    const isAdmin: boolean = user?.role === enumData.UserType.Admin.code || user?.role === enumData.UserType.Author.code;
+    const isAdmin: boolean = user?.role === enumData.UserType.Admin.code || user?.role === enumData.UserType.Author.code || user?.role === enumData.UserType.Employee.code;
 
     if (!isAdmin) {
       const error = new CustomError("Admin", "This user is not admin or author role!", 401);
