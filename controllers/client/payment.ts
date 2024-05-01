@@ -141,7 +141,7 @@ export const handleVnpayReturn = async (req: Request, res: Response, next: NextF
             }
           }
 
-          res.redirect(`${FRONTEND_URL}/order-completed?orderId=${orderId}`);
+          res.redirect(`https://e-learning-platform.pro/order-completed?orderId=${orderId}`);
         } else {
           res.send("Error: Order not found");
         }
