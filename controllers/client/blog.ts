@@ -21,6 +21,7 @@ export const getAllBlog = async (req: Request, res: Response, next: NextFunction
       isDeleted: { $ne: true },
     })
       .populate("categoryId", "name")
+      .populate("userId", "name avatar")
       .skip(skip)
       .sort({ createdAt: -1 })
       .limit(limit);
@@ -92,7 +93,7 @@ export const getBlogById = async (req: Request, res: Response, next: NextFunctio
     return res.status(400).json({ message: "Invalid blog ID" });
   }
   try {
-    const blog = await Blog.findById(blogId);
+    const blog = await Blog.findById(blogId).populate("userId", "name avatar");
     if (!blog) {
       const error = new CustomErrorMessage("Could not find blog", 422);
       throw error;
