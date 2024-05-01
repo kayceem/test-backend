@@ -7,7 +7,7 @@ import { AuthorAuthRequest } from "../../middleware/is-auth";
 
 export const getAllSubscribe = async (req: Request, res: Response): Promise<void> => {
   try {
-    const subscribe: ISubscribe[] = await Subscribe.find()
+    const subscribe: ISubscribe[] = await Subscribe.find().sort({ createdAt: -1 })
       .populate("createdBy", "name")
       .populate("updatedBy", "name");
     const response = { subscribe: subscribe };
