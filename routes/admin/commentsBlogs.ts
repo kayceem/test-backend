@@ -4,28 +4,28 @@ import * as blogCommentsController from "../../controllers/admin/commentsBlogs";
 const router: Router = express.Router();
 import isAuth from "../../middleware/is-auth";
 
-// Route để tạo một bình luận mới
+// route to create a new comment
 router.post("/create", blogCommentsController.addComment);
 
-// Route để lấy tất cả bình luận của một bài viết
+// route to get all the comments of an article
 router.get("/getCommentsByBlogId/:blogId", isAuth, blogCommentsController.getCommentsByBlogId);
 
-// Route để cập nhật một bình luận
+// route to update a comment
 router.put("/update/:commentId", isAuth, blogCommentsController.updateComment);
 
-// Route để xóa một bình luận
+// route to delete a comment
 router.delete("/:commentId", isAuth, blogCommentsController.deleteComment);
 
-// Route để 'like' hoặc 'unlike' một bình luận
+// route to 'like' or 'unlike' a comment
 router.patch("/like", isAuth, blogCommentsController.toggleLikeComment);
 
-// Route để phản hồi bình luận
+// route to respond to commentss
 router.post("/reply", isAuth, blogCommentsController.addReplyToComment);
 
-// Route để lấy tất cả blog comments
+// route to get all blog comments
 router.get("/getAll", blogCommentsController.getAllBlogComments);
 
-// Route để lấy tất cả bình luận của một bài viết (admin)
+// route to get all the comments of an article (admin)
 router.get("/getBlogParams/getBlogParams", isAuth, blogCommentsController.getCommentsBlog);
 
 router.patch(
@@ -34,7 +34,7 @@ router.patch(
   blogCommentsController.updateActiveCategoryBlogStatus
 );
 
-// Route để lấy lịch sử của một blog comments
+// route to get the history of a blog comments
 router.get("/histories/:commentId", isAuth, blogCommentsController.loadHistoriesForCategoryBlog);
 
 export default router;

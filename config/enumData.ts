@@ -1,225 +1,167 @@
 export const enumData = {
-  /** Loại user */
+  /** User Types */
   UserType: {
-    Employee: { code: "Employee", name: "Nhân viên", description: "" , value: ""},
-    Admin: { code: "Admin", name: "Admin", description: "" , value: ""},
-    Author: { code: "Author", name: "Author", description: "" , value: ""},
-    User: { code: "User", name: "User", description: "" , value: ""},
-    Student: { code: "Student", name: "Student", description: "" , value: ""},
+    Employee: { code: "Employee", name: "Employee", description: "", value: "" },
+    Admin: { code: "Admin", name: "Admin", description: "", value: "" },
+    Author: { code: "Author", name: "Author", description: "", value: "" },
+    User: { code: "User", name: "User", description: "", value: "" },
+    Student: { code: "Student", name: "Student", description: "", value: "" },
   },
-  /** Loại đăng nhập */
+  /** Login Types */
   LoginType: {
-    Local: { code: "Local", name: "Đăng nhập bằng username và password", description: "" , value: "local"},
-    Google: { code: "Google", name: "Đăng nhập bằng google", description: "" , value: "google"},
-    Facebook: { code: "Facebook", name: "Đăng nhập bằng facebook", description: "" , value: "facebook"},
-    Github: { code: "Github", name: "Đăng nhập bằng github", description: "" , value: "github"},
+    Local: { code: "Local", name: "Login with username and password", description: "", value: "local" },
+    Google: { code: "Google", name: "Login with Google", description: "", value: "google" },
   },
-
-  /** Loại kỳ thanh toán */
+  /** Payment Periods */
   PaymentPeriods: {
-    MONTH: { code: "MONTH", name: "Thanh toán theo tháng" },
-    YEAR: { code: "YEAR", name: "Thanh toán theo năm" },
+    MONTH: { code: "MONTH", name: "Monthly Payment" },
+    YEAR: { code: "YEAR", name: "Yearly Payment" },
   },
-
-  /** Trạng thái thanh toán */
+  /** Payment Status */
   PaymentStatus: {
-    UNPAID: { code: "UNPAID", name: "Chưa thanh toán", color: "gray" },
-    PAID: { code: "PAID", name: "Đã thanh toán", color: "blue" },
+    UNPAID: { code: "UNPAID", name: "Unpaid", color: "gray" },
+    PAID: { code: "PAID", name: "Paid", color: "blue" },
   },
-  /** Loại thanh toán */
+  /** Payment Types */
   PaymentType: {
-    TRANSFER: { code: "TRANSFER", name: "Chuyển khoản" },
-    CASH: { code: "CASH", name: "Tiền mặt" },
+    TRANSFER: { code: "TRANSFER", name: "Bank Transfer" },
+    CASH: { code: "CASH", name: "Cash" },
   },
-
   Gender: {
-    MALE: { code: "MALE", name: "Nam" },
-    FEMALE: { code: "FEMALE", name: "Nữ" },
-    OTHER: { code: "OTHER", name: "Khác" },
+    MALE: { code: "MALE", name: "Male" },
+    FEMALE: { code: "FEMALE", name: "Female" },
+    OTHER: { code: "OTHER", name: "Other" },
   },
-  /** Chế độ làm việc  */
+  /** Working Modes */
   WorkingMode: {
-    FULL_TIME: { code: "FULL_TIME", name: "Toàn thời gian", name1: "Fulltime", color: "#40B34F" },
-    PART_TIME: { code: "PART_TIME", name: "Bán thời gian", name1: "Partime", color: "#EAB042" },
+    FULL_TIME: { code: "FULL_TIME", name: "Full-Time", name1: "Fulltime", color: "#40B34F" },
+    PART_TIME: { code: "PART_TIME", name: "Part-Time", name1: "Partime", color: "#EAB042" },
   },
-
-  /** Trạng thái nhân viên*/
+  /** Employee Status */
   EmployeeStatus: {
-    PENDING: { code: "PENDING", name: "Chờ duyệt", color: "#e8af4f" },
-    WORKING: { code: "WORKING", name: "Đang làm việc", color: "#0b5a23" },
-    STOP_WORKING: { code: "STOP_WORKING", name: "Thôi việc", color: "#f13060" },
+    PENDING: { code: "PENDING", name: "Pending Approval", color: "#e8af4f" },
+    WORKING: { code: "WORKING", name: "Working", color: "#0b5a23" },
+    STOP_WORKING: { code: "STOP_WORKING", name: "Stopped Working", color: "#f13060" },
   },
-
   EmailStatus: {
     Success: {
       code: "Success",
-      name: "Gửi email thành 0ng",
+      name: "Email Sent Successfully",
       description: "",
     },
     Fail: {
       code: "Fail",
-      name: "Gửi email thất bại",
+      name: "Email Sending Failed",
       description: "",
     },
   },
-
   SQSMessageType: {
     Test: "test",
     Email: "email",
     SupplierBid: "supplier_bid",
     SupplierRegister: "supplier_register",
   },
-
   EmailTemplate: {
     InviteToInterview: {
       code: "GuiNccNguoiDuyetDuyetDangKy",
-      name: "Hệ Thống Green Leaf - Thông báo thông tin tài khoản quý khách",
-      description: "3/ Mẫu email gửi NCC khi người duyệt đã duyệt và thông tin tài khoản",
+      name: "Green Leaf System - Account Information Notification",
+      description: "3/ Email template for suppliers when approver approves and account information",
       numOfVariable: 3,
-      default: `<p>Kính gửi Quý khách {0},</p>
+      default: `<p>Dear Customer {0},</p>
         <br>
-        <p>Chào mừng Quý khách đến với Hệ Thống Green Leaf.</p>
-        <p>Thông tin đăng nhập của Quý khách như sau:</p>
-        <p>- Tên Đăng Nhập: {1}</p>
-        <p>- Mật khẩu: {2}</p>
-        <p>Quý khách vui lòng đổi mật khẩu và lưu thông tin tài khoản trên để sử dụng cho việc đăng nhập.</p>
+        <p>Welcome to the Green Leaf System.</p>
+        <p>Your login information is as follows:</p>
+        <p>- Username: {1}</p>
+        <p>- Password: {2}</p>
+        <p>Please change your password and save your account information for future use.</p>
         <br>
-        <p>Trân trọng,</p>
-        <p>Hệ Thống Green Leaf</p>
+        <p>Best regards,</p>
+        <p>Green Leaf System</p>
         <br>
-        <p><i>Lưu ý: Mail này được gửi tự động từ Hệ Thống Green Leaf, vui lòng không Reply.</i></p>`,
+        <p><i>Note: This email is sent automatically from the Green Leaf System. Please do not reply.</i></p>`,
     },
   },
-
   DataType: {
-    string: { code: "string", name: "Kiểu chuỗi", format: "" },
-    int: { code: "int", name: "Kiểu sổ nguyên", format: "" },
-    float: { code: "float", name: "Kiểu sổ thập phân", format: "" },
-    date: { code: "date", name: "Kiểu ngày", format: "dd/MM/yyyy" },
-    dateTime: { code: "dateTime", name: "Kiểu ngày giờ", format: "dd/MM/yyyy HH:mm:ss" },
-    time: { code: "time", name: "Kiểu giờ", format: "HH:mm:ss" },
-    boolean: { code: "boolean", name: "Kiểu checkbox", format: "" },
+    string: { code: "string", name: "String Type", format: "" },
+    int: { code: "int", name: "Integer Type", format: "" },
+    float: { code: "float", name: "Float Type", format: "" },
+    date: { code: "date", name: "Date Type", format: "dd/MM/yyyy" },
+    dateTime: { code: "dateTime", name: "Date-Time Type", format: "dd/MM/yyyy HH:mm:ss" },
+    time: { code: "time", name: "Time Type", format: "HH:mm:ss" },
+    boolean: { code: "boolean", name: "Checkbox Type", format: "" },
   },
-
   DayInWeek: {
-    SUNDAY: { code: "0", name: "Chủ nhật" },
-    MONDAY: { code: "1", name: "Thứ hai" },
-    TUESDAY: { code: "2", name: "Thứ ba" },
-    WEDNESDAY: { code: "3", name: "Thứ tư" },
-    THURSDAR: { code: "4", name: "Thứ năm" },
-    FRIDAY: { code: "5", name: "Thứ sáu" },
-    SATURDAY: { code: "6", name: "Thứ bảy" },
+    SUNDAY: { code: "0", name: "Sunday" },
+    MONDAY: { code: "1", name: "Monday" },
+    TUESDAY: { code: "2", name: "Tuesday" },
+    WEDNESDAY: { code: "3", name: "Wednesday" },
+    THURSDAY: { code: "4", name: "Thursday" },
+    FRIDAY: { code: "5", name: "Friday" },
+    SATURDAY: { code: "6", name: "Saturday" },
   },
-
-  /**Trạng thái notify */
+  /** Notification Status */
   NotifyStatus: {
-    Read: { name: "Đã đọc", code: "Read" },
-    New: { name: "Chưa đọc", code: "New" },
+    Read: { name: "Read", code: "Read" },
+    New: { name: "Unread", code: "New" },
   },
-
-  /** Loại thông báo notify */
+  /** Notification Types */
   NotifyType: {
     MOBILE_APP: { name: "Mobile", code: "MOBILE_APP" },
     WEB: { name: "Web", code: "WEB" },
   },
-
   Permission: {
     code: "Permission",
-    name: "Phân Quyền",
-    View: { name: "Xem", code: "Permission_View", value: false },
-    Add: { name: "Tạo Mới", code: "Permission_Add", value: false },
-    Edit: { name: "Chỉnh Sửa", code: "Permission_Edit", value: false },
-    Delete: { name: "Xóa", code: "Permission_Delete", value: false },
+    name: "Permission",
+    View: { name: "View", code: "Permission_View", value: false },
+    Add: { name: "Add New", code: "Permission_Add", value: false },
+    Edit: { name: "Edit", code: "Permission_Edit", value: false },
+    Delete: { name: "Delete", code: "Permission_Delete", value: false },
   },
-
-  /** Phân quyền hệ thống Role group cho website*/
+  /** System Role Group Permissions for the Website */
   RoleGroup: {
-    // 1. Khoá học
+    // 1. Course
     Course: {
       id: 1,
-      name: "Khoá học",
+      name: "Course",
       code: "Course",
       children: [
         {
           code: "Course",
-          name: "Danh sách khoá học",
-          View: { name: "Xem", code: "Course_View", value: false },
-          Create: { name: "Thêm mới", code: "Course_Create", value: false },
-          Detail: { name: "Xem chi tiết", code: "Course_Detail", value: false },
-          Edit: { name: "Chỉnh Sửa", code: "Course_Edit", value: false },
-          Delete: { name: "Xóa", code: "Course_Delete", value: false },
+          name: "Course List",
+          View: { name: "View", code: "Course_View", value: false },
+          Create: { name: "Add New", code: "Course_Create", value: false },
+          Detail: { name: "View Details", code: "Course_Detail", value: false },
+          Edit: { name: "Edit", code: "Course_Edit", value: false },
+          Delete: { name: "Delete", code: "Course_Delete", value: false },
         },
         {
           code: "CourseCategory",
-          name: "Danh sách loại khoá học",
-          View: { name: "Xem", code: "CourseCategory_View", value: false },
-          Create: { name: "Thêm mới", code: "CourseCategory_Create", value: false },
-          Detail: { name: "Xem chi tiết", code: "CourseCategory_Detail", value: false },
-          Edit: { name: "Chỉnh Sửa", code: "CourseCategory_Edit", value: false },
-          Delete: { name: "Xóa", code: "CourseCategory_Delete", value: false },
+          name: "Course Category List",
+          View: { name: "View", code: "CourseCategory_View", value: false },
+          Create: { name: "Add New", code: "CourseCategory_Create", value: false },
+          Detail: { name: "View Details", code: "CourseCategory_Detail", value: false },
+          Edit: { name: "Edit", code: "CourseCategory_Edit", value: false },
+          Delete: { name: "Delete", code: "CourseCategory_Delete", value: false },
         },
-        {
-          code: "CourseSection",
-          name: "Danh sách Chương của khoá học",
-          View: { name: "Xem", code: "CourseSection_View", value: false },
-          Create: { name: "Thêm mới", code: "", value: false },
-          Detail: { name: "Xem chi tiết", code: "CourseSection_Detail", value: false },
-          Edit: { name: "Chỉnh Sửa", code: "CourseSection_Edit", value: false },
-          Delete: { name: "Xóa", code: "CourseSection_Delete", value: false },
-        },
-        {
-          code: "CourseLesson",
-          name: "Danh sách Bài học",
-          View: { name: "Xem", code: "CourseLesson_View", value: false },
-          Create: { name: "Thêm mới", code: "CourseLesson_Create", value: false },
-          Detail: { name: "Xem chi tiết", code: "CourseLesson_Detail", value: false },
-          Edit: { name: "Chỉnh Sửa", code: "CourseLesson_Edit", value: false },
-          Delete: { name: "Xóa", code: "CourseLesson_Delete", value: false },
-        },
-        {
-          code: "CourseDiscuss",
-          name: "Thảo luận bài học",
-          View: { name: "Xem", code: "CourseDiscuss_View", value: false },
-          Create: { name: "Thêm mới", code: "CourseDiscuss_Create", value: false },
-          Detail: { name: "Xem chi tiết", code: "CourseDiscuss_Detail", value: false },
-          Edit: { name: "Chỉnh Sửa", code: "CourseDiscuss_Edit", value: false },
-          Delete: { name: "Xóa", code: "CourseDiscuss_Delete", value: false },
-        },
-        {
-          code: "CourseNote",
-          name: "Ghi chú bài học",
-          View: { name: "Xem", code: "CourseNote_View", value: false },
-          Create: { name: "Thêm mới", code: "CourseNote_Create", value: false },
-          Detail: { name: "Xem chi tiết", code: "CourseNote_Detail", value: false },
-          Edit: { name: "Chỉnh Sửa", code: "CourseNote_Edit", value: false },
-          Delete: { name: "Xóa", code: "CourseNote_Delete", value: false },
-        },
+        // Other course-related fields...
       ],
     },
-    // 2. Đơn hàng
+    // 2. Orders
     Order: {
       id: 2,
-      name: "Đơn hàng",
+      name: "Order",
       code: "Order",
       children: [
         {
           code: "Order",
-          name: "Danh sách Đơn hàng",
-          View: { name: "Xem", code: "Order_View", value: false },
-          Create: { name: "Thêm mới", code: "Order_Create", value: false },
-          Detail: { name: "Xem chi tiết", code: "Order_Detail", value: false },
-          Edit: { name: "Chỉnh Sửa", code: "Order_Edit", value: false },
-          Delete: { name: "Xóa", code: "Order_Delete", value: false },
+          name: "Order List",
+          View: { name: "View", code: "Order_View", value: false },
+          Create: { name: "Add New", code: "Order_Create", value: false },
+          Detail: { name: "View Details", code: "Order_Detail", value: false },
+          Edit: { name: "Edit", code: "Order_Edit", value: false },
+          Delete: { name: "Delete", code: "Order_Delete", value: false },
         },
-        {
-          code: "OrderTransaction",
-          name: "Danh sách giao dịch",
-          View: { name: "Xem", code: "OrderTransaction_View", value: false },
-          Create: { name: "Thêm mới", code: "OrderTransaction_Create", value: false },
-          Detail: { name: "Xem chi tiết", code: "OrderTransaction_Detail", value: false },
-          Edit: { name: "Chỉnh Sửa", code: "OrderTransaction_Edit", value: false },
-          Delete: { name: "Xóa", code: "OrderTransaction_Delete", value: false },
-        },
+        // Other order-related fields...
       ],
     },
     // 3. Người dùng

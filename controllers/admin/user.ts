@@ -29,6 +29,7 @@ import { template } from "../../config/template";
 import sendEmail from "../../utils/sendmail";
 import Order from "../../models/Order";
 import Course from "../../models/Course";
+import { BACKEND_URL } from "../../config/backend-domain";
 
 export const getUsers = async (req: AuthorAuthRequest, res: Response, next: NextFunction) => {
   let searchTerm = (req.query._q as string) || "";
@@ -164,7 +165,7 @@ export const getUsers = async (req: AuthorAuthRequest, res: Response, next: Next
     let resUser = users;
     let listCourseIdOfCurrentAuthor = [];
     if (req.userId && req.role === enumData.UserType.Author.code) {
-      // Danh sách userId của tác giả
+      // Author's userid list
       const listUserIdOfCurrentAuthor = dictUsersOfAuthor[req.userId];
       resUser = users.filter((item) => listUserIdOfCurrentAuthor.includes(item._id.toString()));
       listCourseIdOfCurrentAuthor = dictCoursesOfAuthor[req.userId];
@@ -180,7 +181,7 @@ export const getUsers = async (req: AuthorAuthRequest, res: Response, next: Next
           listCourseIdOfCurrentAuthor.includes(item.courseId.toString())
         );
       }
-      // Trường hợp đã có order
+      // In case of order
       if (listCourse && listCourse.length > 0) {
         const listCourseId = listCourse.map((item) => item.courseId.toString());
         const listCourseIdDistinct = [...new Set<string>(listCourseId)];
@@ -209,7 +210,7 @@ export const getUsers = async (req: AuthorAuthRequest, res: Response, next: Next
         };
         result.push(item);
       } else {
-        // Trường hợp chưa có order (khoá học mới!)
+        // In case there is no order (new course!)
         const item = {
           _id: user._id,
           name: user.name,
@@ -612,10 +613,10 @@ export const settingUser = async (req: AuthorAuthRequest, res: Response, next: N
   let avatar;
 
   if (req.file) {
-    avatar = req.file.path;
+    const imagePath = req.file.path.replace(/\\/g, "/");
+    avatar = `${BACKEND_URL}/${imagePath}`;
   } else {
-    avatar =
-      "https://lwfiles.mycourse.app/64b5524f42f5698b2785b91e-public/avatars/thumbs/64c077e0557e37da3707bb92.jpg";
+    avatar = "";
   }
 
   let session: ClientSession | null = null;

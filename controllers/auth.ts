@@ -15,14 +15,13 @@ import { google } from "googleapis";
 import admin from "firebase-admin";
 import serviceAccount from "../firebase/serviceAccountKey.json";
 import { BACKEND_URL } from "../config/backend-domain";
-import passport from "passport";
-import { Strategy as FacebookStrategy } from "passport-facebook";
 import { enumData } from "../config/enumData";
 import Permission from "../models/Permission";
 import { TreeNode, coreHelper } from "../utils/coreHelper";
 import { createOAuthAppAuth } from "@octokit/auth-oauth-app";
 import { Octokit } from "@octokit/rest";
 import { getIO } from "../socket";
+
 const serviceAccountConfig = {
   type: serviceAccount.type,
   projectId: serviceAccount.project_id,
@@ -51,6 +50,14 @@ admin.initializeApp({
   databaseURL: `https://${firebaseConfig.projectId}.firebaseio.com`,
 });
 
+const getJWT = (email: string, id: string) => {
+  return jwt.sign(
+    { email: email, userId: id },
+    "somesupersecret",
+    { expiresIn: "4h" }
+  );
+}
+
 export const signup = async (req: Request, res: Response, next: NextFunction) => {
   const { email, name, password, role, avatar } = req.body;
 
@@ -72,11 +79,11 @@ export const signup = async (req: Request, res: Response, next: NextFunction) =>
       avatar,
       providerId: "local",
     };
-
+    
     const newUser = new User(userData);
-
+    
     const result = await newUser.save();
-
+    
     res.status(201).json({
       message: "User created successfully!",
       userId: result._id,
@@ -93,31 +100,34 @@ export const signup = async (req: Request, res: Response, next: NextFunction) =>
 
 export const googleLogin = async (req: Request, res: Response, next: NextFunction) => {
   const { token } = req.body;
-
+  
   try {
     const oauth2Client = new google.auth.OAuth2();
     oauth2Client.setCredentials({ access_token: token });
-
+    
     const oauth2 = google.oauth2({
       auth: oauth2Client,
       version: "v2",
     });
-
+    
     const userInfoResponse = await oauth2.userinfo.get();
-    const email = userInfoResponse.data.email;
+    const {email,name, picture } = userInfoResponse.data;
 
-    const userDoc = await User.findOne({ email, providerId: "google.com" });
-
+    let userDoc = await User.findOne({ email, providerId: "google.com" });
+    
     if (!userDoc) {
-      const error = new CustomError("Email", "Could not find user by email!", 401);
-      throw error;
+      const userData: Partial<IUser> = {
+        email,
+        name,
+        role:"STUDENT",
+        avatar:picture,
+        providerId: "google.com",
+      };
+      userDoc = new User(userData);
+      userDoc.save()
     }
-
-    const jwtToken = jwt.sign(
-      { email: userDoc.email, userId: userDoc._id.toString() },
-      "somesupersecret",
-      { expiresIn: "4h" }
-    );
+    
+    const jwtToken = getJWT(userDoc.email,userDoc._id.toString());
 
     userDoc.loginToken = jwtToken;
     userDoc.loginTokenExpiration = new Date(Date.now() + 60 * 60 * 1000);
@@ -155,13 +165,9 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
       throw error;
     }
 
-    const token = jwt.sign(
-      { email: userDoc.email, userId: userDoc._id.toString() },
-      "somesupersecret",
-      { expiresIn: "4h" }
-    );
+    const jwtToken = getJWT(userDoc.email,userDoc._id.toString());
 
-    userDoc.loginToken = token;
+    userDoc.loginToken = jwtToken;
     userDoc.loginTokenExpiration = new Date(Date.now() + 60 * 60 * 1000);
     await userDoc.save();
 
@@ -173,7 +179,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
 
     res.status(200).json({
       message: "Login successfuly!",
-      token: token,
+      token: jwtToken,
       userId: userDoc._id.toString(),
     });
   } catch (error) {
@@ -190,7 +196,7 @@ export const adminLogin = async (req: Request, res: Response, next: NextFunction
   const { email, password, username } = req.body;
 
   try {
-    let userDoc: IUser | null = null;
+    let userDoc: IUser | null=null;
     if (email) {
       userDoc = await User.findOne({
         email,
@@ -513,149 +519,6 @@ export const updateLastLogin = async (req: Request, res: Response, next: NextFun
   }
 };
 
-//facebook
-passport.use(
-  new FacebookStrategy(
-    {
-      clientID: "1143621327082143",
-      clientSecret: "c22d321e19b7ad993227a7889c752a7f",
-      callbackURL: "http://localhost:8000",
-      profileFields: ["id", "emails", "name", "picture.type(large)"],
-    },
-    async (accessToken, refreshToken, profile, done) => {
-      try {
-        // Use the profile information to find or create a user
-        let user = await User.findOne({
-          email: profile.emails[0].value,
-          providerId: "facebook.com",
-        });
-
-        if (!user) {
-          user = new User({
-            email: profile.emails[0].value,
-            name: `${profile.name.givenName} ${profile.name.familyName}`,
-            avatar: profile.photos ? profile.photos[0].value : null,
-            providerId: "facebook.com",
-            role: "USER",
-            payment: "COD",
-            language: "en",
-            showProfile: true,
-            showCourses: true,
-          });
-          await user.save();
-        }
-
-        return done(null, user);
-      } catch (error) {
-        return done(error, false);
-      }
-    }
-  )
-);
-
-export const githubLogin = async (req: Request, res: Response, next: NextFunction) => {
-  const { code } = req.body;
-
-  try {
-    const clientID = "2c54ea01c90e1cbc1e0f";
-    const clientSecret = "e212d5f4cd4e9fd080217b5ce2c4e43fbb3bcf50";
-    const tokenURL = "https://github.com/login/oauth/access_token";
-
-    const response = await fetch(tokenURL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify({
-        client_id: clientID,
-        client_secret: clientSecret,
-        code: code,
-      }),
-    });
-
-    const data = await response.json();
-    console.log("Response from GitHub:", data);
-    const githubToken = data.access_token;
-    console.log(githubToken);
-
-    // Get user information using the GitHub token
-    const octokit = new Octokit({ auth: githubToken });
-    const { data: userData } = await octokit.users.getAuthenticated();
-    let userDoc = await User.findOne({ email: userData.email, providerId: "github.com" });
-    if (!userDoc) {
-      userDoc = new User({
-        email: userData.email || "",
-        name: userData.name || userData.login,
-        avatar: userData.avatar_url,
-        providerId: "github.com",
-        role: "USER",
-        payment: "COD",
-        language: "en",
-        showProfile: true,
-        showCourses: true,
-      });
-      console.log(userDoc);
-      await userDoc.save();
-    }
-
-    const jwtToken = jwt.sign(
-      { email: userDoc.email, userId: userDoc._id.toString() },
-      "somesupersecret",
-      { expiresIn: "4h" }
-    );
-    userDoc.loginToken = jwtToken; // Use loginToken instead of token
-    userDoc.loginTokenExpiration = new Date(Date.now() + 60 * 60 * 1000);
-    await userDoc.save();
-
-    res.status(200).json({
-      message: "Login successful!",
-      token: jwtToken,
-      userId: userDoc._id.toString(),
-    });
-  } catch (error: any) {
-    if (error.message === "Bad credentials") {
-      console.error("The provided GitHub token is invalid.");
-    } else {
-      console.error(`Error fetching data from GitHub: ${error.message}`);
-    }
-  }
-};
-
-export const facebookLogin = (req: Request, res: Response, next: NextFunction) => {
-  passport.authenticate("facebook", { session: false }, (err: any, user: any) => {
-    if (err) {
-      return next(err);
-    }
-
-    if (!user) {
-      return next(new CustomError("Facebook Authentication", "Authentication failed", 401));
-    }
-
-    const jwtToken = jwt.sign(
-      { email: user.email, userId: user._id.toString() },
-      "somesupersecret",
-      { expiresIn: "4h" }
-    );
-
-    user.loginToken = jwtToken;
-    user.loginTokenExpiration = new Date(Date.now() + 60 * 60 * 1000);
-
-    user
-      .save()
-      .then(() => {
-        res.status(200).json({
-          message: "Login successful!",
-          token: jwtToken,
-          userId: user._id.toString(),
-        });
-      })
-      .catch((saveError: any) => {
-        console.error("Error saving user:", saveError);
-        next(new CustomError("User Save", "Error saving user", 500));
-      });
-  })(req, res, next);
-};
 
 export const changePassword = async (req: Request, res: Response, next: NextFunction) => {
   const { userId, oldPassword, newPassword } = req.body;

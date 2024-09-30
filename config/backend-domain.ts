@@ -1,5 +1,3 @@
-// const BACKEND_URL = `https://e-learning-api-dev.trannhatsang.com`; // dev site
-// const BACKEND_URL = `https://e-learning-api.trannhatsang.com`; // production site/
-const BACKEND_URL = "https://e-learning-api.trannhatsang.com"; // Local site!!!
+const BACKEND_URL = process.env.BACKEND;
 
 export { BACKEND_URL };

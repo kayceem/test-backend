@@ -299,10 +299,10 @@ export const getUserDetail = async (req: Request, res: Response, next: NextFunct
         }
 
         if (currentUserProgress === 1) {
-          numCompletedCourses++; // Tăng biến đếm nếu khóa học đã hoàn thành
+          numCompletedCourses++; // increase counting if the course has been completed
           completedCourses.push(courseId);
 
-          // Chỉ thêm thông tin của các khóa học đã hoàn thành vào completedCoursesDetail
+          // Only add information of the completed courses to Completedcoursdetail
           const courseEnrolledItem = {
             ...currentInfoCourse._doc,
             progress: currentUserProgress,
@@ -340,11 +340,9 @@ export const updateUser = async (req: Request, res: Response, next: NextFunction
   let updateData = {
     ...req.body,
   };
-
   if (req.file) {
     const imagePath = req.file.path.replace(/\\/g, "/");
-    const cleanImagePath = imagePath.replace("assets/", "");
-    updateData.avatar = `${BACKEND_URL}/${cleanImagePath}`;
+    updateData.avatar = `${BACKEND_URL}/${imagePath}`;
   }
 
   try {

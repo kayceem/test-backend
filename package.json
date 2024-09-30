@@ -9,7 +9,7 @@
     "test": "jest",
     "test:cover": "jest --coverage",
     "start:js": "nodemon app.js",
-    "start:dev": "nodemon app.ts",
+    "dev": "nodemon app.ts",
     "build": "tsc",
     "copy": "cp .node-version dist/"
   },

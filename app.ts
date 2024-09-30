@@ -2,9 +2,7 @@ import dotenv from 'dotenv';
 dotenv.config(); 
 import express, { NextFunction, Response, Request } from "express";
 import path from "path";
-import { v4 as uuidv4 } from "uuid";
 import bodyParser from "body-parser";
-import multer from "multer";
 import mongoose from "mongoose";
 import cors from "cors";
 import { Server } from "socket.io";
@@ -24,6 +22,7 @@ import {
 // Likely your main server file or an initialization file
 
 import { runRon } from "./cron";
+
 const app = express();
 
 app.use(cors());
@@ -34,7 +33,7 @@ app.use(bodyParser.json());
 // app.use(express.static(path.join(__dirname, "public")));
 
 // Define storage for uploaded files and public the path folder for users
-app.use(express.static(path.join(__dirname, "assets")));
+app.use('/assets', express.static(path.join(__dirname, 'assets')));
 
 app.use((req: Request, res: Response, next: NextFunction) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -82,14 +81,15 @@ mongoose
       server,
       {
         cors: {
-          origin: `${FRONTEND_URL}`, // Allow your React app's origin
-          methods: ["GET", "POST", "PUT", "PATCH", "OPTIONS", "DELETE"], // Might need to adjust allowed methods
+          origin: `${FRONTEND_URL}`,
+          methods: ["GET", "POST", "PUT", "PATCH", "OPTIONS", "DELETE"],
         },
+        transports: ["websocket"],  
       }
     );
-    // io.on("connection", (socket) => {
-    //   console.log("Client connected");
-    // });
+    io.on("connection", (socket) => {
+      console.log("Client connected");
+    });
   })
   .catch((err) => {
     console.log(err);
@@ -102,12 +102,4 @@ export { io };
 
 
 /** Auto run this job every 1 minutes */
-// cron.schedule("* * * * *", function () {
-//   console.log("This task runs every minute");
-//   runRon()
-// });
-
-// Auto run every monday at 00:00
-cron.schedule("0 0 0 * * 1", function () {
-  console.log("This task runs every monday at 00:00");
-});
+// cron.schedule("* * * * *", () => runRon());

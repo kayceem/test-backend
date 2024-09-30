@@ -1,0 +1,22 @@
+{
+    "files.exclude": {
+      "__tests__/": true,
+      "**/*.{lock}": true,
+    "node_modules/": true,
+    ".github/": true,
+    "**/*.{lock}": true,
+    // "**/{package}*.{json}": true,
+    "**/*{config}.*": true,
+    "**/*.es*": true,
+    "**/*.md": true,
+    "**/*.toml": true,
+    "**/*.*config": true,
+    "**/*.docker*": true,
+    "{Dockerfile}": true,
+    "**/*.prettierrc": true,
+    "**/*.postman*": true,
+    "**/*.node-version": true,
+    "**/tslint.json": true,
+  
+    }
+  }

@@ -17,10 +17,6 @@ router.post("/admin/signup-request", authController.adminSignupRequest);
 
 router.post("/google-login", authController.googleLogin);
 
-router.post("/facebook-login", authController.facebookLogin);
-
-router.post("/github-login", authController.githubLogin);
-
 router.post("/admin-login", authController.adminLogin);
 
 router.post("/change-password", authController.changePassword);

@@ -12,22 +12,22 @@ import {
 
 const router = express.Router();
 
-// Route để tạo một bình luận mới
+// route to create a new comment
 router.post("/", addComment);
 
-// Route để lấy tất cả bình luận của một bài viết
+// route to get all the comments of an article
 router.get("/:blogId", getCommentsByBlogId);
 
-// Route để cập nhật một bình luận
+// route to update a comment
 router.put("/:commentId", updateComment);
 
-// Route để xóa một bình luận
+// route to delete a comment
 router.delete("/:commentId", deleteComment);
 
-// Route để 'like' hoặc 'unlike' một bình luận
+// route to 'like' or 'unlike' a comment
 router.patch("/like", toggleLikeComment);
 
-// Route để phản hồi bình luận
+// route to respond to comments
 router.post("/reply", addReplyToComment);
 
 

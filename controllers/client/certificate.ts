@@ -4,7 +4,6 @@ import Course from "../../models/Course";
 import fs from "fs";
 import path from "path";
 import PDFDocument from "pdfkit";
-import { removeVietnameseAccents } from "../../utils/helper";
 import Certificate from "../../models/Certificate";
 import CustomError from "../../utils/error";
 import CustomErrorMessage from "../../utils/errorMessage";
@@ -71,9 +70,8 @@ export const postCertificate = async (req: Request, res: Response, next: NextFun
       return;
     }
 
-    const convertedName = removeVietnameseAccents(user.name);
 
-    const certificateName = generateCertificate(convertedName, course.name, moment(completionDate).format("DD-MM-YYYY"), res);
+    const certificateName = generateCertificate(user.name, course.name, moment(completionDate).format("DD-MM-YYYY"), res);
 
     const newCertificate = new Certificate({
       certificateName: certificateName,

@@ -6,7 +6,7 @@ import { ICategoryBlog } from "../../types/iCategoryBlog";
 export const getAllCategories = async (req: Request, res: Response): Promise<void> => {
   try {
     const categories: ICategoryBlog[] = await BlogCategory.find();
-    // Gói mảng các danh mục thành một đối tượng với thuộc tính blogsCategories
+    // Package of categories into one object with the Blogscategories attribute
     const response = { blogsCategories: categories };
     res.json(response);
   } catch (err) {

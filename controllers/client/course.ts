@@ -167,12 +167,12 @@ export const getCourses = async (req: Request, res: Response, next: NextFunction
       .skip(skip)
       .limit(limit);
 
-    // Nếu có sắp xếp khoá học!
+    // If there is a course arrangement!
     if (_sort) {
       let sortQuery: SortQuery = {
         ...(query.$text && { score: { $meta: "textScore" } }),
       };
-      // Sắp xếp theo khoá học mới nhất
+      // Sort by the latest course
       if (_sort === "newest") {
         sortQuery.createdAt = -1;
       }
@@ -234,19 +234,19 @@ export const getCourses = async (req: Request, res: Response, next: NextFunction
     let courseIdOfUserList: string[] = [];
     if (typeof userId === "string" && userId.trim() !== "") {
       const listCourseOfUser = dictCoursesOfUser[userId] ?? [];
-      let listCourseIfOfUser = [];
+      let listCourseIdOfUser = [];
       if (listCourseOfUser.length > 0) {
-        listCourseIfOfUser = listCourseOfUser.map((course: any) => course.courseId.toString());
+        listCourseIdOfUser = listCourseOfUser.map((course: any) => course.courseId.toString());
       }
       if (listCourseOfUser.length > 0) {
-        courseIdOfUserList = [...new Set<string>(listCourseIfOfUser)];
+        courseIdOfUserList = [...new Set<string>(listCourseIdOfUser)];
       } else {
         courseIdOfUserList = [];
       }
     }
 
     let result: Array<ICourse & { isBought: boolean }> = [];
-    // FIX BUG HERE LATER!
+    // TODO::Fix Bug
     for (const course of courses) {
       const currentCourseId = course._id.toString();
       const listReviewsOfCurrentCourse = dictReviewsOfCourse[currentCourseId] ?? [];
@@ -273,14 +273,14 @@ export const getCourses = async (req: Request, res: Response, next: NextFunction
 
       result.push(courseItem);
     }
-    // Sắp xếp theo lượt đánh giá khoá học (Mặc định)
+    // Arrange the course Review (default)
     if (!_sort || _sort === "mostReviews") {
       result.sort((a: any, b: any) => {
         return b.avgRatings - a.avgRatings;
       });
     }
 
-    // Lọc khoá học theo lượt đánh giá
+    // Filter the Review Course
     if (req.query._avgRatings && parseFloat(req.query._avgRatings as string) >= 3) {
       const _avgRatings = parseFloat(req.query._avgRatings as string);
       result = result.filter((item: any) => item.avgRatings >= _avgRatings);
@@ -693,18 +693,18 @@ export const getSuggestedCourses = async (req: Request, res: Response, next: Nex
     let courseIdOfUserList: string[] = [];
     if (typeof userId === "string" && userId.trim() !== "") {
       const listCourseOfUser = dictCoursesOfUser[userId] ?? [];
-      let listCourseIfOfUser = [];
-      if (listCourseIfOfUser.length > 0) {
-        listCourseIfOfUser = listCourseOfUser.map((course: any) => course.courseId.toString());
-      }
+      let listCourseIdOfUser = [];
+      
       if (listCourseOfUser.length > 0) {
-        courseIdOfUserList = [...new Set<string>(listCourseIfOfUser)];
+        listCourseIdOfUser = listCourseOfUser.map((course: any) => course.courseId.toString());
+        courseIdOfUserList = [...new Set<string>(listCourseIdOfUser)];
       } else {
         courseIdOfUserList = [];
       }
     }
 
-    // Gợi ý những khó học cùng danh mục trong những khoá học đã mua và khác những khoá học đã mua!
+
+    // Suggest the difficulties of the same list in purchased courses and other courses!
     const suggestedCourses = await Course.find({
       categoryId: { $in: boughtCourseCategories },
       _id: { $nin: boughtCourses.map((course) => course._id) },
@@ -732,10 +732,7 @@ export const getSuggestedCourses = async (req: Request, res: Response, next: Nex
         ...course.toObject(),
         avgRatings: avgRatings,
         numberUsersOfCourse: listUsersOfCurrentCourse.length,
-        isBought:
-          typeof userId === "string" && userId.trim() !== ""
-            ? courseIdOfUserList.includes(currentCourseId)
-            : false,
+        isBought: courseIdOfUserList.includes(currentCourseId)
       };
       suggestedCoursesRes.push(courseItem);
     }
@@ -885,7 +882,6 @@ export const getUsersByCourseId = async (req: Request, res: Response, next: Next
     const orders = await Order.find({ "items._id": courseId, status: "Success" }).sort({ createdAt: -1 });
 
     const users = orders.map((order) => order.user);
-
     const uniqueUsers = users.reduce((acc, user) => {
       if (!acc.find((u) => u._id.toString() === user._id.toString())) {
         acc.push(user);
