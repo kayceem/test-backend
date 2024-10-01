@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from "express";
+import { SECRET_KEY } from "../config/constant";
 
 const jwt = require("jsonwebtoken");
 const RevokedToken = require("../models/RevokedToken"); // Import your revoked tokens model
@@ -17,7 +18,7 @@ module.exports = async (req: CustomRequest, res: Response, next: NextFunction) =
       return res.status(401).json({ message: "Token revoked" });
     }
 
-    const decodedToken = jwt.verify(token, "somesupersecret");
+    const decodedToken = jwt.verify(token, SECRET_KEY);
     req.userId = decodedToken.userId;
     next();
   } catch (error) {

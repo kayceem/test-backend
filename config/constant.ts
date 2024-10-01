@@ -1,10 +1,7 @@
 
-const UNSPLASH_API_KEY = "uq_ad2eH1y4LjziHL50dLDv8h1esiKtEUNejDcwEOgw";
-const YOUTUBE_API_KEY = "AIzaSyBhd4f7KxGoXeR5HHXUZeYm5e5JHmS35Ws";
-const OPEN_AI_KEY = "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";
 // Mongodb URI remote
-  // Mongodb URI remote
 export const MONGODB_URI = process.env.MONGODB_URI;
+export const SECRET_KEY = process.env.SECRET_KEY;
 export const PWD_SALT_ROUNDS = 12;
 export const ERROR_NOT_FOUND_DATA = "Error! Cannot found data";
 export const ERROR_GET_DATA = "Failed to fetch data";
@@ -31,14 +28,9 @@ export const DELETE_SUCCESS = "Delete data successfully.";
 export const IMPORT_SUCCESS = "Import data successfully.";
 export const ACTION_SUCCESS = "Action successfully.";
 
-export const DEFAULT_CONNECTION_NAME = "default";
-export const DATA_SOURCE = "DATA_SOURCE";
-export const TYPEORM_EX_CUSTOM_REPOSITORY = "TYPEORM_EX_CUSTOM_REPOSITORY";
 export const millisecondInDay = 86400000;
 
 export const COUPON_TYPES = {
-  COUPON_TYPE_PERCENT: "66ed227ceaee5f9398e0b4a1",
-  COUPON_TYPE_FIXED_AMOUNT: "65f4f44d0df4092dc3f30d9d",
+  COUPON_TYPE_PERCENT: "",
+  COUPON_TYPE_FIXED_AMOUNT: "",
 };
-
-export { UNSPLASH_API_KEY, YOUTUBE_API_KEY, OPEN_AI_KEY };

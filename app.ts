@@ -9,7 +9,7 @@ import { Server } from "socket.io";
 import authRouter from "./routes/auth";
 import clientRouter from "./routes/client";
 import adminRouter from "./routes/admin";
-
+import initializeAdminUser from "./utils/initializeAdmin";
 import { MONGODB_URI } from "./config/constant";
 import { FRONTEND_URL } from "./config/frontend-domain";
 import {
@@ -72,6 +72,7 @@ mongoose
   .connect(MONGODB_URI)
   .then(() => {
     const server = app.listen(port, () => {
+      initializeAdminUser()
       console.log(`App listening on port ${port}`);
     });
     io = new Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>(

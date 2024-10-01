@@ -281,7 +281,6 @@ export const postFeedbackReply = async (
     const emailContent = emailTemplate.default.replace("{0}", contentReply);
 
     await sendEmail({
-      from: emailTemplate.from,
       to: email,
       subject: emailTemplate.name,
       html: emailContent,

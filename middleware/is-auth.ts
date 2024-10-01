@@ -4,6 +4,7 @@ import CustomError from "../utils/error";
 import CustomErrorMessage from "../utils/errorMessage";
 import RevokedToken from "../models/RevokedToken";
 import User from "../models/User";
+import { SECRET_KEY } from "../config/constant";
 
 interface DecodedToken extends JwtPayload {
   userId: string;
@@ -49,7 +50,7 @@ export default async (req: AuthorAuthRequest, res: Response, next: NextFunction)
       return res.status(401).json({ message: "Token revoked" });
     }
 
-    decodedToken = jwt.verify(token, "somesupersecret") as DecodedToken;
+    decodedToken = jwt.verify(token, SECRET_KEY) as DecodedToken;
   } catch (error) {
     if (error instanceof CustomError) {
       return next(error);

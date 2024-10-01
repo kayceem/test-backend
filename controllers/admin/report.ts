@@ -351,7 +351,6 @@ export const getReportsUserProgress = async (
     const reviewQuery: any = {};
     const wishlistQuery: any = {};
     if (req.userId) {
-      // Chỉ list ra những User của tác giả hiện tại - Nếu đăng nhập bằng tài khoản tác giả!
     }
 
     if (dateStart && dateEnd) {

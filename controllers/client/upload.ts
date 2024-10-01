@@ -5,7 +5,7 @@ import CustomErrorMessage from "../../utils/errorMessage";
 
 export const uploadVideo = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const videoPath: string = req.file.path;
+    const videoPath: string = req.file.path.replace(/\\/g, "/");
 
     const fullVideoPath: string = `${BACKEND_URL}/${videoPath}`;
 
@@ -30,7 +30,7 @@ export const uploadVideo = async (req: Request, res: Response, next: NextFunctio
 
 export const uploadPDF = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const pdfPath: string = req.file.path;
+    const pdfPath: string = req.file.path.replace(/\\/g, "/");
 
     const fullPDFPath: string = `${BACKEND_URL}/${pdfPath}`;
 
@@ -52,7 +52,7 @@ export const uploadPDF = async (req: Request, res: Response, next: NextFunction)
 
 export const uploadImage = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const imagePath: string = req.file.path;
+    const imagePath: string = req.file.path.replace(/\\/g, "/");
 
     const fullImagePath: string = `${BACKEND_URL}/${imagePath}`;
 

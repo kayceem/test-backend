@@ -95,7 +95,7 @@ class CoreHelper {
   // public getDomain(req: IRequest) {
   //   const header: any = req?.headers
   //   let domain = header?.origin
-  //   if (!domain) throw new UnauthorizedException('Không xác định domain truy cập! (code: REQUEST_DOMAIN_ERROR)')
+  //   if (!domain) throw new UnauthorizedException('Unrelated access domain! (code: REQUEST_DOMAIN_ERROR)')
   //   domain = domain.replace('http://', '').replace('https://', '')
   //   if (domain.includes('localhost')) domain = enumDomainReplace[domain]
 
@@ -133,7 +133,6 @@ class CoreHelper {
   }
 
   /**
-   * Tự động gán prop có sẵn trong đối tượng chỉ định
    * @param data
    * @param target
    * @author NhatSang
@@ -264,11 +263,10 @@ class CoreHelper {
   stringToDate(dateString: string) {
     const parts = dateString.split("/");
     const day = parseInt(parts[0], 10);
-    const month = parseInt(parts[1], 10) - 1; // Giá trị tháng trong đối tượng Date là từ 0 đến 11
+    const month = parseInt(parts[1], 10) - 1;
     const year = parseInt(parts[2], 10);
     return new Date(year, month, day);
   }
-  /** Lấy 1 arr gồm 1 trường data không trùng */
   selectDistinct(arr: any[], field: string) {
     if (!arr?.length) return [];
     const set = new Set<string>();

@@ -12,22 +12,8 @@ import { ISection } from "../types/section.type";
 import Lesson from "../models/Lesson";
 import { ILesson, IIsLessonDone } from "../types/lesson.type";
 import IsLessonDone from "../models/IsLessonDone";
-import { Configuration, OpenAIApi } from "openai";
-import mongoose from "mongoose";
-import { courseNames, devopsCourses, blockchainCourses } from "./fakerData";
-import slugify from "slugify";
-import { faker } from "@faker-js/faker";
-import fs from "fs";
-import path from "path";
-import axios from "axios";
-import { UNSPLASH_API_KEY, OPEN_AI_KEY } from "../config/constant";
-import { BACKEND_URL } from "../config/backend-domain";
-const configuration = new Configuration({
-  apiKey: OPEN_AI_KEY,
-});
 import { COUPON_TYPES } from "../config/constant";
 import { ICoupon } from "../types/coupon.type";
-export const openai = new OpenAIApi(configuration);
 
 
 export const getProgressOfCourse = async (courseId: string, userId: string) => {

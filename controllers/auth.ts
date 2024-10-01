@@ -22,6 +22,8 @@ import { createOAuthAppAuth } from "@octokit/auth-oauth-app";
 import { Octokit } from "@octokit/rest";
 import { getIO } from "../socket";
 import { FRONTEND_URL } from "../config/frontend-domain";
+import { template } from "../config/template";
+import { SECRET_KEY } from "../config/constant";
 
 const serviceAccountConfig = {
   type: serviceAccount.type,
@@ -40,16 +42,19 @@ const serviceAccountConfig = {
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccountConfig),
-  databaseURL: `https://${serviceAccountConfig.projectId}.firebaseio.com`,
+  // databaseURL: `https://${serviceAccountConfig.projectId}.firebaseio.com`,
 });
 
-const getJWT = (email: string, id: string) => {
-  return jwt.sign(
-    { email: email, userId: id },
-    "somesupersecret",
-    { expiresIn: "4h" }
-  );
-}
+const getJWT = (email: string, id: string, role?: string) => {
+  const payload: any = {
+    email: email,
+    userId: id,
+  };
+  if (role) {
+    payload.adminRole = role;
+  }
+  return jwt.sign(payload, SECRET_KEY, { expiresIn: "7d" });
+};
 
 export const signup = async (req: Request, res: Response, next: NextFunction) => {
   const { email, name, password, role, avatar } = req.body;
@@ -71,6 +76,7 @@ export const signup = async (req: Request, res: Response, next: NextFunction) =>
       role,
       avatar,
       providerId: "local",
+      status: enumData.UserStatus.ACTIVE.code
     };
     
     const newUser = new User(userData);
@@ -112,8 +118,9 @@ export const googleLogin = async (req: Request, res: Response, next: NextFunctio
       const userData: Partial<IUser> = {
         email,
         name,
-        role:"STUDENT",
+        role:enumData.UserType.User.code,
         avatar:picture,
+        status: enumData.UserStatus.ACTIVE.code,
         providerId: "google.com",
       };
       userDoc = new User(userData);
@@ -225,11 +232,7 @@ export const adminLogin = async (req: Request, res: Response, next: NextFunction
       throw new CustomError("Password", "Password wrong!", 401);
     }
 
-    const token = jwt.sign(
-      { email: userDoc.email, userId: userDoc._id.toString(), adminRole: userDoc.role },
-      "somesupersecret",
-      { expiresIn: "4h" }
-    );
+    const token = getJWT(userDoc.email, userDoc._id.toString(), userDoc.role);
 
     userDoc.loginToken = token;
     userDoc.loginTokenExpiration = new Date(Date.now() + 60 * 60 * 1000);
@@ -428,13 +431,16 @@ export const postReset = async (req: Request, res: Response, next: NextFunction)
       const hrefLink = resetPassUrl
         ? `${resetPassUrl}?token=${token}`
         : `${FRONTEND_URL}/site/reset-password?token=${token}`;
+      const emailTemplate = template.EmailTemplate.ResetPassword
+      const emailBody =  emailTemplate.default
+      .replace("{0}", token)
+      .replace("{1}", hrefLink);
 
       await sendmail({
         to: email,
-        subject: "Password reset",
-        html: `<p>You requested a password reset!</p>
-               <p>Token: ${token}</p>
-               <p>Click this <a href="${hrefLink}">Link Here</a> to set a new password.</p>`
+        subject: emailTemplate.name,
+        html: emailBody,
+
       });
     } catch (error) {
       if (error instanceof CustomError) {

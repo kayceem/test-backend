@@ -154,7 +154,7 @@ export const getUsers = async (req: AuthorAuthRequest, res: Response, next: Next
       };
     }
 
-    if (previousDays >= 0) {
+    if (previousDays > 0) {
       query["createdAt"] = {
         $gte: previousDaysAgo,
         $lt: currentDate,
@@ -396,7 +396,6 @@ export const approveUser = async (req: AuthorAuthRequest, res: Response, next: N
       .replace("{1}", foundUser.username) // Replace {1} with the user's username
       .replace("{2}", "123456"); // Replace {2} with the generated or default password
     await sendEmail({
-      from: template.EmailTemplate.SendUserNameAndPasswordForAuthor.from,
       to: foundUser.email,
       subject: template.EmailTemplate.SendUserNameAndPasswordForAuthor.name,
       html: bodyHtml,
@@ -430,7 +429,7 @@ export const updateUser = async (req: AuthorAuthRequest, res: Response, next: Ne
     avatar = req.file.path;
   } else {
     avatar =
-      "https://lwfiles.mycourse.app/64b5524f42f5698b2785b91e-public/avatars/thumbs/64c077e0557e37da3707bb92.jpg";
+      "";
   }
 
   let session: ClientSession | null = null;
@@ -502,6 +501,8 @@ export const updateActiveStatusUser = async (
     }
 
     foundUser.isDeleted = !foundUser.isDeleted;
+    console.log(foundUser.isDeleted)
+    foundUser.status = foundUser.isDeleted ? enumData.UserStatus.INACTIVE.code : enumData.UserStatus.ACTIVE.code
     foundUser.updatedAt = new Date();
     foundUser.updatedBy = new mongoose.Types.ObjectId(req.userId) as any;
     await foundUser.save();

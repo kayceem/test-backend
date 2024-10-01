@@ -29,6 +29,7 @@ import {
   GET_DETAIL_SUCCESS,
   GET_HISOTIES_SUCCESS,
   GET_SUCCESS,
+  SECRET_KEY,
   UPDATE_ACTIVE_SUCCESS,
   UPDATE_SUCCESS,
 } from "../../config/constant";
@@ -140,7 +141,7 @@ export const getCourses = async (req: Request, res: Response, next: NextFunction
     const tokenArray = authorizationHeader.split(" ");
     const token = tokenArray[1];
     // const userId = req.userId;
-    const decodedToken: DecodedToken = jwt.verify(token, "somesupersecret") as DecodedToken;
+    const decodedToken: DecodedToken = jwt.verify(token, SECRET_KEY) as DecodedToken;
     userId = decodedToken.userId;
   }
   let limit = parseInt(_limit as string);

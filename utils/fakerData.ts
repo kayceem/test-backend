@@ -10,11 +10,6 @@ export const courseNames: string[] = [
   "Machine Learning A-Z™: Hands-On Python & R In Data Science",
   "Frontend Web Development Bootcamp: HTML, CSS, JavaScript, and More",
   "Complete Ethical Hacking Course: Beginner to Advanced",
-  // Add 10 course titles related to blockchain fields
-  // Add 10 course titles related to backend fields
-  // Add 10 course titles related to frontend fields
-  // Add 10 course titles related to AI fields
-  // Add 10 course titles related to IoT fields
 ];
 
 export const backendCourses: string[] = [
@@ -106,7 +101,5 @@ export const courseDescriptions: string[] = [
   "Dive into the world of data science and machine learning with Python and R.",
   "Get started with web development and learn HTML, CSS, JavaScript, and other essential technologies.",
   "Become an ethical hacker and learn how to secure systems and networks from cyber threats.",
-  // Add 30 more course descriptions here
 ];
 
-// Add types and interfaces as needed for your code

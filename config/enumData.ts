@@ -247,5 +247,12 @@ export const enumData = {
     VALID: { code: "VALID", name: "Valid", color: "#005C20" },
     EXPIRE: { code: "EXPIRE", name: "Expired", color: "#F5365C" },
   },
-
+  SettingString: {
+    REVENUE_RATING_AUTHOR: {
+      code: 'REVENUE_RATING_AUTHOR',
+      name: "Rating for author revenue per order!",
+      value: 0.4,
+      type: "number"
+    }
+  },
 };
