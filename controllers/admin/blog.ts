@@ -118,7 +118,7 @@ export const createBlog = async (req: AuthorAuthRequest, res: Response, next: Ne
       content,
       thumbnail,
       categoryId,
-      tags: tags.split(",").map((tag) => tag.trim()), // Chuyển đổi chuỗi tags thành mảng
+      tags: tags.split(",").map((tag) => tag.trim()), 
       blogImg,
       author: req.userId,
       technology,

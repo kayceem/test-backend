@@ -7,6 +7,6 @@ export interface IBlogComment extends IBaseSchema {
   userId: Schema.Types.ObjectId;
   blogId: Schema.Types.ObjectId;
   parentCommentId?: Schema.Types.ObjectId;
-  likes: Schema.Types.ObjectId[]; // Thêm dòng này
+  likes: Schema.Types.ObjectId[];
   replies: Schema.Types.ObjectId[];
 }

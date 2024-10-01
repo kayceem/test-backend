@@ -32,13 +32,6 @@ export interface RoleGroup {
 }
 
 class CoreHelper {
-  /** Hàm gen code */
-  // async genCodeDefault(data: string, isFinance = true) {
-  //   const nanoid = customAlphabet('ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890', 5)
-  //   const genCode = `${data}-${nanoid()}`
-  //   return genCode
-  // }
-  /** Get array từ obj */
   public convertObjToArray(obj: any) {
     const arr = [];
     // tslint:disable-next-line:forin
@@ -148,7 +141,6 @@ class CoreHelper {
     return target;
   }
 
-  /** Tính số phút của hai ngày */
   public calculateMinutesBetweenTwoDate(dateFrom: Date, dateTo: Date) {
     const msInHour = 1000 * 60;
     const minutes = Math.round(
@@ -158,7 +150,6 @@ class CoreHelper {
     return minutes;
   }
 
-  /** Hàm tìm key trùng value */
   findDuplicates(arr: any[], key: string): string[] {
     const seen: { [key: string]: boolean } = {};
     const duplicates: string[] = [];
@@ -186,11 +177,10 @@ class CoreHelper {
       .padStart(2, "0")}`;
   }
 
-  /** Tính số giờ dự trên số phút */
   public convertMinutesToHoursDecimal(minutes: number) {
-    var minutes = 150; // Số phút cần chuyển đổi
-    var hours = Math.floor(minutes / 60); // Số giờ nguyên
-    var decimalHours = hours + (minutes % 60) / 60; // Số giờ dạng thập phân
+    var minutes = 150; 
+    var hours = Math.floor(minutes / 60);
+    var decimalHours = hours + (minutes % 60) / 60;
     return decimalHours;
   }
 

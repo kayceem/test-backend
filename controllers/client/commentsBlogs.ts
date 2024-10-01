@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import BlogComment from "../../models/BlogComment"; // Giả sử đường dẫn đến model BlogComment
+import BlogComment from "../../models/BlogComment"; 
 import { coreHelper } from "../../utils/coreHelper";
 
 export const getAllCommentsFromMultipleBlogs = async (req: Request, res: Response) => {

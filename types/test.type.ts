@@ -10,7 +10,7 @@ export interface ITest extends IBaseSchema {
   dateEnd: Date;
   status: string;
   timeLimitTest: number;
-  listUserId: IUserJoinTest[] // User tham gia bài test
+  listUserId: IUserJoinTest[] 
   numberCorrectAnswersToPass: number;
 }
 

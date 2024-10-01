@@ -14,7 +14,6 @@ class ArrayHelper {
       }))
     }
   
-    /** Hàm distinct array theo 1 trường nào đó */
     public filterArrayUniqueByFieldName(arr: any[], fieldName: string) {
       const lstValue = arr.map((c) => c[fieldName])
       return lstValue.filter((value, index, self) => self.indexOf(value) === index)
