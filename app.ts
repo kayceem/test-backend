@@ -12,16 +12,13 @@ import adminRouter from "./routes/admin";
 
 import { MONGODB_URI } from "./config/constant";
 import { FRONTEND_URL } from "./config/frontend-domain";
-import cron from "node-cron";
 import {
   ClientToServerEvents,
   InterServerEvents,
   ServerToClientEvents,
   SocketData,
 } from "./types/socket.type";
-// Likely your main server file or an initialization file
 
-import { runRon } from "./cron";
 
 const app = express();
 
@@ -97,9 +94,3 @@ mongoose
 
 export default app;
 export { io };
-
-/** AUTO RUN JOB HERE */
-
-
-/** Auto run this job every 1 minutes */
-// cron.schedule("* * * * *", () => runRon());

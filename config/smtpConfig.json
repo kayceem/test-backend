@@ -1,0 +1,11 @@
+{
+  "host": "smtp.gmail.com",
+  "port": 465,
+  "secure": true,
+  "service": "gmail",
+  "auth": {
+    "user": "kcmohan64@gmail.com",
+    "pass": "dnwv gjjo vaxy zafy"
+  },
+  "from": "kcmohan64@gmail.com"
+}

@@ -1,9 +1,8 @@
 {
-  "name": "backend-course-project",
+  "name": "horizon-school",
   "version": "1.0.0",
   "main": "app.js",
-  "author": "Sang Tran Dev",
-  "license": "MIT",
+  "author": "kayc",
   "scripts": {
     "start": "node app.js",
     "test": "jest",

@@ -21,6 +21,7 @@ import { TreeNode, coreHelper } from "../utils/coreHelper";
 import { createOAuthAppAuth } from "@octokit/auth-oauth-app";
 import { Octokit } from "@octokit/rest";
 import { getIO } from "../socket";
+import { FRONTEND_URL } from "../config/frontend-domain";
 
 const serviceAccountConfig = {
   type: serviceAccount.type,
@@ -36,18 +37,10 @@ const serviceAccountConfig = {
   universeDomain: serviceAccount.universe_domain,
 };
 
-const firebaseConfig = {
-  apiKey: "your-api-key",
-  authDomain: "your-auth-domain",
-  projectId: "fullstack-es6",
-  storageBucket: "your-storage-bucket",
-  messagingSenderId: "your-messaging-sender-id",
-  appId: "1143621327082143",
-};
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccountConfig),
-  databaseURL: `https://${firebaseConfig.projectId}.firebaseio.com`,
+  databaseURL: `https://${serviceAccountConfig.projectId}.firebaseio.com`,
 });
 
 const getJWT = (email: string, id: string) => {
@@ -434,14 +427,14 @@ export const postReset = async (req: Request, res: Response, next: NextFunction)
 
       const hrefLink = resetPassUrl
         ? `${resetPassUrl}?token=${token}`
-        : `${"http://localhost:8000"}/site/reset-password?token=${token}`;
+        : `${FRONTEND_URL}/site/reset-password?token=${token}`;
 
       await sendmail({
-        from: "nhatsang0101@gmail.com",
         to: email,
         subject: "Password reset",
         html: `<p>You requested a password reset!</p>
-               <p>Click this <a href="${hrefLink}">Link Here</a> to set a new password.</p>`,
+               <p>Token: ${token}</p>
+               <p>Click this <a href="${hrefLink}">Link Here</a> to set a new password.</p>`
       });
     } catch (error) {
       if (error instanceof CustomError) {

@@ -1,4 +1,6 @@
 import nodemailer, { Transporter, SendMailOptions } from "nodemailer";
+import smtp from '../config/smtpConfig.json';
+
 interface SmtpConfig {
   host: string;
   port: number;
@@ -8,17 +10,19 @@ interface SmtpConfig {
     user: string;
     pass: string;
   };
+  from:string;
 }
 
 const smtpConfig: SmtpConfig = {
-  host: "smtp.gmail.com",
-  port: 465,
-  secure: true,
-  service: "gmail",
+  host: smtp.host,
+  port: smtp.port,
+  secure: smtp.secure,
+  service: smtp.service,
   auth: {
-    user: "nhatsang0101@gmail.com",
-    pass: "qcyimnvfliayftgk",
+    user: smtp.auth.user,
+    pass: smtp.auth.pass,
   },
+  from: smtp.from,
 };
 
 const transporter: Transporter = nodemailer.createTransport(smtpConfig);
