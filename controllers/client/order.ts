@@ -5,6 +5,7 @@ import Course from "../../models/Course";
 import { randomBytes } from "crypto";
 import CustomError from "../../utils/error";
 import CustomErrorMessage from "../../utils/errorMessage";
+import { coreHelper } from "../../utils/coreHelper";
 
 export const getOrder = async (req: Request, res: Response, next: NextFunction) => {
   const { orderId } = req.params;
@@ -36,35 +37,15 @@ export const postOrder = async (req: Request, res: Response, next: NextFunction)
 
   let status: string;
 
-  if (transaction.method === "Visa") {
+  if (transaction.method === "Khalti") {
     status = "Success";
-  } else {
+  }else{
     status = totalPrice === 0 ? "Success" : "Pending";
   }
-
-  let updatedTransaction: any;
-
-  try {
-    if (transaction.method === "Visa") {
-      const currentTime = new Date();
-      const randomTransactionNo = randomBytes(8).toString("hex");
-      const visaTransactionInfo = {
-        method: "Visa",
-        amount: totalPrice,
-        bankCode: "NCB",
-        bankTranNo: randomTransactionNo,
-        cardType: "ATM",
-        payDate: currentTime,
-        orderInfo: `Thanh+toan+cho+ma+GD%3A${randomTransactionNo}`,
-        transactionNo: randomTransactionNo,
-      };
-
-      updatedTransaction = visaTransactionInfo;
-    } else {
-      updatedTransaction = {
+  try{
+  let updatedTransaction = {
         method: transaction.method,
       };
-    }
 
     const courses = await Course.find({
       _id: {
@@ -84,10 +65,25 @@ export const postOrder = async (req: Request, res: Response, next: NextFunction)
     });
 
     const response = await order.save();
-
+    // if (transaction.method === "Khalti") {
+    //   const formData = {
+    //     amount: totalPrice,
+    //     failure_url: FRONTEND_URL,
+    //     product_delivery_charge: "0",
+    //     product_service_charge: "0",
+    //     product_code: "EPAYTEST",
+    //     signature: coreHelper.createSignature(`total_amount=${order.totalPrice},transaction_uuid=${order._id},product_code=EPAYTEST`),
+    //     signed_field_names: "total_amount,transaction_uuid,product_code",
+    //     success_url: `${BACKEND_URL}/`,
+    //     tax_amount: totalPrice*0.1,
+    //     total_amount: totalPrice,
+    //     transaction_uuid: order._id,
+    //   };
+    // }
     res.status(201).json({
       message: "Created order successfully!",
       order: response,
+      // formData: formData
     });
   } catch (error) {
     if (error instanceof CustomError) {
@@ -97,7 +93,7 @@ export const postOrder = async (req: Request, res: Response, next: NextFunction)
       return next(customError);
     }
   }
-};
+  };
 
 export const getOrdersByUserId = async (req: Request, res: Response, next: NextFunction) => {
   try {

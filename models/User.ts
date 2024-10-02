@@ -1,6 +1,7 @@
 import { Schema, model } from "mongoose";
 import baseSchema from "./BaseSchema";
 import { IUser } from "../types/user.type";
+import { DEFAULT_AVATAR } from "../config/default";
 
 const userSchema = new Schema<IUser>(
   {
@@ -17,6 +18,7 @@ const userSchema = new Schema<IUser>(
     },
     avatar: {
       type: String,
+      default: DEFAULT_AVATAR,
     },
     username: {
       type: String,

@@ -60,7 +60,14 @@ class CoreHelper {
     return `${day}/${month}/${year}`;
   }
 
-  /** Get array từ obj */
+  // public createSignature = (message: string) => {
+  //   const secret = "8gBm/:&EnhH.1/q";
+  //   const hmac = crypto.createHmac("sha256", secret);
+  //   hmac.update(message);
+  //   const hashInBase64 = hmac.digest("base64");
+  //   return hashInBase64;
+  // };
+
   public convertObjToArrayCodeName(obj: any) {
     const arr = [];
     // tslint:disable-next-line:forin
@@ -167,7 +174,6 @@ class CoreHelper {
     return duplicates;
   }
 
-  /** Tính số giờ dự trên số phút */
   public convertMinutesToHours(minutes: number) {
     const hours = minutes / 60;
     const roundedHours = Math.floor(hours);

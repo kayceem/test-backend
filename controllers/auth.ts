@@ -124,7 +124,7 @@ export const googleLogin = async (req: Request, res: Response, next: NextFunctio
         providerId: "google.com",
       };
       userDoc = new User(userData);
-      userDoc.save()
+      await userDoc.save(); 
     }
     
     const jwtToken = getJWT(userDoc.email,userDoc._id.toString());
@@ -138,6 +138,7 @@ export const googleLogin = async (req: Request, res: Response, next: NextFunctio
       userId: userDoc._id.toString(),
     });
   } catch (error) {
+    console.error("Error during Google login:", error);
     if (error instanceof CustomError) {
       return next(error);
     } else {
